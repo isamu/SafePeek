@@ -8,6 +8,7 @@ import { tokenizerFor } from "./payment.js";
 import { hostMatches, urlMatches } from "./page-urls.js";
 import { isRelatedHost } from "../engine/related-systems.js";
 import { isSignInService } from "./auth.js";
+import { parsePattern, toList } from "../engine/patterns.js";
 
 const ANALYTICS_CATEGORIES = [10, 42];
 const ADVERTISING_CATEGORIES = [36, 71, 77];
@@ -21,10 +22,12 @@ const MAX_EVIDENCE = 20;
  * @property {import("../types.js").Technology[]} technologies
  * @property {{ urls: string[] }[]} botChecks
  * @property {import("./auth.js").AuthService[]} auth
+ * @property {import("./destinations.js").DestinationService[]} destinations  session replay and monitoring services
+ * @property {Record<string, any>} fingerprints  webappanalyzer technologies, for scripts known only by host
  */
 
 /**
- * @typedef {"bot check" | "sign-in" | "analytics" | "ads" | "other"} Role
+ * @typedef {"bot check" | "sign-in" | "session replay" | "monitoring" | "analytics" | "ads" | "other"} Role
  */
 
 /**
@@ -72,7 +75,7 @@ function loginPageFinding(page, scripts) {
   if (!hasPassword) return [];
   const counted = scripts.filter((s) => s.role !== "bot check" && s.role !== "sign-in");
   if (counted.length === 0) return [];
-  const severity = counted.every((s) => s.role === "analytics") ? "info" : "low";
+  const severity = counted.every((s) => s.role === "analytics" || s.role === "monitoring") ? "info" : "low";
   const { count, evidence } = labelled(counted);
   return [finding("login_page_third_party", severity, "page", { count }, evidence)];
 }
@@ -83,7 +86,7 @@ function loginPageFinding(page, scripts) {
  *   unknown hosts first), the lines capped for display
  */
 function labelled(scripts) {
-  const order = ["other", "ads", "analytics", "sign-in", "bot check"];
+  const order = ["other", "session replay", "ads", "monitoring", "analytics", "sign-in", "bot check"];
   const lines = scripts.map((s) => ({ rank: order.indexOf(s.role), line: `${s.role}: ${s.host}` }));
   const unique = [...new Set(lines.sort((a, b) => a.rank - b.rank).map((l) => l.line))];
   return { count: new Set(scripts.map((s) => s.host)).size, evidence: unique.slice(0, MAX_EVIDENCE) };
@@ -125,7 +128,7 @@ function otherDomainScripts(page, context) {
   const seen = new Set(fromDom.map((s) => s.host));
   const fromRecord = (page.scriptHosts ?? [])
     .filter((host) => isOther(host) && !seen.has(host))
-    .map((host) => ({ host, url: null, role: roleOf(host, null, categories, context) }));
+    .map((host) => ({ host, url: null, role: roleOf(host, null, withHostOnly(categories, host, context.fingerprints), context) }));
   return [...fromDom, ...fromRecord];
 }
 
@@ -141,6 +144,9 @@ function roleOf(host, url, categories, context) {
   const matchesUrl = (/** @type {string} */ pattern) => (url ? urlMatches(pattern, url) : hostMatches(pattern.slice(0, pattern.indexOf("/")), host));
   if (context.botChecks.some((b) => b.urls.some(matchesUrl))) return "bot check";
   if (cats.includes(AUTHENTICATION_CATEGORY) || isSignInService(host, url, context.auth)) return "sign-in";
+  const destination = context.destinations.find((s) => (s.hosts ?? []).some((p) => hostMatches(p, host)));
+  if (destination?.purpose === "session_replay") return "session replay";
+  if (destination?.purpose === "monitoring") return "monitoring";
   if (cats.some((c) => ADVERTISING_CATEGORIES.includes(c))) return "ads";
   if (cats.some((c) => ANALYTICS_CATEGORIES.includes(c))) return "analytics";
   return "other";
@@ -167,4 +173,19 @@ function hostCategories(technologies) {
     }
   }
   return byHost;
+}
+
+/**
+ * For a script known only by its host, the categories of the products whose script-URL patterns match that host
+ * alone ("googlesyndication\\.com/" does, "googletagmanager\\.com/gtm\\.js" does not).
+ * @param {Map<string, number[]>} categories
+ * @param {string} host
+ * @param {Record<string, any>} fingerprints
+ * @returns {Map<string, number[]>}
+ */
+function withHostOnly(categories, host, fingerprints) {
+  if (categories.has(host)) return categories;
+  const subject = `https://${host}/`;
+  const cats = Object.values(fingerprints).flatMap((fp) => (toList(fp.scriptSrc).some((p) => parsePattern(p).regex?.test(subject)) ? (fp.cats ?? []) : []));
+  return new Map([...categories, [host, cats]]);
 }
