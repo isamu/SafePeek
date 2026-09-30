@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { checkLegalNoticeLink, HTML_LIMIT, TEXT_LIMIT } from "../extension/src/checks/legal-notice-link.js";
 import { makePage } from "./helpers.js";
 
-const JAPANESE_SHOP = "こちらの商品はカートに入れてご購入いただけます。税込価格で表示しています。送料は全国一律です。".repeat(10);
+const JAPANESE_SHOP = "こちらの商品は税込価格で表示しています。送料は全国一律です。「カートに入れる」ボタンからどうぞ。".repeat(10);
 
 /** @param {string} footer */
 const shop = (footer) => makePage({ text: `${JAPANESE_SHOP}\n${footer}`, html: `<html lang="ja"><body><footer>${footer}</footer></body></html>` });
@@ -28,6 +28,25 @@ describe("a link to the 特定商取引法 notice", () => {
     }
     const imageLink = makePage({ text: JAPANESE_SHOP, html: '<html><body><a href="/law"><img alt="特定商取引法に基づく表記"></a></body></html>' });
     assert.deepEqual(checkLegalNoticeLink(imageLink), [], "named only in an alt text");
+  });
+
+  it("accepts the notice named only in the visible text, as when a link is drawn by script", () => {
+    const page = makePage({ text: `${JAPANESE_SHOP}\n特定商取引法表示`, html: "<html><body><div id=app></div></body></html>" });
+    assert.deepEqual(checkLegalNoticeLink(page), []);
+  });
+
+  it("does not judge cart, checkout or order pages, which often drop the footer", () => {
+    for (const path of ["/cart", "/shop/cart/", "/basket", "/checkout/step1", "/order/confirm", "/shoppingcart.aspx", "/kago.html", "/p/cart.php"]) {
+      const page = makePage({ url: `https://shop.example${path}`, text: JAPANESE_SHOP, html: "<html></html>" });
+      assert.deepEqual(checkLegalNoticeLink(page), [], path);
+    }
+    const product = makePage({ url: "https://shop.example/items/cartridge-001", text: JAPANESE_SHOP, html: "<html></html>" });
+    assert.equal(checkLegalNoticeLink(product).length, 1, "a product whose name starts with cart is still judged");
+  });
+
+  it("does not judge a page that talks about shops without offering to buy", () => {
+    const platform = "ネットショップを始めるならこちら。カート機能、税込表示、送料設定、購入導線まで簡単に作れます。".repeat(10);
+    assert.deepEqual(checkLegalNoticeLink(makePage({ text: platform, html: "<html></html>" })), []);
   });
 
   it("does not judge a page that is not a Japanese shop", () => {
