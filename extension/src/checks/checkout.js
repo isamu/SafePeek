@@ -5,6 +5,7 @@ import { cartTraceLabels } from "./cart-traces.js";
 
 // Traces an embedded widget, image or copied markup can leave all count as one family; runtime traces each count alone.
 const ASSET_KINDS = new Set(["script", "dom", "html", "url", "page", "host"]);
+const SHOWN_EVIDENCE = 3;
 
 /**
  * @typedef {object} CheckoutPlatform
@@ -31,8 +32,26 @@ const ASSET_KINDS = new Set(["script", "dom", "html", "url", "page", "host"]);
  * @returns {number}
  */
 function evidenceFamilies(evidence) {
-  const kinds = evidence.map((label) => label.split(" ")[0]);
-  return new Set(kinds.map((kind) => (ASSET_KINDS.has(kind) ? "asset" : kind))).size;
+  return new Set(evidence.map(familyOf)).size;
+}
+
+/**
+ * @param {string} label
+ * @returns {string}
+ */
+function familyOf(label) {
+  const kind = label.split(" ")[0];
+  return ASSET_KINDS.has(kind) ? "asset" : kind;
+}
+
+/**
+ * Up to SHOWN_EVIDENCE labels, one from each family first, so what made the verdict pass is always shown.
+ * @param {string[]} evidence
+ * @returns {string[]}
+ */
+function shownEvidence(evidence) {
+  const firstOfFamily = evidence.filter((label, i) => evidence.findIndex((other) => familyOf(other) === familyOf(label)) === i);
+  return [...new Set([...firstOfFamily, ...evidence])].slice(0, SHOWN_EVIDENCE);
 }
 
 /**
@@ -80,6 +99,6 @@ export function checkCheckout(technologies, platforms, page) {
  */
 function platformFinding(id, severity, platforms) {
   if (platforms.length === 0) return [];
-  const evidence = platforms.flatMap((p) => p.evidence.slice(0, 3).map((line) => `${p.name}: ${line}`));
+  const evidence = platforms.flatMap((p) => shownEvidence(p.evidence).map((line) => `${p.name}: ${line}`));
   return [finding(id, severity, "payment", { platforms: platforms.map((p) => p.name).join(", ") }, evidence)];
 }

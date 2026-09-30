@@ -114,6 +114,12 @@ describe("who runs the checkout", () => {
     assert.ok(!report.findings.some((f) => f.id === "checkout_saas"));
   });
 
+  it("shows every family the verdict rests on, even past the first three labels", () => {
+    const page = makePage({ contactedHosts: ["echosting.cafe24.com"] });
+    const [f] = checkCheckout([tech("Cafe24", ["js EC_GLOBAL_DATETIME", "js EC_GLOBAL_INFO", "js EC_ROOT_DOMAIN"])], db.checkout, page);
+    assert.deepEqual(f.evidence, ["Cafe24: js EC_GLOBAL_DATETIME", "Cafe24: host cafe24.com", "Cafe24: js EC_GLOBAL_INFO"]);
+  });
+
   it("carries the evidence it rests on", () => {
     const [f] = checkCheckout([tech("Shopify", ["js Shopify", "meta shopify-digital-wallet"])], db.checkout, blank);
     assert.deepEqual(f.evidence, ["Shopify: js Shopify", "Shopify: meta shopify-digital-wallet"]);
