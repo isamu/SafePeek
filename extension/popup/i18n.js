@@ -5,6 +5,11 @@
 
 /** @type {Record<string, Message>} */
 const JA = {
+  backend_related: {
+    title: (p) => `同じ組織らしい別のシステム: ${p.hosts}`,
+    detail: () =>
+      "このページのHTML・フォーム・API呼び出し・自社のスクリプトに、同じ組織らしい別ホストのURLがあります。そのURLの形から推定した技術を根拠に並べています。このページ自体のバックエンドとは別で、推定はURLの形とドメイン名だけによるものです。",
+  },
   backend_hosting: {
     title: (p) => `このページは ${p.name} から配信されています`,
     detail: (p) =>
@@ -165,6 +170,11 @@ const JA = {
 
 /** @type {Record<string, Message>} */
 const EN = {
+  backend_related: {
+    title: (p) => `Other systems that look like the same organisation's: ${p.hosts}`,
+    detail: () =>
+      "The page's HTML, forms, API calls or own scripts name URLs on other hosts that look like the same organisation's. The evidence lists what their URL shapes suggest. These are separate from this page's own backend, and the guess rests on URL shapes and domain names alone.",
+  },
   backend_hosting: {
     title: (p) => `This page is served from ${p.name}`,
     detail: (p) =>

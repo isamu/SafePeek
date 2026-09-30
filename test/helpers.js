@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { parseRetireRepository } from "../extension/src/engine/retire.js";
+import { indexPublicSuffixes } from "../extension/src/engine/public-suffix.js";
 
 const data = (/** @type {string} */ name) => readFileSync(new URL(`../extension/data/${name}`, import.meta.url), "utf8");
 
@@ -19,6 +20,7 @@ export function loadDb() {
     compromised: JSON.parse(data("compromised-script-hosts.json")).hosts,
     auth: JSON.parse(data("auth-services.json")).services,
     destinations: JSON.parse(data("data-destinations.json")),
+    suffixes: indexPublicSuffixes(JSON.parse(data("public-suffixes.json"))),
   };
 }
 

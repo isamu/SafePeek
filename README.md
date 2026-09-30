@@ -53,6 +53,7 @@ SafePeek infers from what the browser can see. Well-run sites often hide server 
 | --- | --- | --- |
 | Technology fingerprints | [enthec/webappanalyzer](https://github.com/enthec/webappanalyzer) | GPL-3.0 |
 | Vulnerable JS libraries | [RetireJS/retire.js](https://github.com/RetireJS/retire.js) | Apache-2.0 |
+| Registrable domains (Public Suffix List) | [publicsuffix/list](https://github.com/publicsuffix/list) | MPL-2.0 |
 | End-of-life dates, payment providers, WordPress support facts | maintained here | GPL-3.0 |
 | Backend inference rules | maintained here, contributed through [issues](https://github.com/isamu/SafePeek/issues/new?template=backend-signature.yml) — see [docs/backend-signatures.md](docs/backend-signatures.md) | GPL-3.0 |
 
