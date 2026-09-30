@@ -91,6 +91,10 @@ describe("simplified Chinese on a Japanese shop", () => {
     assert.deepEqual(checkSimplifiedChinese(shop(article)), [], "a Japanese page about Chinese, with no shop words");
   });
 
+  it("reads the lang attribute itself, not data-lang", () => {
+    assert.deepEqual(checkSimplifiedChinese(shop(JAPANESE_SHOP, '<html lang="ja" data-lang="zh-CN"><body></body></html>')), []);
+  });
+
   it("reads the language only from the <html> tag, not from an element inside the page", () => {
     const quoted = '<html lang="ja"><body><span lang="zh-CN">北京</span></body></html>';
     assert.deepEqual(
