@@ -1,0 +1,45 @@
+name: False result
+description: A finding or a detected technology that SafePeek got wrong. The popup's "Report a false result" link fills this in.
+title: "[false result] "
+labels: ["false-result"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for telling us. The fields below were filled in by SafePeek from the result you saw — the site's origin, the finding and SafePeek's version, never page contents. Please do **not** add session ids, tokens or personal data.
+  - type: input
+    id: page
+    attributes:
+      label: Site (origin)
+      placeholder: "https://shop.example"
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What SafePeek reported
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong?
+      options:
+        - It should not be reported (false positive)
+        - It is right, but the severity is wrong
+        - Something is missing (false negative)
+        - The explanation or evidence is misleading
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why do you think so?
+      description: What the site really uses or does, and how you know (e.g. the page source, the site's own documentation).
+    validations:
+      required: true
+  - type: input
+    id: safepeek
+    attributes:
+      label: SafePeek version
