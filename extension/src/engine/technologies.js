@@ -192,15 +192,15 @@ function dropScriptOnlyPlatforms(hits, technologies) {
 
 /**
  * Where the site runs is reported only when seen directly. Using one service of a provider (files on Amazon S3)
- * implies the provider but not that the site is hosted there, so a hosting category reached only through
- * implies is dropped.
+ * implies the provider but not that the site is hosted there, and a bundle mentioning ".amazonaws.com" says as
+ * little, so a hosting category reached through implies or seen only in script code is dropped.
  * @param {Map<string, Hit>} hits
  * @param {Record<string, any>} technologies
  */
 function dropImpliedHosting(hits, technologies) {
   for (const [name, hit] of [...hits]) {
     const hosting = (technologies[name]?.cats ?? []).some((/** @type {number} */ c) => HOSTING_CATEGORIES.has(c));
-    if (hosting && hit.impliedBy) hits.delete(name);
+    if (hosting && (hit.impliedBy || !hit.direct)) hits.delete(name);
   }
 }
 

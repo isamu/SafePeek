@@ -70,6 +70,11 @@ describe("technology detection", () => {
     assert.ok(!found.includes("Amazon Web Services"), found.join(", "));
   });
 
+  it("does not claim hosting from a provider's domain inside script code", () => {
+    const bundle = script("https://shop.example/app.js", 'const img = "https://bucket.s3.ap-northeast-1.amazonaws.com/a.png";');
+    assert.ok(!names(makePage({ scripts: [bundle] })).includes("Amazon Web Services"));
+  });
+
   it("still reports the hosting provider when the page itself shows it", () => {
     assert.ok(names(makePage({ headers: { ...makePage().headers, "x-amz-request-id": "ABC123" } })).includes("Amazon Web Services"));
   });
