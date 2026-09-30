@@ -145,6 +145,15 @@ describe("data-destinations.json", () => {
     }
   });
 
+  it("uses a whole domain only where the vendor documents all its subdomains", () => {
+    for (const host of ["js.sentry-cdn.com", "browser.sentry-cdn.com", "www.datadoghq-browser-agent.com"]) {
+      assert.equal(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] })).length, 1, host);
+    }
+    for (const host of ["sentry-cdn.com", "foo.sentry-cdn.com", "datadoghq-browser-agent.com", "foo.datadoghq-browser-agent.com"]) {
+      assert.deepEqual(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] })), [], host);
+    }
+  });
+
   it("files TrackJS under monitoring once, from its product or its host", () => {
     const page = makePage({ contactedHosts: ["cdn.trackjs.com"] });
     assert.deepEqual(summary(checkDestinations([tech("TrackJs", ["script https://cdn.trackjs.com/agent/v3/latest/t.js"])], db.destinations, page)), [

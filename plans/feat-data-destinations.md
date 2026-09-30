@@ -3,7 +3,7 @@
 Users want to know where analytics and personal data are sent, including logging services.
 
 ## Approach
-- A new section in the popup, "Where data goes", with one info finding per purpose: session replay, monitoring, advertising, analytics, marketing.
+- A new section in the popup, "Where data goes", with one info finding per purpose: session replay, monitoring, advertising, marketing, analytics.
 - Advertising, analytics and marketing come from webappanalyzer categories.
 - Session replay and monitoring vendors are filed under Analytics or RUM by webappanalyzer. `data/data-destinations.json` lists them with the hosts they send data to, taken from each vendor's own CSP or allowlist documentation, so they are recognised from `contactedHosts` even when the script is bundled.
 - A product only mentioned in a script body, the HTML or the page text does not count, and neither does an implied one. Evidence names a product only by the kind of its trace.
