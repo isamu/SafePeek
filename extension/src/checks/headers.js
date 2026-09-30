@@ -12,7 +12,7 @@ const SESSION_COOKIE =
  * @returns {Finding[]}
  */
 export function checkTransport(page) {
-  if (page.protocol === "https:") return [];
+  if (page.protocol !== "http:") return [];
   const findings = [finding("not_https", "high", "transport", { protocol: page.protocol })];
   if (page.forms.some((f) => f.hasPassword)) findings.push(finding("password_over_http", "high", "transport"));
   return findings;
