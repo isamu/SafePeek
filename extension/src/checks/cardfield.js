@@ -7,7 +7,7 @@ const CARD_HINTS = [
   /クレジットカード|カード番号|セキュリティコード/,
 ];
 // Fields that share card vocabulary but hold something else: loyalty/membership/gift cards and one-time codes.
-const NOT_CARD_HINT = /point|ポイント|member|会員|gift|ギフト|loyalty|coupon|クーポン|otp|one.?time|sms|verif|認証|ワンタイム/i;
+const NOT_CARD_HINT = /(?<![a-z])(point|member|gift|loyalty|coupon|otp)|one.?time|sms|ポイント|会員|ギフト|クーポン|ワンタイム|認証/i;
 
 /**
  * @param {import("../types.js").InputField} field

@@ -82,6 +82,8 @@ describe("payment", () => {
       inputField("x", { hints: "クレジットカード番号" }),
       inputField("card_csc"),
       inputField("cardNumber"),
+      inputField("cvv", { hints: "Card verification value" }),
+      inputField("remember_card_number"),
     ]) {
       assert.equal(checkPayment(makePage({ inputs: [field] }), db.providers)[0].id, "card_on_page", field.name);
     }
