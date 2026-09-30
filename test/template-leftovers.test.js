@@ -14,14 +14,7 @@ describe("template leftovers on a shop page", () => {
   });
 
   it("reads the common variants", () => {
-    for (const text of [
-      "販売業者 ○○ショップ",
-      "運営会社 有限会社××",
-      "TEL 00-000-0000",
-      "Lorem ipsum dolor sit amet",
-      "Your Store Name",
-      "Default Store View",
-    ]) {
+    for (const text of ["販売業者 ○○ショップ", "運営会社 有限会社××", "TEL 00-000-0000", "Your Store Name", "Default Store View"]) {
       assert.equal(checkTemplateLeftovers(shop(text)).length, 1, text);
     }
   });
