@@ -5,6 +5,7 @@ import { checkEol, checkLibraries } from "./checks/eol.js";
 import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
+import { checkCompromisedHosts } from "./checks/compromised-hosts.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
 import { checkBackends } from "./checks/backend.js";
@@ -30,6 +31,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./engine/backend.js").BackendRule[]} backends
  * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
  * @property {import("./checks/checkout.js").CheckoutPlatform[]} checkout
+ * @property {import("./checks/compromised-hosts.js").CompromisedHost[]} compromised
  * @property {import("./checks/auth.js").AuthService[]} auth
  * @property {import("./checks/destinations.js").Destinations} destinations
  */
@@ -72,6 +74,7 @@ export async function analyze(page, db, env) {
     ...checkHeaders(page),
     ...checkCookies(page),
     ...checkPage(page),
+    ...checkCompromisedHosts(page, db.compromised),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };
   for (const f of findings) counts[f.severity]++;

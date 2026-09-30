@@ -18,7 +18,7 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 - **Backend inference** from weighted traces (URL conventions, parameters, headers, cookies, globals, script names, comments, error output), with confidence per guess and strength per trace; EOL and legacy backends flagged.
 - **BaaS / managed platforms** (Firebase, Supabase, AWS, Vercel …).
 - **WordPress**: core support status, plugins and themes, XML-RPC.
-- **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts.
+- **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts, scripts from a CDN that has been taken over.
 - **False-result report link**: opens a GitHub issue form pre-filled with the origin and the finding only; the user submits it.
 - **npm package** `safepeek`: the same engine for checking your own sites in CI (not published); not for bulk scanning of others' sites.
 

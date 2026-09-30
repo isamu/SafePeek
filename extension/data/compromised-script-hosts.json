@@ -1,0 +1,10 @@
+{
+  "_comment": "Hand-maintained: domains that served malicious JavaScript to the sites loading scripts from them (a taken-over or sold CDN). A page loading any script from one of these, or from a subdomain, is reported. Every entry needs a source that names the domain.",
+  "hosts": [
+    {"domain": "polyfill.io", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack", "https://blog.cloudflare.com/polyfill-io-now-available-on-cdnjs-reduce-your-supply-chain-risk"]},
+    {"domain": "bootcdn.net", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "bootcss.com", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "staticfile.org", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "staticfile.net", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]}
+  ]
+}
