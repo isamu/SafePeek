@@ -26,7 +26,7 @@ Everything is inference from what the page exposes. "No problems found" is never
 ### Ways to use it
 
 - **Browser extension** (Chrome, from GitHub; see README).
-- **npm package `safepeek`**: the same engine as ES modules (`extension/package.json`, entry `src/index.js`), for use in crawlers, CI or other tools. Page data must be collected in a real page (the collector plus `probeGlobals`).
+- **npm package `safepeek`**: the same engine as ES modules (`extension/package.json`, entry `src/index.js`), for checking your own sites (CI, monitoring) or building other visitor tools. It is not meant for scanning other people's sites in bulk. Page data must be collected in a real page (the collector plus `probeGlobals`).
 - **Contributing traces**: users paste the popup's "Copy the inference" output into the *Backend inference* issue form; maintainers turn it into rules (`docs/backend-signatures.md`).
 - **Reporting a false result**: every finding, and the technology list, has a "Report a false result" link that opens the *False result* issue form pre-filled with the site's origin, the finding's id, severity and area, parameters taken from SafePeek's own data (names, dates, CVE ids), counts, a detected version when it is a plain version number, and the extension and data versions — decided per parameter, so never evidence lines, header values, cookie names or other page-controlled text (`popup/false-report.js`). The technology-list link is cut to stay below GitHub's URL limit. SafePeek sends nothing itself: opening the link is a user-initiated visit to GitHub, which receives the pre-filled values in the URL; they become a public issue only if the user submits the form.
 
@@ -42,6 +42,7 @@ Everything is inference from what the page exposes. "No problems found" is never
 | S6 | No build step. The files in `extension/` are what the browser loads. | repository layout; review |
 | S7 | The extension is distributed through GitHub releases only (zip + SHA-256), built only from tags on commits already on `main`. No store listing, so no silent auto-update. The analysis engine alone (no popup, no manifest) is also published to npm from the same tag, with provenance. | `release.yml` |
 | S8 | Signature data changes arrive as reviewed pull requests with upstream commits recorded in `data/sources.json`. | `update-data.yml` |
+| S9 | Findings tell a visitor what they need to decide whether to trust the site, not an attacker where to strike. A check is added only when it answers a visitor's question (can my card or password be read, where does my data go, is this software maintained). Specifics that mainly help exploitation are never shown: secret values, the exact location of an exposed secret or debug feature, exact internal or staging host names, bypass routes around a defence, takeover candidates, tamperable form fields. Such facts are stated in general terms, with a suggestion to tell the site. | review; a test per such finding that its evidence carries no value |
 
 ## 3. Flow
 
