@@ -11,6 +11,7 @@ const MAX_SUBJECT = 300_000;
  * @property {number} confidence
  * @property {string[]} versions
  * @property {string[]} evidence
+ * @property {string} [impliedBy]  set when the only reason for the hit is another technology's "implies"
  */
 
 /**
@@ -165,7 +166,7 @@ function applyImplies(hits, technologies) {
     for (const implied of toList(technologies[name]?.implies)) {
       const pattern = parsePattern(implied);
       if (!technologies[pattern.source] || hits.has(pattern.source)) continue;
-      hits.set(pattern.source, { confidence: pattern.confidence, versions: [], evidence: [`implied by ${name}`] });
+      hits.set(pattern.source, { confidence: pattern.confidence, versions: [], evidence: [`implied by ${name}`], impliedBy: name });
       queue.push(pattern.source);
     }
   }
@@ -204,6 +205,7 @@ function toResults(hits, db) {
       categories: db.technologies[name]?.cats ?? [],
       website: db.technologies[name]?.website ?? "",
       evidence: hit.evidence,
+      impliedBy: hit.impliedBy ?? "",
     }))
     .sort((a, b) => priority(a.categories) - priority(b.categories) || a.name.localeCompare(b.name));
 }
