@@ -6,6 +6,9 @@ import { finding } from "./finding.js";
 
 const MAX_POLICY_EVIDENCE = 300;
 const ANY_SCRIPT_SOURCES = new Set(["*", "http:", "https:", "data:"]);
+const ANY_HOST_OF_SCHEME = /^https?:\/\/\*(?::\*)?\/?$/;
+// Browsers ignore 'unsafe-inline' when a nonce, a hash or 'strict-dynamic' is present.
+const INLINE_ALLOW_LISTS = /^'(?:nonce-|sha(?:256|384|512)-|strict-dynamic')/;
 const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
 const SCRIPT_ATTRIBUTES = ["script-src-attr", "script-src", "default-src"];
 // A weakness is reported when, for one of its directive chains, every policy that governs it allows the weakness.
@@ -116,11 +119,21 @@ function effectiveDirective(policy, chain) {
 }
 
 /**
+ * CSP matches keywords, scheme names and hash algorithms case-insensitively.
+ * @param {string} sourceList
+ * @returns {string[]}
+ */
+function sourceTokens(sourceList) {
+  return sourceList.toLowerCase().split(/\s+/);
+}
+
+/**
  * @param {string} sourceList
  * @returns {boolean}
  */
 function allowsInlineScript(sourceList) {
-  return sourceList.includes("'unsafe-inline'") && !/'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(sourceList);
+  const sources = sourceTokens(sourceList);
+  return sources.includes("'unsafe-inline'") && !sources.some((source) => INLINE_ALLOW_LISTS.test(source));
 }
 
 /**
@@ -129,8 +142,8 @@ function allowsInlineScript(sourceList) {
  * @returns {boolean}
  */
 function allowsAnyScriptSource(sourceList) {
-  const sources = sourceList.toLowerCase().split(/\s+/);
-  return !sources.includes("'strict-dynamic'") && sources.some((source) => ANY_SCRIPT_SOURCES.has(source));
+  const sources = sourceTokens(sourceList);
+  return !sources.includes("'strict-dynamic'") && sources.some((source) => ANY_SCRIPT_SOURCES.has(source) || ANY_HOST_OF_SCHEME.test(source));
 }
 
 /**

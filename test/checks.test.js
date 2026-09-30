@@ -77,6 +77,10 @@ describe("transport and headers", () => {
       assert.deepEqual(withCsp(csp), ["csp_any_script_host"], csp);
     }
     assert.deepEqual(withCsp("script-src 'self' https: 'unsafe-inline'; frame-ancestors 'none'"), ["csp_unsafe_inline", "csp_any_script_host"]);
+    for (const csp of ["script-src https://*; frame-ancestors 'none'", "script-src 'self' HTTP://*:*; frame-ancestors 'none'"]) {
+      assert.deepEqual(withCsp(csp), ["csp_any_script_host"], csp);
+    }
+    assert.deepEqual(withCsp("script-src 'self' https://*.example.com; frame-ancestors 'none'"), []);
   });
 
   it("does not flag host wildcards that strict-dynamic, a named host or another policy rules out", () => {
@@ -97,6 +101,16 @@ describe("transport and headers", () => {
     assert.deepEqual(withCsp("script-src 'self'; script-src-attr 'unsafe-inline'"), ["csp_unsafe_inline"]);
     assert.deepEqual(withCsp("script-src-attr 'unsafe-inline', script-src 'self'"), []);
     assert.deepEqual(withCsp("img-src *; style-src 'unsafe-inline'"), []);
+  });
+
+  it("matches CSP keywords and hash algorithms case-insensitively", () => {
+    const withCsp = (/** @type {string} */ csp) =>
+      ids(checkHeaders(makePage({ headers: { ...makePage().headers, "content-security-policy": `${csp}; frame-ancestors 'none'` } })));
+    assert.deepEqual(withCsp("script-src 'self' 'UNSAFE-INLINE'"), ["csp_unsafe_inline"]);
+    assert.deepEqual(withCsp("script-src 'unsafe-inline' 'STRICT-DYNAMIC'"), []);
+    assert.deepEqual(withCsp("script-src 'unsafe-inline' 'Nonce-abc'"), []);
+    assert.deepEqual(withCsp("script-src 'unsafe-inline' 'SHA256-abc='"), []);
+    assert.deepEqual(withCsp("script-src 'self' HTTPS: 'Strict-Dynamic'"), []);
   });
 
   it("does not flag unsafe-inline that another enforced policy blocks", () => {
