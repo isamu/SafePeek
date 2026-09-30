@@ -69,6 +69,14 @@ describe("template leftovers on a shop page", () => {
     }
   });
 
+  it("stays out of guides to writing a notice or building a shop, demo stores, and pages that do not offer to buy", () => {
+    for (const guide of ["特定商取引法に基づく表記の書き方", "ネットショップの作り方", "デモストアです", "表記の記載例"]) {
+      assert.deepEqual(checkTemplateLeftovers(shop(`${guide}\n販売業者 株式会社〇〇`)), [], guide);
+    }
+    const noBuy = makePage({ text: `${"税込価格の送料について説明します。".repeat(20)}\n販売業者 株式会社〇〇`, html: "<html></html>" });
+    assert.deepEqual(checkTemplateLeftovers(noBuy), []);
+  });
+
   it("stays out of pages that are not Japanese shops", () => {
     assert.deepEqual(checkTemplateLeftovers(makePage({ text: "Company: 株式会社〇〇 TEL 000-0000-0000", html: "<html></html>" })), []);
   });

@@ -12,6 +12,17 @@ export function countKana(text) {
   return (text.match(KANA) ?? []).length;
 }
 
+// A storefront offers to buy; a page about running a shop (a cart platform's own site, a guide) only talks about it.
+const BUY_ACTION = /カートに入れる|カートへ入れる|カートに追加|買い物かごに入れる|買い物かごへ|購入手続き|今すぐ購入|購入する/;
+
+/**
+ * @param {string} text  the page's visible text
+ * @returns {boolean}
+ */
+export function offersToBuy(text) {
+  return BUY_ACTION.test(text);
+}
+
 /**
  * @param {string} text  the page's visible text
  * @returns {boolean}
