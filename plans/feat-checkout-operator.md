@@ -10,8 +10,9 @@ the question behind "is this a self-built payment page?" beyond what the card-fi
   clear; ambiguous ones (Shopware, 1C-Bitrix, ecbeing) are left out. Upstream `saas`/`oss` flags were tried first and
   dropped: they mark self-hostable products (Shopware, 1C-Bitrix) as `saas` and some as both.
 - `checks/checkout.js` (pure): a listed product, seen directly (not implied) → `checkout_saas` (good) or
-  `checkout_self_hosted` (info), with its evidence lines. `minEvidenceKinds` raises the bar per product: BASE needs two
-  kinds of trace, because its link rule also fires on BASE's own site, which links to shops.
+  `checkout_self_hosted` (info), with its evidence lines. A product needs two different kinds of trace by default (one generic trace — BASE's link to a shop, an embedded
+  BigCommerce image, a server header — also appears on pages that are not the shop); `singleTraceReason` allows one,
+  only when every trace of that product comes from the shop itself, and says why.
 - Wording stays at "the shop is on a cart service"; how the card is entered is judged on the checkout page.
 
 ## Verification

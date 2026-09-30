@@ -4,11 +4,11 @@ import { readFileSync } from "node:fs";
 import { checkCheckout } from "../extension/src/checks/checkout.js";
 import { analyze } from "../extension/src/analyze.js";
 import { sha1 } from "../extension/src/engine/hash.js";
-import { loadDb, makePage } from "./helpers.js";
+import { loadDb, makePage, script } from "./helpers.js";
 
 const db = loadDb();
 /** @returns {import("../extension/src/types.js").Technology} */
-const tech = (/** @type {string} */ name, evidence = ["js a"], impliedBy = "") => ({
+const tech = (/** @type {string} */ name, evidence = ["js a", "script b"], impliedBy = "") => ({
   name,
   version: "",
   confidence: 100,
@@ -37,16 +37,22 @@ describe("who runs the checkout", () => {
     assert.deepEqual(checkCheckout([tech("WooCommerce", ["implied by WordPress"], "WordPress")], db.checkout), []);
   });
 
-  it("asks BASE for two kinds of trace, since its link rule also fires on pages that only link to shops", () => {
-    assert.deepEqual(checkCheckout([tech("Base", ["dom link[href*='.thebase.in/']", "dom link[href*='.thebase.in/']"])], db.checkout), []);
+  it("needs two kinds of trace by default, since one generic trace also appears on pages that are not the shop", () => {
     assert.deepEqual(
       checkCheckout([tech("Base", ["dom link[href*='.thebase.in/']", "dom a[href*='.thebase.in/']"])], db.checkout),
       [],
       "two labels of one kind",
     );
+    assert.deepEqual(checkCheckout([tech("BigCommerce", ["dom img[src*='.bigcommerce.com']"])], db.checkout), [], "an embedded BigCommerce image");
+    assert.deepEqual(checkCheckout([tech("Shopify", ["js Shopify"])], db.checkout), []);
     assert.deepEqual(summary(checkCheckout([tech("Base", ["script https://thebase.in/js/shop.js", "js BASE_API.shop_id"])], db.checkout)), [
       "checkout_saas:Base",
     ]);
+  });
+
+  it("takes one trace only for products whose every trace comes from the shop itself", () => {
+    assert.deepEqual(summary(checkCheckout([tech("stores.jp", ["js STORES_JP"])], db.checkout)), ["checkout_saas:stores.jp"]);
+    assert.deepEqual(summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/js/eccube.js"])], db.checkout)), ["checkout_self_hosted:EC-CUBE"]);
   });
 
   it("says nothing for a plain Squarespace site, whose server header every Squarespace site sends", async () => {
@@ -63,7 +69,11 @@ describe("who runs the checkout", () => {
   });
 
   it("reports it with the payment findings from real page data", async () => {
-    const report = await analyze(makePage({ globals: { Shopify: true, ShopifyAnalytics: true } }), db, { today: new Date("2026-09-30T00:00:00Z"), sha1 });
+    const report = await analyze(
+      makePage({ globals: { Shopify: true }, scripts: [script("https://cdn.shopify.com/s/files/1/0001/t/1/assets/theme.js")] }),
+      db,
+      { today: new Date("2026-09-30T00:00:00Z"), sha1 },
+    );
     const found = report.findings.find((f) => f.id === "checkout_saas");
     assert.equal(found?.area, "payment");
     assert.equal(found?.severity, "good");
@@ -78,6 +88,7 @@ describe("checkout-platforms.json", () => {
       assert.ok(db.technologies[p.name].cats.includes(6), "is an ecommerce product");
       assert.ok(p.kind === "hosted" || p.kind === "self", "kind");
       assert.match(p.source, /^https:\/\//, "source link");
+      if ("singleTraceReason" in p) assert.ok(typeof p.singleTraceReason === "string" && p.singleTraceReason.length > 20, "says why one trace is enough");
     });
   }
 });

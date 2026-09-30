@@ -7,7 +7,7 @@ import { finding } from "./finding.js";
  * @property {string} name  webappanalyzer technology name
  * @property {"hosted" | "self"} kind
  * @property {string} source
- * @property {number} [minEvidenceKinds]  different kinds of trace required (default 1)
+ * @property {string} [singleTraceReason]  why one kind of trace is enough for this product; otherwise two are required
  */
 
 /**
@@ -30,7 +30,7 @@ export function checkCheckout(technologies, platforms) {
   const byName = new Map(platforms.map((p) => [p.name, p]));
   const seen = technologies.filter((t) => {
     const platform = byName.get(t.name);
-    return platform !== undefined && !t.impliedBy && evidenceKinds(t) >= (platform.minEvidenceKinds ?? 1);
+    return platform !== undefined && !t.impliedBy && evidenceKinds(t) >= (platform.singleTraceReason ? 1 : 2);
   });
   const of = (/** @type {"hosted" | "self"} */ kind) => seen.filter((t) => byName.get(t.name)?.kind === kind);
   return [...platformFinding("checkout_saas", "good", of("hosted")), ...platformFinding("checkout_self_hosted", "info", of("self"))];
