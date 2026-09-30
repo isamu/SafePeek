@@ -8,6 +8,8 @@ const MAX_SUBJECT = 300_000;
 const SCRIPT_CONTENT = "script content";
 /** CMS, ecommerce, blogs, web frameworks, web servers, programming languages, databases: what the site is built on. */
 const PLATFORM_CATEGORIES = new Set([1, 6, 11, 18, 22, 27, 34]);
+/** PaaS, IaaS, hosting: where the site itself runs. */
+const HOSTING_CATEGORIES = new Set([62, 63, 88]);
 
 /**
  * @typedef {object} Hit
@@ -46,6 +48,7 @@ export function detectTechnologies(page, db) {
   dropZeroConfidence(hits);
   applyImplies(hits, db.technologies);
   dropScriptOnlyPlatforms(hits, db.technologies);
+  dropImpliedHosting(hits, db.technologies);
   applyRequirements(hits, db.technologies);
   return toResults(hits, db);
 }
@@ -184,6 +187,20 @@ function dropScriptOnlyPlatforms(hits, technologies) {
   for (const [name, hit] of [...hits]) {
     const platform = (technologies[name]?.cats ?? []).some((/** @type {number} */ c) => PLATFORM_CATEGORIES.has(c));
     if (platform && !hit.direct) hits.delete(name);
+  }
+}
+
+/**
+ * Where the site runs is reported only when seen directly. Using one service of a provider (files on Amazon S3)
+ * implies the provider but not that the site is hosted there, and a bundle mentioning ".amazonaws.com" says as
+ * little, so a hosting category reached through implies or seen only in script code is dropped.
+ * @param {Map<string, Hit>} hits
+ * @param {Record<string, any>} technologies
+ */
+function dropImpliedHosting(hits, technologies) {
+  for (const [name, hit] of [...hits]) {
+    const hosting = (technologies[name]?.cats ?? []).some((/** @type {number} */ c) => HOSTING_CATEGORIES.has(c));
+    if (hosting && (hit.impliedBy || !hit.direct)) hits.delete(name);
   }
 }
 
