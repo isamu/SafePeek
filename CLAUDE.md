@@ -19,7 +19,7 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 - **BaaS / managed platforms** (Firebase, Supabase, AWS …), and **hosting** that only serves the page (Vercel, Netlify, Cloudflare Pages …).
 - **Related systems**: other hosts of the same organisation the page hands off to, with what their URL shapes suggest.
 - **WordPress**: core support status, plugins and themes, XML-RPC.
-- **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts, scripts from a CDN that has been taken over.
+- **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts, scripts from a CDN that has been taken over, server-side secrets in the page (reported without kind, value or place).
 - **False-result report link**: opens a GitHub issue form pre-filled with the origin and the finding only; the user submits it.
 - **npm package** `safepeek`: the same engine for checking your own sites in CI (not published); not for bulk scanning of others' sites.
 
