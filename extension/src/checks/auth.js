@@ -3,7 +3,7 @@
 // any page that loads the vendor's general SDK.
 
 import { finding } from "./finding.js";
-import { hostMatches, pageHosts, pageUrls } from "./page-urls.js";
+import { hostMatches, pageHosts, pageUrls, urlMatches } from "./page-urls.js";
 
 const EVIDENCE_PER_SERVICE = 2;
 
@@ -56,14 +56,4 @@ function seenService(service, direct, page) {
     ...(service.paths ?? []).filter((p) => urls.some((u) => u.pathname.includes(p))).map((p) => `path ${p}`),
   ];
   return { name: service.name, evidence };
-}
-
-/**
- * @param {string} pattern  "domain-pattern/path-prefix"
- * @param {URL} url
- * @returns {boolean}
- */
-function urlMatches(pattern, url) {
-  const slash = pattern.indexOf("/");
-  return hostMatches(pattern.slice(0, slash), url.hostname) && url.pathname.startsWith(pattern.slice(slash));
 }

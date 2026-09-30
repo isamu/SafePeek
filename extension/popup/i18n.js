@@ -159,12 +159,12 @@ const JA = {
   card_page_third_party: {
     title: (p) => `カード番号を入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
     detail: () =>
-      "カード番号はこのページ自身の入力欄に入力します。そのため、ここで動く別ドメインのスクリプト（広告・解析など）からも読み取れます。カード情報を盗む攻撃は、こうしたスクリプトの改ざんを入口にします。自社の配信用ドメインの場合もあるので、根拠のドメインを確かめてください。決済会社の入力画面（iframe）なら、ほかのスクリプトからは読めません。",
+      "カード番号はこのページ自身の入力欄に入力します。そのため、ここで動く別ドメインのスクリプトからも読み取れます。カード情報を盗む攻撃は、タグマネージャーや解析タグのような一般的なスクリプトの改ざんを入口にすることもあるため、ここでは有名なツールも数えています。根拠には種類（不明・広告・解析など）を付けています。自社の配信用ドメインの場合もあります。決済会社の入力画面（iframe）なら、ほかのスクリプトからは読めません。",
   },
   login_page_third_party: {
     title: (p) => `パスワードを入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
     detail: () =>
-      "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。自社の配信用ドメインや、ロボット対策（reCAPTCHA など）の一般的なものも含まれますが、ログイン画面では少ないほど安全です。",
+      "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析やタグマネージャーだけなら「情報」、広告や正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
   },
   script_compromised_host: {
     title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
@@ -326,12 +326,12 @@ const EN = {
   card_page_third_party: {
     title: (p) => `Scripts from other domains run where you type your card number (${p.count} hosts)`,
     detail: () =>
-      "The card number goes into this page's own fields, so scripts from other domains running here (ads, analytics …) can read it too. Card-skimming attacks come in through exactly these scripts. Some may be the site's own asset domains, so check the listed hosts. A payment provider's card frame would keep them all out.",
+      "The card number goes into this page's own fields, so scripts from other domains running here can read it too. Card skimming has come in through ordinary tag managers and analytics tags, so well-known tools count here as well; each host is labelled (other, ads, analytics …). Some may be the site's own asset domains. A payment provider's card frame would keep them all out.",
   },
   login_page_third_party: {
     title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
     detail: () =>
-      "The password goes into this page's own field, so scripts from other domains running here can read it too. Some are the site's own asset domains or common bot checks such as reCAPTCHA, but on a login page, the fewer the safer.",
+      "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics and tag managers alone make this information; ads or unknown hosts make it low. Some may be the site's own asset domains.",
   },
   script_compromised_host: {
     title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,

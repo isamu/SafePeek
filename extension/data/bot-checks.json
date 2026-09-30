@@ -1,0 +1,8 @@
+{
+  "_comment": "Hand-maintained: bot checks (CAPTCHAs) a login page is expected to load. Their scripts are left out of the login-page count, since they are there for the page's safety; on a card page they still count, like every script that can read the card number. 'urls' are domain pattern + path prefix (see auth-services.json), each from the vendor's documented script URL in 'sources'.",
+  "services": [
+    {"name": "reCAPTCHA", "sources": ["https://developers.google.com/recaptcha/docs/v3", "https://developers.google.com/recaptcha/docs/faq"], "urls": ["www.google.com/recaptcha/", "www.gstatic.com/recaptcha/", "www.recaptcha.net/recaptcha/", "recaptcha.net/recaptcha/"]},
+    {"name": "hCaptcha", "sources": ["https://docs.hcaptcha.com/"], "urls": ["js.hcaptcha.com/", "hcaptcha.com/1/"]},
+    {"name": "Cloudflare Turnstile", "sources": ["https://developers.cloudflare.com/turnstile/get-started/client-side-rendering/"], "urls": ["challenges.cloudflare.com/turnstile/"]}
+  ]
+}

@@ -23,6 +23,18 @@ export function providerForHost(host, providers) {
 }
 
 /**
+ * The provider whose tokenizer this script is: the script is on that provider's host and its URL matches one of that
+ * provider's tokenScripts. A URL on another host that merely contains the pattern is not a tokenizer.
+ * @param {string} src
+ * @param {Provider[]} providers
+ * @returns {Provider | undefined}
+ */
+export function tokenizerFor(src, providers) {
+  const provider = providerForHost(hostOf(src), providers);
+  return (provider?.tokenScripts ?? []).some((re) => new RegExp(re, "i").test(src)) ? provider : undefined;
+}
+
+/**
  * @param {string[]} urls
  * @param {Provider[]} providers
  * @returns {string[]}  provider names, unique
@@ -79,7 +91,7 @@ export function checkPayment(page, providers) {
   const redirectProviders = providersIn(paymentPaths, providers);
   // A provider's other frames (buttons, wallets, fraud checks) show it is used, not where the card is typed.
   const scriptProviders = providersIn([...scriptSrcs, ...page.iframes], providers);
-  const tokenizer = providers.find((p) => (p.tokenScripts ?? []).some((re) => scriptSrcs.some((src) => new RegExp(re, "i").test(src))));
+  const tokenizer = scriptSrcs.map((src) => tokenizerFor(src, providers)).find((p) => p !== undefined);
 
   const cardInputs = cardFields(page.inputs);
   const findings = [];
