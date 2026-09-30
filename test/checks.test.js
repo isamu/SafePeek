@@ -167,7 +167,17 @@ describe("payment", () => {
       const [f] = checkPayment(makePage({ iframes: [url] }), db.providers);
       assert.deepEqual([f.id, f.params.providers], ["card_hosted_iframe", provider], provider);
     }
-    const otherFrames = ["https://js.pay.jp/v2/payjp_api_iframe.1771219814365.html#origin=x", "https://api.pay.jp/v1/js/apitunnel.html"];
+    const otherFrames = [
+      "https://js.pay.jp/v2/payjp_api_iframe.1771219814365.html#origin=x",
+      "https://api.pay.jp/v1/js/apitunnel.html",
+      // Adyen serves non-card Secured Fields (gift card, ACH, Bancontact) from the same page with another type.
+      "https://checkoutshopper-live.adyen.com/checkoutshopper/securedfields/pub.v2.123.abc/5.0.0/securedFields.html?type=giftcard",
+      "https://checkoutshopper-live.adyen.com/checkoutshopper/securedfields/pub.v2.123.abc/5.0.0/securedFields.html?type=ach&d=x",
+      "https://checkoutshopper-live.adyen.com/checkoutshopper/securedfields/pub.v2.123.abc/5.0.0/securedFields.html?type=bcmc",
+      // Look-alikes that only contain a card-frame path somewhere in the URL.
+      "https://js.pay.jp/v2/redirect?next=/v2/element_iframe.1.html",
+      "https://assets.braintreegateway.com/web/3.97.0/html/hosted-fields-frame.min.html.bak",
+    ];
     assert.deepEqual(ids(checkPayment(makePage({ iframes: otherFrames }), db.providers)), ["payment_scripts_only"]);
   });
 

@@ -13,6 +13,8 @@ listed any, so a checkout using another provider's hosted card fields showed "us
 - PAY.JP v2: `js.pay.jp/v2/element_iframe.…` — observed on PAY.JP's official payjp.js v2 sample, which also loads a
   hidden `payjp_api_iframe` and `api.pay.jp/v1/js/apitunnel.html` that must not count.
 PayPal card fields are not added: the frame URL could not be confirmed from a source.
+Each pattern is anchored from scheme and host to the end of the file name. Adyen serves non-card Secured Fields (gift
+card, ACH, Bancontact) from the same page, so only `type=card` / `type=cardCompat` counts.
 
 ## Verification
 Unit tests: each provider's card frame → `card_hosted_iframe` with that provider; PAY.JP's non-card frames →
