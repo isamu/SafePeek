@@ -153,7 +153,15 @@ const JA = {
     detail: (p) => (p.password ? "パスワードを含むフォームがHTTPで送信されます。" : "入力内容がHTTPで送信されます。"),
   },
   headers_unavailable: { title: () => "レスポンスヘッダーを取得できませんでした", detail: () => "ヘッダーに関するチェックは行っていません。" },
-  no_hsts: { title: () => "HSTSが設定されていません", detail: () => "HTTPへ誘導する攻撃を防ぐ Strict-Transport-Security ヘッダーがありません。" },
+  no_hsts: {
+    title: () => "HSTSが設定されていません",
+    detail: () =>
+      "HTTPへ誘導する攻撃を防ぐ有効な Strict-Transport-Security ヘッダーがありません。ブラウザに組み込まれたHSTSプリロードリストに載っているサイトは、このヘッダーがなくても保護されます。",
+  },
+  hsts_short: {
+    title: (p) => `HSTSの有効期間が短すぎます（${p.seconds}秒）`,
+    detail: () => "Strict-Transport-Security の max-age が6か月未満のため、しばらく訪れないと効果が切れ、HTTPへ誘導する攻撃を防げなくなります。",
+  },
   no_csp: { title: () => "CSPが設定されていません", detail: () => "Content-Security-Policy がなく、不正なスクリプトの実行を抑える仕組みがありません。" },
   csp_unsafe_inline: {
     title: () => "CSPがインラインスクリプトを許可しています",
@@ -164,7 +172,10 @@ const JA = {
     detail: () => "* や https:、data: などにより、任意のサイトや data: URL からスクリプトを読み込めます。",
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
-  no_clickjacking: { title: () => "クリックジャッキング対策がありません", detail: () => "X-Frame-Options も CSP の frame-ancestors もありません。" },
+  no_clickjacking: {
+    title: () => "クリックジャッキング対策がありません",
+    detail: () => "有効な X-Frame-Options（DENY / SAMEORIGIN）も、埋め込み元を限定する CSP の frame-ancestors もありません。",
+  },
   password_other_site: {
     title: (p) => `パスワードが別の組織らしいドメインに送られます（${p.hosts}）`,
     detail: () =>
@@ -358,7 +369,15 @@ const EN = {
     detail: (p) => (p.password ? "A form with a password field is sent unencrypted." : "Form input is sent unencrypted."),
   },
   headers_unavailable: { title: () => "Could not read response headers", detail: () => "Header checks were skipped." },
-  no_hsts: { title: () => "No HSTS", detail: () => "No Strict-Transport-Security header to prevent downgrade to HTTP." },
+  no_hsts: {
+    title: () => "No HSTS",
+    detail: () =>
+      "No valid Strict-Transport-Security header to prevent downgrade to HTTP. A site on the browser's built-in HSTS preload list is protected without it.",
+  },
+  hsts_short: {
+    title: (p) => `HSTS lasts too briefly (${p.seconds} seconds)`,
+    detail: () => "Strict-Transport-Security has a max-age under six months, so it lapses between visits and no longer prevents downgrade to HTTP.",
+  },
   no_csp: { title: () => "No Content Security Policy", detail: () => "Nothing limits which scripts may run on the page." },
   csp_unsafe_inline: { title: () => "CSP allows inline scripts", detail: () => "'unsafe-inline' largely disables CSP's protection against injected scripts." },
   csp_any_script_host: {
@@ -366,7 +385,10 @@ const EN = {
     detail: () => "A source such as *, https: or data: lets scripts load from any site or from data: URLs.",
   },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
-  no_clickjacking: { title: () => "No clickjacking protection", detail: () => "Neither X-Frame-Options nor CSP frame-ancestors is set." },
+  no_clickjacking: {
+    title: () => "No clickjacking protection",
+    detail: () => "Neither a valid X-Frame-Options (DENY or SAMEORIGIN) nor a CSP frame-ancestors that limits who may embed the page.",
+  },
   password_other_site: {
     title: (p) => `Your password would be sent to another organisation's domain (${p.hosts})`,
     detail: () =>

@@ -56,6 +56,77 @@ describe("transport and headers", () => {
     }
   });
 
+  it("treats max-age=0 as no HSTS and a short one as its own finding", () => {
+    const withHsts = (/** @type {string} */ value) => ids(checkHeaders(makePage({ headers: { ...makePage().headers, "strict-transport-security": value } })));
+    assert.deepEqual(withHsts("max-age=0"), ["no_hsts"]);
+    assert.deepEqual(withHsts("includeSubDomains"), ["no_hsts"], "no max-age at all");
+    assert.deepEqual(withHsts("max-age=86400; includeSubDomains"), ["hsts_short"]);
+    assert.deepEqual(withHsts('max-age="15551999"'), ["hsts_short"]);
+    assert.deepEqual(withHsts("max-age=15552000"), []);
+    assert.deepEqual(withHsts("MAX-AGE = 31536000; preload"), []);
+  });
+
+  it("ignores an HSTS header the browser would ignore, and reads only the first of several", () => {
+    const withHsts = (/** @type {string} */ value) => ids(checkHeaders(makePage({ headers: { ...makePage().headers, "strict-transport-security": value } })));
+    for (const malformed of [
+      "max-age=31536000x",
+      'max-age="31536000',
+      "max-age=31536000; max-age=0",
+      "max-age=31536000; includeSubDomains; includesubdomains",
+    ]) {
+      assert.deepEqual(withHsts(malformed), ["no_hsts"], malformed);
+    }
+    assert.deepEqual(withHsts("max-age=31536000, max-age=0"), [], "the first header counts");
+    assert.deepEqual(withHsts("max-age=0, max-age=31536000"), ["no_hsts"], "only the first header counts");
+    assert.deepEqual(withHsts('foo="a,b"; max-age=31536000'), [], "a comma inside a quoted value does not start another header");
+    assert.deepEqual(withHsts('foo="a;max-age=0"; max-age=31536000'), [], "nor does a semicolon start another directive");
+    assert.deepEqual(withHsts('max-age="3153\\6000"'), [], "a quoted value is unescaped");
+    assert.deepEqual(withHsts('max-age="31536000"x'), ["no_hsts"], "text after the closing quote is malformed");
+    for (const malformed of [
+      "max-age=31536000; bad name",
+      "max-age=31536000; foo=bar baz",
+      "max-age=31536000; includeSubDomains=true",
+      "max-age=31536000; =x",
+    ]) {
+      assert.deepEqual(withHsts(malformed), ["no_hsts"], malformed);
+    }
+    assert.deepEqual(withHsts("max-age=31536000; includeSubDomains; preload; foo=bar;"), [], "well-formed extensions and a trailing ; are fine");
+  });
+
+  it("counts only X-Frame-Options values and frame-ancestors that browsers honour", () => {
+    const base = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
+    const framing = (/** @type {Record<string, string>} */ extra) => ids(checkHeaders(makePage({ headers: { ...base, ...extra } })));
+    for (const value of ["DENY", "sameorigin", "SAMEORIGIN, SAMEORIGIN"]) assert.deepEqual(framing({ "x-frame-options": value }), [], value);
+    for (const value of ["ALLOW-FROM https://partner.example", "ALLOWALL", "yes"])
+      assert.deepEqual(framing({ "x-frame-options": value }), ["no_clickjacking"], value);
+    assert.deepEqual(framing({ "content-security-policy": "default-src 'self'; frame-ancestors 'self' https://partner.example" }), []);
+    for (const ancestors of ["frame-ancestors *", "frame-ancestors https:", "frame-ancestors https://*"]) {
+      assert.deepEqual(framing({ "content-security-policy": `default-src 'self'; ${ancestors}` }), ["no_clickjacking"], ancestors);
+    }
+    assert.deepEqual(
+      framing({ "content-security-policy": "default-src 'self'; frame-ancestors *://partner.example" }),
+      [],
+      "a wildcard scheme still names a host",
+    );
+  });
+
+  it("lets a header CSP with frame-ancestors decide over X-Frame-Options, as browsers do", () => {
+    const base = { ...makePage().headers, "x-frame-options": "DENY" };
+    const framing = (/** @type {string} */ csp) => ids(checkHeaders(makePage({ headers: { ...base, "content-security-policy": csp } })));
+    assert.deepEqual(framing("default-src 'self'; frame-ancestors *"), ["no_clickjacking"]);
+    assert.deepEqual(framing("default-src 'self'"), [], "without frame-ancestors, X-Frame-Options decides");
+  });
+
+  it("follows the HTML Standard for several X-Frame-Options values", () => {
+    const base = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
+    const framing = (/** @type {string} */ value) => ids(checkHeaders(makePage({ headers: { ...base, "x-frame-options": value } })));
+    for (const value of ["ALLOWALL, INVALID", "INVALID, DENY", "SAMEORIGIN, DENY"]) assert.deepEqual(framing(value), [], `${value}: confusing values block`);
+    assert.deepEqual(framing("INVALID, OTHER"), ["no_clickjacking"], "several unknown values do not");
+    assert.deepEqual(framing("ALLOWALL"), ["no_clickjacking"], "ALLOWALL alone allows framing");
+    assert.deepEqual(framing("ALLOWALL,"), [], "an empty member makes two values, blocked as confusing");
+    assert.deepEqual(framing("   "), ["no_clickjacking"], "an empty header is none");
+  });
+
   it("flags a CSP that allows inline scripts without nonces", () => {
     const page = makePage({ headers: { ...makePage().headers, "content-security-policy": "script-src 'self' 'unsafe-inline'; frame-ancestors 'self'" } });
     assert.deepEqual(ids(checkHeaders(page)), ["csp_unsafe_inline"]);

@@ -1,13 +1,19 @@
 // Transport and response-header checks.
 
 import { finding } from "./finding.js";
+import { hstsMaxAge } from "./hsts.js";
 
 /** @typedef {import("../types.js").Finding} Finding */
 
 const MAX_POLICY_EVIDENCE = 300;
+const MIN_HSTS_MAX_AGE_S = 15_552_000;
+const BLOCKING_FRAME_OPTIONS = ["deny", "sameorigin"];
+// With more than one distinct value, the HTML Standard blocks framing when any of these is among them.
+const CONFUSING_FRAME_OPTIONS = ["deny", "sameorigin", "allowall"];
 const ANY_HOST_SCHEMES = new Set(["http:", "https:", "data:"]);
 // A host-source's host part: after an optional scheme, up to a port or path.
-const HOST_OF_SOURCE = /^(?:[a-z][a-z\d+.-]*:\/\/)?([^:/]*)/;
+// A scheme may itself be the wildcard (*://partner.example), which still names a host.
+const HOST_OF_SOURCE = /^(?:(?:[a-z][a-z\d+.-]*|\*):\/\/)?([^:/]*)/;
 // Browsers ignore 'unsafe-inline' when a well-formed nonce or hash, or 'strict-dynamic', is present; a malformed one is itself ignored.
 const INLINE_ALLOW_LISTS = /^'(?:strict-dynamic|nonce-[a-z\d+/_-]+={0,2}|sha(?:256|384|512)-[a-z\d+/_-]+={0,2})'$/;
 const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
@@ -61,15 +67,51 @@ export function checkHeaders(page) {
   const h = page.headers;
   if (!h) return [finding("headers_unavailable", "info", "headers")];
   const findings = [];
-  if (page.protocol === "https:" && !h["strict-transport-security"]) findings.push(finding("no_hsts", "low", "headers"));
+  if (page.protocol === "https:") findings.push(...checkHsts(h["strict-transport-security"]));
   const headerPolicies = cspPolicies(h["content-security-policy"]);
   findings.push(...checkCsp([...headerPolicies, ...page.metaCsp.filter((p) => p.trim() !== "")]));
   if (!/nosniff/i.test(h["x-content-type-options"] ?? "")) findings.push(finding("no_nosniff", "low", "headers"));
-  // Browsers ignore frame-ancestors in a <meta> policy, so only the header counts.
-  const framed = headerPolicies.some((p) => directive(p, "frame-ancestors") !== null);
-  if (!h["x-frame-options"] && !framed) findings.push(finding("no_clickjacking", "low", "headers"));
+  if (!limitsFraming(h["x-frame-options"], headerPolicies)) findings.push(finding("no_clickjacking", "low", "headers"));
   findings.push(...checkDisclosure(h));
   return findings;
+}
+
+/**
+ * max-age=0 tells the browser to forget HSTS, so it is none; under six months (Mozilla HTTP Observatory's bar) it
+ * lapses between visits.
+ * @param {string | undefined} header
+ * @returns {Finding[]}
+ */
+function checkHsts(header) {
+  const maxAge = hstsMaxAge(header);
+  if (maxAge === 0) return [finding("no_hsts", "low", "headers")];
+  return maxAge < MIN_HSTS_MAX_AGE_S ? [finding("hsts_short", "low", "headers", { seconds: maxAge }, [`Strict-Transport-Security: ${header}`])] : [];
+}
+
+/**
+ * A header CSP with frame-ancestors decides alone: browsers then ignore X-Frame-Options (HTML Standard), and they
+ * ignore frame-ancestors in a <meta> policy. A frame-ancestors that admits any host limits nothing.
+ * @param {string | undefined} frameOptions
+ * @param {string[]} headerPolicies
+ * @returns {boolean}
+ */
+function limitsFraming(frameOptions, headerPolicies) {
+  const ancestors = headerPolicies.map((policy) => directive(policy, "frame-ancestors")).filter((d) => d !== null);
+  if (ancestors.length > 0) return ancestors.some((d) => !sourceTokens(d).slice(1).some(admitsAnyHost));
+  return frameOptionsBlock(frameOptions);
+}
+
+/**
+ * The HTML Standard's processing of X-Frame-Options: its values form a set; several distinct ones including a known
+ * value block framing as confusing; one value blocks only when it is DENY or SAMEORIGIN (ALLOW-FROM is obsolete).
+ * @param {string | undefined} header
+ * @returns {boolean}
+ */
+function frameOptionsBlock(header) {
+  // Empty members count: "ALLOWALL," is two values, blocked as confusing.
+  const values = new Set((header ?? "").split(",").map((v) => v.trim().toLowerCase()));
+  if (values.size > 1) return CONFUSING_FRAME_OPTIONS.some((v) => values.has(v));
+  return BLOCKING_FRAME_OPTIONS.some((v) => values.has(v));
 }
 
 /**
