@@ -56,6 +56,28 @@ describe("transport and headers", () => {
     }
   });
 
+  it("treats max-age=0 as no HSTS and a short one as its own finding", () => {
+    const withHsts = (/** @type {string} */ value) => ids(checkHeaders(makePage({ headers: { ...makePage().headers, "strict-transport-security": value } })));
+    assert.deepEqual(withHsts("max-age=0"), ["no_hsts"]);
+    assert.deepEqual(withHsts("includeSubDomains"), ["no_hsts"], "no max-age at all");
+    assert.deepEqual(withHsts("max-age=86400; includeSubDomains"), ["hsts_short"]);
+    assert.deepEqual(withHsts('max-age="15551999"'), ["hsts_short"]);
+    assert.deepEqual(withHsts("max-age=15552000"), []);
+    assert.deepEqual(withHsts("MAX-AGE = 31536000; preload"), []);
+  });
+
+  it("counts only X-Frame-Options values and frame-ancestors that browsers honour", () => {
+    const base = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
+    const framing = (/** @type {Record<string, string>} */ extra) => ids(checkHeaders(makePage({ headers: { ...base, ...extra } })));
+    for (const value of ["DENY", "sameorigin", "SAMEORIGIN, SAMEORIGIN"]) assert.deepEqual(framing({ "x-frame-options": value }), [], value);
+    for (const value of ["ALLOW-FROM https://partner.example", "ALLOWALL", "yes"])
+      assert.deepEqual(framing({ "x-frame-options": value }), ["no_clickjacking"], value);
+    assert.deepEqual(framing({ "content-security-policy": "default-src 'self'; frame-ancestors 'self' https://partner.example" }), []);
+    for (const ancestors of ["frame-ancestors *", "frame-ancestors https:", "frame-ancestors https://*"]) {
+      assert.deepEqual(framing({ "content-security-policy": `default-src 'self'; ${ancestors}` }), ["no_clickjacking"], ancestors);
+    }
+  });
+
   it("flags a CSP that allows inline scripts without nonces", () => {
     const page = makePage({ headers: { ...makePage().headers, "content-security-policy": "script-src 'self' 'unsafe-inline'; frame-ancestors 'self'" } });
     assert.deepEqual(ids(checkHeaders(page)), ["csp_unsafe_inline"]);

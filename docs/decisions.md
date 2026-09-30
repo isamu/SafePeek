@@ -18,6 +18,13 @@ A finding answers a visitor's question: can my card or password be read, where d
 
 Only the coarse weaknesses a visitor can read from the public header are reported: no policy, inline scripts allowed, and scripts allowed from any host or from data: URLs (`*`, `http:`, `https:`, `data:`). Each is a statement that the policy does not limit something, and it is reported only when every enforced policy that governs it allows it, with directives resolved as CSP Level 3 does (`script-src-elem` or `script-src-attr`, then `script-src`, then `default-src`). Which listed host could be abused to get around a policy is a bypass route, and it is left out (S9).
 
+## HSTS and framing follow what browsers honour
+
+A header that browsers ignore protects nothing, so it is not counted as protection (the Mozilla HTTP Observatory rules, https://github.com/mdn/mdn-http-observatory).
+
+- **HSTS:** `max-age=0` tells the browser to forget HSTS, so it counts as none. An age under six months is reported on its own, since it lapses between visits.
+- **Framing:** only `DENY` and `SAMEORIGIN` count for `X-Frame-Options` (`ALLOW-FROM` is obsolete). A `frame-ancestors` that admits any host limits nothing.
+
 ## Scripts from other domains on card and login pages
 
 Any script on a page can read what is typed into that page's own fields. Widely used tools are not treated as harmless everywhere; where they are tolerated depends on what is typed.

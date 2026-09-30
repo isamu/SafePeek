@@ -5,6 +5,9 @@ import { finding } from "./finding.js";
 /** @typedef {import("../types.js").Finding} Finding */
 
 const MAX_POLICY_EVIDENCE = 300;
+const HSTS_MAX_AGE = /max-age\s*=\s*"?(\d+)/i;
+const MIN_HSTS_MAX_AGE_S = 15_552_000;
+const VALID_FRAME_OPTIONS = /^(?:deny|sameorigin)$/i;
 const ANY_HOST_SCHEMES = new Set(["http:", "https:", "data:"]);
 // A host-source's host part: after an optional scheme, up to a port or path.
 const HOST_OF_SOURCE = /^(?:[a-z][a-z\d+.-]*:\/\/)?([^:/]*)/;
@@ -61,15 +64,40 @@ export function checkHeaders(page) {
   const h = page.headers;
   if (!h) return [finding("headers_unavailable", "info", "headers")];
   const findings = [];
-  if (page.protocol === "https:" && !h["strict-transport-security"]) findings.push(finding("no_hsts", "low", "headers"));
+  if (page.protocol === "https:") findings.push(...checkHsts(h["strict-transport-security"]));
   const headerPolicies = cspPolicies(h["content-security-policy"]);
   findings.push(...checkCsp([...headerPolicies, ...page.metaCsp.filter((p) => p.trim() !== "")]));
   if (!/nosniff/i.test(h["x-content-type-options"] ?? "")) findings.push(finding("no_nosniff", "low", "headers"));
-  // Browsers ignore frame-ancestors in a <meta> policy, so only the header counts.
-  const framed = headerPolicies.some((p) => directive(p, "frame-ancestors") !== null);
-  if (!h["x-frame-options"] && !framed) findings.push(finding("no_clickjacking", "low", "headers"));
+  if (!limitsFraming(h["x-frame-options"], headerPolicies)) findings.push(finding("no_clickjacking", "low", "headers"));
   findings.push(...checkDisclosure(h));
   return findings;
+}
+
+/**
+ * max-age=0 tells the browser to forget HSTS, so it is none; under six months (Mozilla HTTP Observatory's bar) it
+ * lapses between visits.
+ * @param {string | undefined} header
+ * @returns {Finding[]}
+ */
+function checkHsts(header) {
+  const maxAge = Number(HSTS_MAX_AGE.exec(header ?? "")?.[1] ?? 0);
+  if (maxAge === 0) return [finding("no_hsts", "low", "headers")];
+  return maxAge < MIN_HSTS_MAX_AGE_S ? [finding("hsts_short", "low", "headers", { seconds: maxAge }, [`Strict-Transport-Security: ${header}`])] : [];
+}
+
+/**
+ * Browsers ignore X-Frame-Options values other than DENY and SAMEORIGIN (ALLOW-FROM is obsolete), and ignore
+ * frame-ancestors in a <meta> policy; a frame-ancestors that admits any host limits nothing.
+ * @param {string | undefined} frameOptions
+ * @param {string[]} headerPolicies
+ * @returns {boolean}
+ */
+function limitsFraming(frameOptions, headerPolicies) {
+  if (VALID_FRAME_OPTIONS.test((frameOptions ?? "").split(",")[0].trim())) return true;
+  return headerPolicies.some((policy) => {
+    const ancestors = directive(policy, "frame-ancestors");
+    return ancestors !== null && !sourceTokens(ancestors).slice(1).some(admitsAnyHost);
+  });
 }
 
 /**
