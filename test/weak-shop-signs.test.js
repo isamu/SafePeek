@@ -52,6 +52,9 @@ describe("weak fake-shop signs, only together", () => {
     assert.deepEqual(signs(shop(FREE_MAIL, undefined, homes))[0][1], ["free email only (gmail.com)", "social links go to home pages only"]);
     const oneProfile = `${homes}<a href="https://www.instagram.com/real_shop_jp/">i</a>`;
     assert.deepEqual(signs(shop(FREE_MAIL, undefined, oneProfile)), [], "one real profile clears it");
+    for (const line of ["https://lin.ee/AbCdEf1", "https://page.line.me/abc1234", "https://line.me/R/ti/p/%40shop"]) {
+      assert.deepEqual(signs(shop(FREE_MAIL, undefined, `${homes}<a href="${line}">LINE</a>`)), [], `a LINE official account: ${line}`);
+    }
     assert.deepEqual(signs(shop(FREE_MAIL, undefined, '<a href="/about">about</a>')), [], "no social links at all");
     assert.deepEqual(signs(shop(FREE_MAIL, undefined, '<abbr href="https://facebook.com/">x</abbr>')), [], "not an <a> tag");
   });

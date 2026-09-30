@@ -36,7 +36,18 @@ const FULL_WIDTH_ZERO = "０".charCodeAt(0);
 const MIN_STEEP_DISCOUNTS = 3;
 // Social networks whose icons a shop shows. Icons that all point at a network's home page, not a profile, are what
 // BEYOND PHISH found on fraudulent shops (https://yancomm.net/papers/2023%20-%20SP%20-%20Beyond%20Phish.pdf).
-const SOCIAL_HOSTS = new Set(["facebook.com", "instagram.com", "twitter.com", "x.com", "youtube.com", "tiktok.com", "line.me"]);
+const SOCIAL_HOSTS = new Set([
+  "facebook.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+  "youtube.com",
+  "tiktok.com",
+  "line.me",
+  // LINE official accounts are linked through these as well.
+  "lin.ee",
+  "page.line.me",
+]);
 const MAX_ANCHORS = 2000;
 // Share and intent buttons say nothing about the shop's own accounts: they neither count as a profile nor as a
 // home-page link. Small real shops often show only these.
