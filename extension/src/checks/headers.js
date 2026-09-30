@@ -4,6 +4,13 @@ import { finding } from "./finding.js";
 
 /** @typedef {import("../types.js").Finding} Finding */
 
+const MAX_POLICY_EVIDENCE = 300;
+const ANY_HOST_SOURCES = new Set(["*", "http:", "https:", "data:"]);
+const CSP_WEAKNESSES = [
+  { id: "csp_unsafe_inline", allows: allowsInlineScript },
+  { id: "csp_any_script_host", allows: allowsAnyScriptHost },
+];
+
 const SESSION_COOKIE =
   /^(phpsessid|jsessionid|asp\.net_sessionid|aspsessionid\w*|laravel_session|connect\.sid|_session_id|sessionid|session|sid|ci_session|cakephp|eccube)$/i;
 
@@ -69,23 +76,16 @@ function cspPolicies(header) {
 }
 
 /**
- * Every policy is enforced, so inline scripts run only when each policy that governs scripts allows them.
+ * Every policy is enforced, so a script runs only when each policy that governs scripts allows it.
  * @param {string[]} policies
  * @returns {Finding[]}
  */
 function checkCsp(policies) {
   if (policies.length === 0) return [finding("no_csp", "low", "headers")];
   const scriptPolicies = policies.filter((p) => scriptDirective(p) !== null);
-  if (scriptPolicies.length === 0 || !scriptPolicies.every(allowsInlineScript)) return [];
-  return [
-    finding(
-      "csp_unsafe_inline",
-      "low",
-      "headers",
-      {},
-      scriptPolicies.map((p) => p.slice(0, 300)),
-    ),
-  ];
+  if (scriptPolicies.length === 0) return [];
+  const evidence = scriptPolicies.map((p) => p.slice(0, MAX_POLICY_EVIDENCE));
+  return CSP_WEAKNESSES.filter(({ allows }) => scriptPolicies.every(allows)).map(({ id }) => finding(id, "low", "headers", {}, evidence));
 }
 
 /**
@@ -103,6 +103,16 @@ function scriptDirective(policy) {
 function allowsInlineScript(policy) {
   const scriptSrc = scriptDirective(policy) ?? "";
   return scriptSrc.includes("'unsafe-inline'") && !/'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(scriptSrc);
+}
+
+/**
+ * 'strict-dynamic' makes browsers ignore host and scheme sources, so a wildcard beside it admits nothing.
+ * @param {string} policy
+ * @returns {boolean}
+ */
+function allowsAnyScriptHost(policy) {
+  const sources = (scriptDirective(policy) ?? "").toLowerCase().split(/\s+/);
+  return !sources.includes("'strict-dynamic'") && sources.some((source) => ANY_HOST_SOURCES.has(source));
 }
 
 /**

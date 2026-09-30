@@ -104,6 +104,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | headers | `no_hsts` | low | HTTPS without HSTS |
 | headers | `no_csp` | low | no CSP header or meta |
 | headers | `csp_unsafe_inline` | low | every policy that governs scripts (script-src, else default-src) allows `'unsafe-inline'` without nonce/hash/strict-dynamic |
+| headers | `csp_any_script_host` | low | every policy that governs scripts allows any host (`*`, `http:`, `https:` or `data:`) without `'strict-dynamic'` |
 | headers | `no_nosniff` | low | no `X-Content-Type-Options: nosniff` |
 | headers | `no_clickjacking` | low | no `X-Frame-Options` and no `frame-ancestors` in a CSP header (browsers ignore it in `<meta>`) |
 | headers | `session_cookie_not_httponly` | medium | a well-known session cookie name readable from JS |
