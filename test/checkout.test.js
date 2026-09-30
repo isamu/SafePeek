@@ -66,12 +66,15 @@ describe("who runs the checkout", () => {
     for (const t of embeddable) assert.deepEqual(checkCheckout([t], db.checkout), [], t.evidence[0]);
   });
 
-  it("does not take a trace the fingerprint marks as generic", async () => {
+  it("does not take traces the fingerprint marks as generic, however many", async () => {
     const today = new Date("2026-09-30T00:00:00Z");
     const cookieOnly = await analyze(makePage({ cookies: { frontend: "abc" } }), db, { today, sha1 });
     assert.ok(!cookieOnly.findings.some((f) => f.id.startsWith("checkout_")), "Magento's frontend cookie");
-    const globalOnly = await analyze(makePage({ globals: { priceDisplayMethod: true } }), db, { today, sha1 });
-    assert.ok(!globalOnly.findings.some((f) => f.id.startsWith("checkout_")), "PrestaShop's priceDisplayMethod");
+    const globalOnly = await analyze(makePage({ globals: { freeProductTranslation: true, priceDisplayMethod: true, priceDisplayPrecision: true } }), db, {
+      today,
+      sha1,
+    });
+    assert.ok(!globalOnly.findings.some((f) => f.id.startsWith("checkout_")), "PrestaShop's weak globals, even all three together");
     const mageCookie = await analyze(makePage({ cookies: { "mage-cache-storage": "{}" } }), db, { today, sha1 });
     assert.deepEqual(summary(mageCookie.findings.filter((f) => f.id.startsWith("checkout_"))), ["checkout_self_hosted:Magento"]);
   });
@@ -101,6 +104,13 @@ describe("who runs the checkout", () => {
   });
 });
 
+const RUNTIME_FIELDS = new Map([
+  ["js", "js"],
+  ["cookie", "cookies"],
+  ["header", "headers"],
+  ["meta", "meta"],
+]);
+
 describe("checkout-platforms.json", () => {
   const { platforms } = JSON.parse(readFileSync(new URL("../extension/data/checkout-platforms.json", import.meta.url), "utf8"));
   for (const p of platforms) {
@@ -109,13 +119,16 @@ describe("checkout-platforms.json", () => {
       assert.ok(db.technologies[p.name].cats.includes(6), "is an ecommerce product");
       assert.ok(p.kind === "hosted" || p.kind === "self", "kind");
       assert.match(p.source, /^https:\/\//, "source link");
-      if ("singleTraceReason" in p) {
-        assert.ok(typeof p.singleTraceReason === "string" && p.singleTraceReason.length > 20, "says why one trace is enough");
-        const fp = db.technologies[p.name];
-        assert.ok(
-          ["js", "cookies", "headers", "meta"].some((k) => k in fp),
-          "has a runtime trace that one trace could be",
-        );
+      assert.equal("singleTraces" in p, "singleTraceReason" in p, "single traces come with their reason");
+      if ("singleTraceReason" in p) assert.ok(p.singleTraceReason.length > 20, "says why one trace is enough");
+      for (const label of p.singleTraces ?? []) {
+        const [kind, key] = label.split(" ");
+        const field = RUNTIME_FIELDS.get(kind);
+        assert.ok(field, `${label}: a runtime trace, not one an embedded asset could leave`);
+        const rules = db.technologies[p.name][field] ?? {};
+        const ruleKey = Object.keys(rules).find((k) => k.toLowerCase() === key.toLowerCase());
+        assert.ok(ruleKey, `${label}: in the fingerprint`);
+        assert.ok(![rules[ruleKey]].flat().some((v) => String(v).includes("\\;confidence:")), `${label}: not marked lower confidence`);
       }
     });
   }

@@ -122,7 +122,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 | `sources.json` | written by the tool: upstream commits and dates | same |
 | `eol.json` | hand-maintained, `reviewed` date | by hand, with source links |
 | `payment-providers.json` | hand-maintained | by hand, with source links in the PR |
-| `checkout-platforms.json` | hand-maintained: who runs a shop's checkout (`hosted` cart service or `self`-run software), each with a source; two different kinds of trace are required unless `singleTraceReason` says why one is enough; that one must then be a runtime trace (JS global, cookie, response header or meta tag, never a DOM selector, script URL or HTML that an embedded asset could leave) at full confidence (a trace the fingerprint marks lower, like Magento's `frontend` cookie, is generic) | by hand; only products whose kind is clear |
+| `checkout-platforms.json` | hand-maintained: who runs a shop's checkout (`hosted` cart service or `self`-run software), each with a source; two different kinds of trace are required unless the product lists `singleTraces`: evidence labels enough on their own, each a runtime trace (JS global, cookie, response header or meta tag) that its fingerprint does not mark lower confidence, with `singleTraceReason` saying why. Confidence is not used, since it sums weak traces of one kind | by hand; only products whose kind is clear |
 | `backend-signatures.json` | hand-maintained, contributed through the issue form | by hand; validated by `test/backend.test.js` |
 | `wordpress.json` | hand-maintained, `reviewed` date | by hand when a WordPress major ships |
 

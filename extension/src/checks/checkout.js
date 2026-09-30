@@ -2,39 +2,36 @@
 
 import { finding } from "./finding.js";
 
-const FULL_CONFIDENCE = 100;
-// Traces only the running shop sets. A DOM selector, script URL or HTML fragment can come from an embedded asset.
-const RUNTIME_KINDS = new Set(["js", "cookie", "header", "meta"]);
-
 /**
  * @typedef {object} CheckoutPlatform
  * @property {string} name  webappanalyzer technology name
  * @property {"hosted" | "self"} kind
  * @property {string} source
- * @property {string} [singleTraceReason]  why one kind of trace is enough for this product; otherwise two are required
+ * @property {string[]} [singleTraces]  evidence labels ("cookie osCsid") that are enough on their own; otherwise two
+ *   kinds of trace are required
+ * @property {string} [singleTraceReason]  why those traces are enough
  */
 
 /**
  * The kinds of trace behind a detection: "js", "script", "meta", "dom", "header", "cookie" …, from its evidence labels.
  * @param {import("../types.js").Technology} tech
- * @returns {Set<string>}
+ * @returns {number}
  */
 function evidenceKinds(tech) {
-  return new Set(tech.evidence.map((label) => label.split(" ")[0]));
+  return new Set(tech.evidence.map((label) => label.split(" ")[0])).size;
 }
 
 /**
- * Two kinds of trace, or one for a product that opts in with singleTraceReason, when that one is a runtime trace (see
- * RUNTIME_KINDS) at full confidence. A trace the fingerprint marks lower, like Magento's `frontend` cookie, is generic.
+ * Two kinds of trace, or one of the product's own singleTraces. Confidence is not used: it is summed over patterns,
+ * so several weak traces of one kind add up to full confidence.
  * @param {import("../types.js").Technology} tech
  * @param {CheckoutPlatform} platform
  * @returns {boolean}
  */
 function isEnoughEvidence(tech, platform) {
-  const kinds = evidenceKinds(tech);
-  if (kinds.size >= 2) return true;
-  const [only] = kinds;
-  return platform.singleTraceReason !== undefined && RUNTIME_KINDS.has(only) && tech.confidence >= FULL_CONFIDENCE;
+  if (evidenceKinds(tech) >= 2) return true;
+  const allowed = new Set((platform.singleTraces ?? []).map((label) => label.toLowerCase()));
+  return tech.evidence.some((label) => allowed.has(label.toLowerCase()));
 }
 
 /**
