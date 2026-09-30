@@ -63,7 +63,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 
 | Area | id | Severity | Condition |
 | --- | --- | --- | --- |
-| transport | `not_https` | high | page not HTTPS |
+| transport | `not_https` | high | page served over plain `http:` (other schemes, such as `file:` passed through the npm API, are not judged) |
 | transport | `password_over_http` | high | HTTP page with a password field |
 | payment | `card_on_page` | high | card-like fields in the page and no known tokenization script |
 | payment | `card_tokenized_on_page` | medium | card-like fields + a provider tokenization script (e.g. GMO-PG token.js, PAY.JP v1, Stripe v1/v2) |
