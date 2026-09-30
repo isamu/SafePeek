@@ -58,7 +58,7 @@ export async function analyze(page, db, env) {
   const findings = [
     ...checkTransport(page),
     ...checkPayment(page, db.providers),
-    ...checkCheckout(technologies, db.checkout),
+    ...checkCheckout(technologies, db.checkout, page),
     ...checkBackends(backends, env.today),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),

@@ -15,6 +15,7 @@ import { sha1 } from "../../extension/src/engine/hash.js";
 import { buildDomQueries, buildGlobalPaths } from "../../extension/src/engine/queries.js";
 import { retireGlobalPaths } from "../../extension/src/engine/retire.js";
 import { backendGlobalPaths } from "../../extension/src/engine/backend.js";
+import { checkoutGlobalPaths } from "../../extension/src/checks/cart-traces.js";
 import { probeGlobals } from "../../extension/src/page/probe.js";
 import { loadDb } from "../helpers.js";
 
@@ -108,7 +109,14 @@ async function collect(name, waitUntil = "load", scans = 1) {
     page.evaluate(([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h), [buildDomQueries(db.technologies), hosts]);
   let collected = await scan();
   for (let n = 1; n < scans; n++) collected = await scan();
-  const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire), ...backendGlobalPaths(db.backends)])];
+  const paths = [
+    ...new Set([
+      ...buildGlobalPaths(db.technologies),
+      ...retireGlobalPaths(db.retire),
+      ...backendGlobalPaths(db.backends),
+      ...checkoutGlobalPaths(db.checkout),
+    ]),
+  ];
   const globals = await page.evaluate(probeGlobals, paths);
   await page.close();
   return { ...collected, globals };

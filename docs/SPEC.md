@@ -75,8 +75,8 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | payment | `payment_redirect` | good | a form posting (`method=post`, no password field) to a known provider host, or a link matching a provider's `checkoutLinks` (e.g. Stripe Checkout / Payment Links, PayPal checkout) — a link to a provider's information pages does not count |
 | payment | `payment_scripts_only` | info | provider script or non-card provider frame, but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
-| payment | `checkout_saas` | good | a directly seen product listed as `hosted` in `data/checkout-platforms.json` (Shopify, BASE, STORES, MakeShop, カラーミーショップ …): a cart service provides the shop |
-| payment | `checkout_self_hosted` | info | a directly seen product listed as `self` (Magento, WooCommerce, PrestaShop …): shop software the site runs and must keep updated |
+| payment | `checkout_saas` | good | a product listed as `hosted` in `data/checkout-platforms.json` (Shopify, BASE, STORES, MakeShop, カラーミーショップ, futureshop, ecforce, Ecwid, VTEX, Cafe24 …), seen through its fingerprint or SafePeek's own traces (hosts, globals, cookies), even on the shop's own domain: a cart service provides the shop |
+| payment | `checkout_self_hosted` | info | a product listed as `self` (EC-CUBE, Magento, WooCommerce, PrestaShop …), seen the same way: shop software the site runs and must keep updated |
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
 | backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |
@@ -124,7 +124,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 | `sources.json` | written by the tool: upstream commits and dates | same |
 | `eol.json` | hand-maintained, `reviewed` date | by hand, with source links |
 | `payment-providers.json` | hand-maintained | by hand, with source links in the PR |
-| `checkout-platforms.json` | hand-maintained: who runs a shop's checkout (`hosted` cart service or `self`-run software), each with a source; two different kinds of trace are required unless the product lists `singleTraces`: evidence labels enough on their own, each a runtime trace (JS global, cookie, response header or meta tag) that its fingerprint does not mark lower confidence, with `singleTraceReason` saying why. Confidence is not used, since it sums weak traces of one kind | by hand; only products whose kind is clear |
+| `checkout-platforms.json` | hand-maintained: who runs a shop's checkout (`hosted` cart service or `self`-run software), each with a source, and optionally SafePeek's own `traces` (`hosts`, `globals`, `cookies`, each observed on live storefronts). Two different families of trace are required (scripts, DOM, HTML, URLs and hosts are one family, since an embed leaves them together; JS globals, cookies, headers and meta tags are each their own) unless the product lists `singleTraces`: evidence labels enough on their own, each a runtime trace (JS global, cookie, response header or meta tag) that its fingerprint does not mark lower confidence or that is one of its own globals / cookies, with `singleTraceReason` saying why. Confidence is not used, since it sums weak traces of one kind | by hand; only products whose kind is clear |
 | `backend-signatures.json` | hand-maintained, contributed through the issue form | by hand; validated by `test/backend.test.js` |
 | `wordpress.json` | hand-maintained, `reviewed` date | by hand when a WordPress major ships |
 
