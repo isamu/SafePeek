@@ -63,6 +63,24 @@ describe("technology detection", () => {
     );
   });
 
+  it("keeps a platform seen only in script code when a directly seen technology implies it", () => {
+    const page = makePage({
+      meta: { generator: ["WordPress 6.9.9"] },
+      scripts: [script("https://news.example/app.js", 'fetch("/wp-admin/admin-ajax.php?action=x")')],
+    });
+    const php = detectTechnologies(page, db).find((t) => t.name === "PHP");
+    assert.ok(php, "PHP implied by WordPress");
+    assert.equal(php.impliedBy, "WordPress");
+    assert.ok(php.evidence.includes("implied by WordPress"), php.evidence.join(", "));
+  });
+
+  it("records which technology implied it even when the evidence list is full", () => {
+    const bundles = Array.from({ length: 6 }, (_, i) => script(`https://news.example/app${i}.js`, 'fetch("/x.php?a=1")'));
+    const php = detectTechnologies(makePage({ meta: { generator: ["WordPress 6.9.9"] }, scripts: bundles }), db).find((t) => t.name === "PHP");
+    assert.equal(php?.evidence.length, 5);
+    assert.equal(php?.evidence.at(-1), "implied by WordPress");
+  });
+
   it("does not claim where a site is hosted from one service it uses", () => {
     const csp = "default-src 'self'; img-src 'self' github-cloud.s3.amazonaws.com";
     const found = names(makePage({ headers: { ...makePage().headers, "content-security-policy": csp } }));

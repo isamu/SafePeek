@@ -61,6 +61,20 @@ describe("analyze on a managed backend", () => {
     assert.ok(report.findings.some((f) => f.id === "backend_managed"));
   });
 
+  it("still drops that stack when script code also mentions it", async () => {
+    const page = makePage({
+      url: "https://omochi.web.app/",
+      scripts: [
+        script("https://omochi.web.app/__/firebase/init.js", 'firebase.initializeApp({authDomain:"omochi.firebaseapp.com"})'),
+        script("https://omochi.web.app/app.js", 'fetch("/api.php?x=1")'),
+      ],
+      globals: { firebase: true },
+      meta: { generator: ["WordPress 6.4.2"] },
+    });
+    const names = (await analyze(page, db, env)).technologies.map((t) => t.name);
+    assert.ok(!names.includes("PHP"), names.join(", "));
+  });
+
   it("keeps implied technologies, marked as implied, on a normal site", async () => {
     const report = await analyze(makePage({ meta: { generator: ["WordPress 6.4.2"] } }), db, env);
     const php = report.technologies.find((t) => t.name === "PHP");

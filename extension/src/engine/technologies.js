@@ -216,8 +216,12 @@ function applyImplies(hits, technologies) {
     for (const implied of toList(technologies[name]?.implies)) {
       const pattern = parsePattern(implied);
       const existing = hits.get(pattern.source);
-      if (existing?.impliedBy && source?.direct && !existing.direct) {
-        existing.direct = true; // a directly seen technology implies it too; pass that on down the chain
+      if (existing && source?.direct && !existing.direct) {
+        // A directly seen technology implies it, whether it was implied before or seen only in script code. It
+        // stays an implied hit (so managed-backend pruning still applies), and says which technology implied it.
+        existing.direct = true;
+        existing.impliedBy ||= name;
+        existing.evidence = [...existing.evidence.slice(0, 4), `implied by ${name}`];
         queue.push(pattern.source);
       }
       if (!technologies[pattern.source] || existing) continue;
