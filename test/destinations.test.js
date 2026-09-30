@@ -42,6 +42,19 @@ describe("where data goes", () => {
     assert.deepEqual(checkDestinations([tech("Hotjar", ["js hj"], "X")], db.destinations, makePage()), []);
   });
 
+  it("knows each vendor's other documented intake hosts", () => {
+    const cases = [
+      ["cdn.lr-in-prod.com", "dest_session_replay:LogRocket"],
+      ["rum-http-intake.logs.datadoghq.com", "dest_monitoring:Datadog"],
+      ["browser-intake-datad0g.com", "dest_monitoring:Datadog"],
+      ["notify.bugsnag.com", "dest_monitoring:Bugsnag"],
+      ["sessions.bugsnag.com", "dest_monitoring:Bugsnag"],
+    ];
+    for (const [host, expected] of cases) {
+      assert.deepEqual(summary(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] }))), [expected], host);
+    }
+  });
+
   it("does not take a vendor's website, docs, status page or dashboard for telemetry", () => {
     const vendorPages = [
       "docs.sentry.io",
@@ -57,6 +70,9 @@ describe("where data goes", () => {
       "app.raygun.com",
       "docs.bugsnag.com",
       "www.smartlook.com",
+      "app.datadoghq.com",
+      "logrocket.com",
+      "bugsnag.com",
       "help.hotjar.com",
       "www.hotjar.com",
       "help.fullstory.com",
