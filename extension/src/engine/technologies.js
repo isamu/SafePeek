@@ -8,6 +8,8 @@ const MAX_SUBJECT = 300_000;
 const SCRIPT_CONTENT = "script content";
 /** CMS, ecommerce, blogs, web frameworks, web servers, programming languages, databases: what the site is built on. */
 const PLATFORM_CATEGORIES = new Set([1, 6, 11, 18, 22, 27, 34]);
+/** PaaS, IaaS, hosting: where the site itself runs. */
+const HOSTING_CATEGORIES = new Set([62, 63, 88]);
 
 /**
  * @typedef {object} Hit
@@ -46,6 +48,7 @@ export function detectTechnologies(page, db) {
   dropZeroConfidence(hits);
   applyImplies(hits, db.technologies);
   dropScriptOnlyPlatforms(hits, db.technologies);
+  dropImpliedHosting(hits, db.technologies);
   applyRequirements(hits, db.technologies);
   return toResults(hits, db);
 }
@@ -188,6 +191,20 @@ function dropScriptOnlyPlatforms(hits, technologies) {
 }
 
 /**
+ * Where the site runs is reported only when seen directly. Using one service of a provider (files on Amazon S3)
+ * implies the provider but not that the site is hosted there, and a bundle mentioning ".amazonaws.com" says as
+ * little, so a hosting category reached through implies or seen only in script code is dropped.
+ * @param {Map<string, Hit>} hits
+ * @param {Record<string, any>} technologies
+ */
+function dropImpliedHosting(hits, technologies) {
+  for (const [name, hit] of [...hits]) {
+    const hosting = (technologies[name]?.cats ?? []).some((/** @type {number} */ c) => HOSTING_CATEGORIES.has(c));
+    if (hosting && (hit.impliedBy || !hit.direct)) hits.delete(name);
+  }
+}
+
+/**
  * @param {Map<string, Hit>} hits
  * @param {Record<string, any>} technologies
  */
@@ -199,8 +216,12 @@ function applyImplies(hits, technologies) {
     for (const implied of toList(technologies[name]?.implies)) {
       const pattern = parsePattern(implied);
       const existing = hits.get(pattern.source);
-      if (existing?.impliedBy && source?.direct && !existing.direct) {
-        existing.direct = true; // a directly seen technology implies it too; pass that on down the chain
+      if (existing && source?.direct && !existing.direct) {
+        // A directly seen technology implies it, whether it was implied before or seen only in script code. It
+        // stays an implied hit (so managed-backend pruning still applies), and says which technology implied it.
+        existing.direct = true;
+        existing.impliedBy ||= name;
+        existing.evidence = [...existing.evidence.slice(0, 4), `implied by ${name}`];
         queue.push(pattern.source);
       }
       if (!technologies[pattern.source] || existing) continue;

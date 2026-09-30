@@ -97,6 +97,50 @@ describe("inferBackends (real rules)", () => {
   });
 });
 
+describe("mentions are not traces", () => {
+  // Text a page can show about these frameworks without running them: a README, a commit message, a blog post.
+  const MENTIONS = [
+    "<p>We migrated off SAStruts and Teeda (Seasar2) in 2016; see teeda.js and kumu.js.</p>",
+    "<p>Struts 1 apps extend <code>org.apache.struts.action.Action</code>; Seasar lives in <code>org.seasar.framework</code>.</p>",
+    "<pre><code>&lt;!-- Powered by SAStruts --&gt;\nxmlns:te=&quot;http://www.seasar.org/teeda/extension&quot;</code></pre>",
+    "<li>symfony 1, CakePHP 2, ColdFusion and Classic ASP are old; java.lang.NullPointerException is common.</li>",
+    "Search index: SAStruts, Teeda, Seasar2, S2Container, org.seasar.framework migration guide",
+    "<article><p>My Struts 1 stack trace:</p><pre>\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre></article>",
+    "<main><p>Debugging old Seasar2:</p><pre>    at org.seasar.framework.container.S2Container.create(S2Container.java:101)</pre></main>",
+    '<td class="blob-code"><span>\tat org.apache.struts.action.ActionServlet.process(ActionServlet.java:1482)</span></td>',
+  ];
+
+  it("reports no end-of-life or old-generation backend for a page that only talks about them", () => {
+    // The same text as markup, as an inline script (hydration JSON, search index) and as a fetched script.
+    for (const text of MENTIONS) {
+      const inline = { src: null, integrity: "", content: JSON.stringify({ readme: text }), fetched: false };
+      const page = makePage({ url: "https://github.com/example/repo", html: text, scripts: [inline, script("https://github.com/assets/search.js", text)] });
+      const flagged = inferBackends(page, db.backends).filter((b) => b.status === "eol" || b.status === "legacy");
+      assert.deepEqual(
+        flagged.map((b) => b.name),
+        [],
+        text,
+      );
+    }
+  });
+
+  it("still reads what a running app emits: a Teeda namespace, an HTML comment", () => {
+    const namespace = byName(inferBackends(makePage({ html: '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>' }), db.backends));
+    assert.equal(namespace["Seasar2 (SAStruts / Teeda)"]?.confidence, 80);
+    const comment = byName(inferBackends(makePage({ html: "<!-- Powered by SAStruts --><p>x</p>" }), db.backends));
+    assert.equal(comment["Seasar2 (SAStruts / Teeda)"]?.confidence, 50);
+  });
+
+  it("counts a stack trace only together with another trace, since a page about the framework can show one", () => {
+    const trace = "<pre>javax.servlet.ServletException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre>";
+    assert.equal(byName(inferBackends(makePage({ html: trace }), db.backends))["Apache Struts 1"], undefined);
+    const withActions = byName(inferBackends(makePage({ html: `${trace}<a href="/reserve/list.do">x</a>` }), db.backends));
+    const constructorFrame = '<pre>\tat org.apache.struts.action.ActionServlet.<init>(ActionServlet.java:120)</pre><a href="/a.do">x</a>';
+    assert.equal(byName(inferBackends(makePage({ html: constructorFrame }), db.backends))["Apache Struts 1"]?.confidence, 35, "<init> frames are frames too");
+    assert.equal(withActions["Apache Struts 1"]?.confidence, 35);
+  });
+});
+
 describe("managed backends (BaaS / PaaS)", () => {
   it("recognises a Firebase site from its domain, SDK and endpoints", () => {
     const page = makePage({
