@@ -32,12 +32,19 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(found.evidence, ["所在地", "電話番号"]);
   });
 
-  it("reports a missing representative or person responsible", () => {
+  it("reports a missing representative or person responsible among other missing terms", () => {
     const text = COMPLETE.split("\n")
-      .filter((line) => !/責任者/.test(line))
+      .filter((line) => !/責任者|お支払い/.test(line))
       .join("\n");
     const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", text));
-    assert.deepEqual([found.severity, found.evidence], ["low", ["代表者または責任者"]]);
+    assert.deepEqual([found.severity, found.evidence], ["low", ["代表者または責任者", "支払方法"]]);
+  });
+
+  it("says nothing when one ordinary term alone is unread, since that is more often wording than a gap", () => {
+    for (const term of [/責任者/, /お支払い/, /引渡し/]) {
+      const text = COMPLETE.split("\n").filter((line) => !term.test(line));
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", text.join("\n"))), [], String(term));
+    }
   });
 
   it("is low when only terms such as returns are missing", () => {
@@ -69,9 +76,9 @@ describe("特定商取引法 notice", () => {
   });
 
   it("lets an on-request promise about one item excuse nothing else", () => {
-    const text = COMPLETE.split("\n").filter((line) => !/電話番号|引渡し/.test(line));
+    const text = COMPLETE.split("\n").filter((line) => !/電話番号|お支払い|引渡し/.test(line));
     const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...text, "電話番号は請求があった場合には遅滞なく開示します"].join("\n")));
-    assert.deepEqual(found.evidence, ["引渡し時期"]);
+    assert.deepEqual(found.evidence, ["支払方法", "引渡し時期"]);
   });
 
   it("does not take an invoice sentence, 速やかに, or a mere 通知 for the on-request statement", () => {
@@ -92,10 +99,10 @@ describe("特定商取引法 notice", () => {
   });
 
   it("does not take other charges or cash on delivery for the price", () => {
-    const withoutPrice = COMPLETE.split("\n").filter((line) => !/販売価格/.test(line));
+    const withoutPrice = COMPLETE.split("\n").filter((line) => !/販売価格|責任者/.test(line));
     const text = [...withoutPrice, "商品代金以外の必要料金 送料500円", "お支払方法 代金引換"].join("\n");
     const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", text));
-    assert.deepEqual(found.evidence, ["販売価格"]);
+    assert.deepEqual(found.evidence, ["代表者または責任者", "販売価格"]);
   });
 
   it("reads a heading whose text sits in nested markup", () => {
@@ -122,8 +129,9 @@ describe("特定商取引法 notice", () => {
     ]) {
       assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutShipping, label].join("\n"))), [], label);
     }
-    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutShipping.join("\n")));
-    assert.deepEqual(found.evidence, ["送料"]);
+    const withoutPayment = withoutShipping.filter((line) => !/お支払い/.test(line));
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutPayment.join("\n")));
+    assert.deepEqual(found.evidence, ["送料", "支払方法"]);
   });
 
   it("reads an unlabelled address under the seller's name", () => {
@@ -166,8 +174,9 @@ describe("特定商取引法 notice", () => {
       "返品・キャンセル サービスの性質上、返金には応じられません",
     ];
     assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", service.join("\n"))), []);
-    const [goods] = checkLegalNotice(notice("特定商取引法に基づく表記", [...service, "ご注文後3日以内に発送します"].join("\n")));
-    assert.deepEqual(goods.evidence, ["送料"]);
+    const goods = [...service.filter((line) => !/責任者/.test(line)), "ご注文後3日以内に発送します"];
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", goods.join("\n")));
+    assert.deepEqual(found.evidence, ["代表者または責任者", "送料"]);
   });
 
   it("reads any of the words a notice uses for the seller", () => {
@@ -184,6 +193,13 @@ describe("特定商取引法 notice", () => {
     }
     const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutSeller.join("\n")));
     assert.deepEqual(found.evidence, ["販売業者"]);
+  });
+
+  it("reads the statute's wording for returns and a stated amount for the price", () => {
+    // The representative is left out too, so an unread price would make two missing terms and be reported.
+    const withoutPriceOrReturns = COMPLETE.split("\n").filter((line) => !/販売価格|返品|責任者/.test(line));
+    const text = [...withoutPriceOrReturns, "お支払い金額 表示金額（税込）＋送料", "商品の引渡し後におけるその引取り又は返還 到着後7日以内"];
+    assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", text.join("\n"))), []);
   });
 
   it("reads common label variants", () => {

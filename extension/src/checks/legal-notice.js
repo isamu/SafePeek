@@ -23,6 +23,10 @@ const DISCLOSED_DETAILS = /開示|書面|電子メール|電磁的記録|事項|
 const POSTAL_CODE = /〒\s?\d{3}-?\d{4}/;
 const PREFECTURE_AND_CITY = /(?:東京都|北海道|京都府|大阪府|\S{2,3}県)\S{1,8}?[市区町村郡]/;
 const SHIPPED_GOODS = /発送|配送|お届け|配達|宅配/;
+// One unread term on an otherwise complete notice is far more often a wording SafePeek does not know than a gap, so the
+// other terms are reported only when several are missing; the seller's identity and the returns (never omittable) always are.
+const MIN_MISSING_TERMS = 2;
+const ALWAYS_REPORTED = ["販売業者", "所在地", "電話番号", "返品"];
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement (price and shipping too, when they are
 // not all shown: https://www.no-trouble.caa.go.jp/qa/advertising.html Q5). The return terms never may.
@@ -39,7 +43,7 @@ const ITEMS = [
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
   // 「商品代金以外の必要料金」 and 「代金引換」 are about other charges and payment, not the price.
   // A service states its price as a fee (利用料金, 月額, 受講料, 会費 …).
-  { label: "販売価格", pattern: /価格|対価|代金(?!以外|引換|引き換)|利用料|月額|年額|受講料|会費/, onRequest: true },
+  { label: "販売価格", pattern: /価格|対価|代金(?!以外|引換|引き換)|利用料|月額|年額|受講料|会費|表示金額|支払い?金額/, onRequest: true },
   // Shipping applies to goods sent to the buyer, so a notice for a service or a right is not asked for it.
   { label: "送料", pattern: /送料|配送料|必要な?(?:料金|費用)|負担[^。\n]{0,12}(?:料金|費用)|手数料/, onRequest: true, onlyWhen: SHIPPED_GOODS },
   // Payment timing may be left out only on conditions the page cannot show, so only the method is checked.
@@ -51,7 +55,8 @@ const ITEMS = [
       /引渡|引き渡|受渡|受け渡|発送|配送|お届け|提供時期|役務の提供|サービス(?:の)?提供|利用開始|移転時期|開始時期|サービス開始|提供開始|始期|利用期間|提供期間/,
     onRequest: true,
   },
-  { label: "返品", pattern: /返品|返金|キャンセル|交換|解約/, onRequest: false },
+  // The statute words it as 引取り or 返還 after delivery.
+  { label: "返品", pattern: /返品|返金|キャンセル|交換|解約|引取|引き取|返還/, onRequest: false },
 ];
 
 /**
@@ -64,7 +69,7 @@ export function checkLegalNotice(page) {
   const onRequest = hasGeneralOnRequest(page.text);
   const asked = ITEMS.filter((item) => !item.onlyWhen || item.onlyWhen.test(page.text));
   const missing = asked.filter((item) => !item.pattern.test(page.text) && !(item.onRequest && onRequest)).map((item) => item.label);
-  if (missing.length === 0) return [];
+  if (!missing.some((label) => ALWAYS_REPORTED.includes(label)) && missing.length < MIN_MISSING_TERMS) return [];
   const severity = missing.some((label) => IDENTITY_ITEMS.includes(label)) ? "medium" : "low";
   return [finding("legal_notice_incomplete", severity, "page", { count: missing.length }, missing)];
 }
