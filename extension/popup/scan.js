@@ -1,5 +1,6 @@
 // Talks to the browser: loads the bundled data and gathers page data from the active tab.
 
+import { COLLECTOR_FILES } from "../src/page/collector-files.js";
 import { buildDomQueries, buildGlobalPaths } from "../src/engine/queries.js";
 import { retireGlobalPaths } from "../src/engine/retire.js";
 import { loadDatabases as loadFromData } from "../src/data.js";
@@ -30,7 +31,7 @@ export async function collectFromTab(tabId, db) {
     ]),
   ];
 
-  await chrome.scripting.executeScript({ target, files: ["src/page/collector.js"] });
+  await chrome.scripting.executeScript({ target, files: COLLECTOR_FILES });
   const [collected] = await chrome.scripting.executeScript({
     target,
     func: (queries, hosts) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, hosts),
