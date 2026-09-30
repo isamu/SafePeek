@@ -24,7 +24,7 @@ describe("where a password form sends the password", () => {
       "https://auth.shop.example.co.jp/login",
       "https://tenant.us.auth0.com/usernamepassword/login",
       "https://example.okta.com/oauth2/v1/authorize",
-      "https://id.example.net/realms/shop/protocol/openid-connect/auth",
+      "https://auth.shop.example.co.jp/realms/shop/protocol/openid-connect/auth",
     ]) {
       assert.deepEqual(check([form(action)]), [], action);
     }
@@ -33,6 +33,19 @@ describe("where a password form sends the password", () => {
   it("checks the target whatever the method, and lists each host once", () => {
     const found = check([{ action: "https://collect.other-site.example/a", method: "get", hasPassword: true }, form("https://collect.other-site.example/b")]);
     assert.deepEqual(found[0].evidence, ["collect.other-site.example"]);
+  });
+
+  it("warns for the same name under another suffix, the shape of a look-alike domain", () => {
+    const found = checkCredentialTarget(
+      makePage({ url: "https://www.mybank.co.jp/login", forms: [form("https://login.mybank.net/auth")] }),
+      db.auth,
+      db.suffixes,
+    );
+    assert.deepEqual(found[0]?.evidence, ["login.mybank.net"]);
+  });
+
+  it("does not let a sign-in path on an unrelated host through: a path fits any host", () => {
+    assert.deepEqual(check([form("https://evil-login.test/realms/shop/protocol/openid-connect/auth")])[0]?.evidence, ["evil-login.test"]);
   });
 
   it("ignores forms without a password field and unparsable targets", () => {
