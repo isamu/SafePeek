@@ -63,6 +63,12 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(found.evidence, ["販売価格", "送料", "返品"]);
   });
 
+  it("lets an on-request promise about one item excuse nothing else", () => {
+    const text = COMPLETE.split("\n").filter((line) => !/電話番号|引渡し/.test(line));
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...text, "電話番号は請求があった場合には遅滞なく開示します"].join("\n")));
+    assert.deepEqual(found.evidence, ["引渡し時期"]);
+  });
+
   it("does not take an invoice sentence, or 速やかに, for the on-request statement", () => {
     const withoutAddress = COMPLETE.split("\n").filter((line) => !/所在地/.test(line));
     for (const sentence of [
@@ -90,6 +96,13 @@ describe("特定商取引法 notice", () => {
     assert.equal(checkLegalNotice(nestedIncomplete).length, 1);
   });
 
+  it("reads the timing of a service or a right as the delivery timing", () => {
+    const goods = COMPLETE.split("\n").filter((line) => !/引渡し/.test(line));
+    for (const label of ["役務の提供時期 お申込み後すぐ", "サービス提供時期 決済完了後", "提供時期 即時", "利用開始日 お申込み当日"]) {
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...goods, label].join("\n"))), [], label);
+    }
+  });
+
   it("reads common label variants", () => {
     const variants = [
       "事業者の名称 株式会社サンプル",
@@ -100,6 +113,7 @@ describe("特定商取引法 notice", () => {
       "商品代金以外の必要料金 送料",
       "お支払方法 代金引換",
       "商品受渡し時期 入金確認後",
+      "役務の提供時期 お申込み後すぐ",
       "返品特約 未開封に限る",
     ];
     assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", variants.join("\n"))), []);

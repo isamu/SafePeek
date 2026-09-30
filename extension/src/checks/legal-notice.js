@@ -21,7 +21,8 @@ const ITEMS = [
   { label: "送料", pattern: /送料|配送料|必要料金|手数料/, onRequest: false },
   // Payment timing may be left out only on conditions the page cannot show, so only the method is checked.
   { label: "支払方法", pattern: /支払|決済/, onRequest: true },
-  { label: "引渡し時期", pattern: /引渡|引き渡|受渡|受け渡|発送|配送|お届け/, onRequest: true },
+  // The law's wording covers services and rights too: 役務の提供時期, 権利の移転時期.
+  { label: "引渡し時期", pattern: /引渡|引き渡|受渡|受け渡|発送|配送|お届け|提供時期|役務の提供|サービス(?:の)?提供|利用開始|移転時期/, onRequest: true },
   { label: "返品", pattern: /返品|返金|キャンセル|交換|解約/, onRequest: false },
 ];
 
@@ -32,11 +33,21 @@ const ITEMS = [
  */
 export function checkLegalNotice(page) {
   if (!isNoticePage(page.html)) return [];
-  const onRequest = ON_REQUEST.test(page.text);
+  const onRequest = hasGeneralOnRequest(page.text);
   const missing = ITEMS.filter((item) => !item.pattern.test(page.text) && !(item.onRequest && onRequest)).map((item) => item.label);
   if (missing.length === 0) return [];
   const severity = missing.some((label) => IDENTITY_ITEMS.includes(label)) ? "medium" : "low";
   return [finding("legal_notice_incomplete", severity, "page", { count: missing.length }, missing)];
+}
+
+/**
+ * An on-request sentence that names an item already puts that item's label in the text, so only one naming no item
+ * ("上記以外の事項は…") stands in for the items left out; a promise about the phone alone excuses nothing else.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function hasGeneralOnRequest(text) {
+  return text.split(/[。\n]/).some((sentence) => ON_REQUEST.test(sentence) && !ITEMS.some((item) => item.pattern.test(sentence)));
 }
 
 /**
