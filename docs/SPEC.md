@@ -64,6 +64,8 @@ What the page itself has already loaded, read from the browser's resource-timing
 
 ## 5. Checks
 
+This table is the specification of every check. To propose a new check or change one, open a pull request against this table (area, id, severity, condition, and the source that supports it) and give the reason in `docs/decisions.md`. The implementation follows the agreed row.
+
 Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger` if any high, `caution` if any medium, else `ok`. The UI always states that `ok` is not a guarantee.
 
 | Area | id | Severity | Condition |

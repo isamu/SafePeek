@@ -69,6 +69,17 @@ SafePeek infers from what the browser can see. Well-run sites often hide server 
 
 The exact upstream commits are recorded in [`extension/data/sources.json`](extension/data/sources.json) and refreshed weekly by a pull request.
 
+## Proposing a check
+
+Every check SafePeek makes is listed in [docs/SPEC.md, section 5](docs/SPEC.md#5-checks): its id, severity and condition. That table is the specification, and new checks start there.
+
+- **A new check, or a change to one**: open a pull request against `docs/SPEC.md`. Add or edit the row (area, id, severity, condition), link the source that supports it, and say in [docs/decisions.md](docs/decisions.md) why a visitor needs it. Once the specification is agreed, the maintainer implements it to match. You do not need to write the code.
+- **A data entry** (a payment provider, an end-of-life date, a reported skimmer kit …): a pull request to the data file in `extension/data` is welcome. Every entry needs a source link ([SPEC section 7](docs/SPEC.md#7-data) says which files are hand-maintained).
+- **A backend trace**: use the [issue form](https://github.com/isamu/SafePeek/issues/new?template=backend-signature.yml).
+- **A wrong result**: use the "Report a false result" link under the finding in the popup.
+
+A proposal has to keep the security invariants in [SPEC section 2](docs/SPEC.md#2-security-invariants-enforced-by-testpolicytestjs). In particular S9 applies: a finding tells a visitor what they need to decide, never where to attack.
+
 ## Development
 
 ```

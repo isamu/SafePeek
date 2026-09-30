@@ -58,6 +58,14 @@ Checks are tuned against real pages; each of these came from a false result.
 - **When the same rule draws a third finding, invert it into what is permitted** instead of patching another case.
 - Verify a check on real sites before trusting it; a fixture proves only what it was written to show.
 
+## Proposals come in through the specification
+
+`docs/SPEC.md` section 5 is the list of every check and its specification. The README asks contributors to propose checks there.
+
+- **A proposal**: a pull request against `docs/SPEC.md` (a row: area, id, severity, condition, source), with the reason in `docs/decisions.md`. Review it as a specification: does it answer a visitor's question, does it keep S1–S9, is the source real. Do not ask the proposer for code.
+- **Implementing an agreed row**: work in its own PR, and follow the usual rules (a message in both languages, tests, real-page sampling for wording-based checks). If implementing shows the row is wrong or incomplete, change the row in the same PR and say why.
+- **Data entries** (`extension/data`, hand-maintained files) may come as pull requests directly. Check the source link before merging.
+
 ## Releasing: a version is released only by its tag
 
 Bumping the version does not release anything. `.github/workflows/release.yml` builds the zip and creates the GitHub release only when a `v*` tag is pushed. It checks that the tag is on `main` and matches `extension/manifest.json`.

@@ -118,6 +118,22 @@ SafePeekはChromeウェブストアでは配布していません。GitHubから
 
 取り込んだ上流のコミットは [`extension/data/sources.json`](extension/data/sources.json) に記録しています。週に1回、自動でプルリクエストを作って更新します。
 
+## チェックの提案
+
+SafePeek のチェックはすべて [docs/SPEC.md の「5. Checks」](docs/SPEC.md#5-checks) に一覧があります。`id`、重要度、条件を表にしたもので、これが仕様です。新しいチェックもここから始めます。
+
+- **新しいチェック、または既存のチェックの変更**：`docs/SPEC.md` へのプルリクエストで提案してください。
+  - 表に行を足すか直します（area、`id`、重要度、条件）。
+  - 根拠になる出典のリンクを付けます。
+  - 訪問者にとってなぜ必要かを [docs/decisions.md](docs/decisions.md) に書きます。
+
+  仕様が固まったら、実装はそれに合わせてこちらで行います。コードを書く必要はありません。
+- **データの追加**（決済会社、サポート終了日、報告されたカード情報窃取キットなど）：`extension/data` のファイルへのプルリクエストを歓迎します。どの項目にも出典のリンクが必要です（手で管理しているファイルは [SPEC の「7. Data」](docs/SPEC.md#7-data) にあります）。
+- **バックエンドの痕跡**：[Issue フォーム](https://github.com/isamu/SafePeek/issues/new?template=backend-signature.yml) から送ってください。
+- **誤判定**：ポップアップの指摘の下にある「誤判定を報告」から送ってください。
+
+提案は [SPEC の「2. Security invariants」](docs/SPEC.md#2-security-invariants-enforced-by-testpolicytestjs) を守る必要があります。特に S9 です。指摘は訪問者の判断に必要なことを伝えるものであり、攻撃の糸口を示すものではありません。
+
 ## 開発
 
 ```
