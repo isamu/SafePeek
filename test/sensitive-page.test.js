@@ -16,13 +16,27 @@ describe("scripts from other sites where a card number or password is typed", ()
     const scripts = [
       script("https://www.googletagmanager.com/gtag/js?id=G-1"),
       script("https://static.shop.example.co.jp/app.js"),
-      script("https://js.stripe.com/v3/"),
+      script("https://js.stripe.com/v2/"),
       script("https://p01.mul-pay.jp/ext/js/token.js"),
       script("", "inline();"),
     ];
     const [f] = check({ inputs: cardInputs, scripts });
     assert.deepEqual(summary([f]), ["card_page_third_party:medium:1"]);
     assert.deepEqual(f.evidence, ["www.googletagmanager.com"]);
+  });
+
+  it("counts a payment provider's other scripts, which run in the page like any other", () => {
+    const paypal = script("https://www.paypal.com/sdk/js?client-id=x");
+    assert.deepEqual(summary(check({ inputs: cardInputs, scripts: [paypal] })), ["card_page_third_party:medium:1"]);
+    assert.deepEqual(summary(check({ inputs: [inputField("password", { type: "password" })], scripts: [paypal] })), ["login_page_third_party:low:1"]);
+    const tokenizerOnLogin = check({ inputs: [inputField("password", { type: "password" })], scripts: [script("https://js.stripe.com/v2/")] });
+    assert.deepEqual(summary(tokenizerOnLogin), ["login_page_third_party:low:1"], "a tokenizer is expected only on a card page");
+  });
+
+  it("needs a card number field, not a security code or expiry alone", () => {
+    const gtm = [script("https://www.googletagmanager.com/gtm.js")];
+    assert.deepEqual(check({ inputs: [inputField("cvc", { autocomplete: "cc-csc" })], scripts: gtm }), []);
+    assert.deepEqual(check({ inputs: [inputField("exp", { autocomplete: "cc-exp" })], scripts: gtm }), []);
   });
 
   it("counts them on a login page at a lower severity", () => {
