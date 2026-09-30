@@ -202,6 +202,15 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", text.join("\n"))), []);
   });
 
+  it("reads a phone number under a label such as 連絡先 as the phone", () => {
+    const withoutPhone = COMPLETE.split("\n").filter((line) => !/電話番号/.test(line));
+    for (const contact of ["連絡先 03-1234-5678（平日10時〜17時）", "販売業者連絡先 ０１２０－１２３－４５６", "連絡先 +81-3-1234-5678"]) {
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutPhone, contact].join("\n"))), [], contact);
+    }
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutPhone, "連絡先 お問い合わせフォームよりご連絡ください"].join("\n")));
+    assert.deepEqual(found.evidence, ["電話番号"]);
+  });
+
   it("reads common label variants", () => {
     const variants = [
       "事業者の名称 株式会社サンプル",

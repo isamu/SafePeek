@@ -27,6 +27,8 @@ const SHIPPED_GOODS = /発送|配送|お届け|配達|宅配/;
 // other terms are reported only when several are missing; the seller's identity and the returns (never omittable) always are.
 const MIN_MISSING_TERMS = 2;
 const ALWAYS_REPORTED = ["販売業者", "所在地", "電話番号", "返品"];
+// A number under a label such as 連絡先 is the phone even without 電話 or TEL; full-width digits and separators too.
+const PHONE_NUMBER = /(?:[0０]|\+81[- ]?)[0-9０-９]{1,4}[-‐－―(（)） ]?[0-9０-９]{1,4}[-‐－―(（)） ]?[0-9０-９]{3,4}/;
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement (price and shipping too, when they are
 // not all shown: https://www.no-trouble.caa.go.jp/qa/advertising.html Q5). The return terms never may.
@@ -39,7 +41,7 @@ const ITEMS = [
   },
   // Some notices put the address under the seller's name without a label: a postal code or prefecture-and-city counts.
   { label: "所在地", pattern: new RegExp(["所在地|住所", POSTAL_CODE.source, PREFECTURE_AND_CITY.source].join("|")), onRequest: true },
-  { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
+  { label: "電話番号", pattern: new RegExp(["電話|TEL", PHONE_NUMBER.source].join("|"), "i"), onRequest: true },
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
   // 「商品代金以外の必要料金」 and 「代金引換」 are about other charges and payment, not the price.
   // A service states its price as a fee (利用料金, 月額, 受講料, 会費 …).
