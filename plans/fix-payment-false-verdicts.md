@@ -13,8 +13,9 @@
   code or expiry field, so a guest checkout that creates an account is still caught.
 - `collector.js`: each input carries its owner form and whether that form has a password field, judged by form
   ownership (`form.elements`), so fields attached with `form="…"` and forms beyond the collected 50 count too.
-- `payment-providers.json` + `checks/payment.js`: optional `cardFrames` per provider; Stripe counts only
-  `elements-inner-card` / `elements-inner-payment` frames.
+- `payment-providers.json` + `checks/payment.js`: `card_hosted_iframe` is opt-in per provider through `cardFrames`
+  (Stripe: `elements-inner-card` / `elements-inner-payment`). Any other frame of a provider only shows the provider is
+  used (`payment_scripts_only`); patterns for other providers are added with a source when verified.
 
 ## Verification
 Unit tests in both directions plus an e2e login fixture; each rule's removal turns a test red. Re-scanning the real

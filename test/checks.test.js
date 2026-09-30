@@ -116,9 +116,17 @@ describe("payment", () => {
     assert.equal(checkPayment(makePage({ inputs: [inputField("exp", { autocomplete: "cc-exp" })] }), db.providers)[0].id, "card_on_page");
   });
 
+  it("reports a provider without known card frames as used, not as holding the card", () => {
+    const frames = [
+      "https://www.paypal.com/smart/buttons?style.layout=vertical",
+      "https://assets.braintreegateway.com/web/3.97.0/html/hosted-fields-frame.min.html",
+    ];
+    assert.deepEqual(ids(checkPayment(makePage({ iframes: frames }), db.providers)), ["payment_scripts_only"]);
+  });
+
   it("does not count Stripe's hidden frames as card entry", () => {
     const hidden = ["https://js.stripe.com/v3/m-outer-3437aadd.html#url=x", "https://js.stripe.com/v3/controller-abc.html"];
-    assert.deepEqual(ids(checkPayment(makePage({ iframes: hidden }), db.providers)), ["no_card_form"]);
+    assert.deepEqual(ids(checkPayment(makePage({ iframes: hidden }), db.providers)), ["payment_scripts_only"], "Stripe is used, but no card entry");
     const card = [...hidden, "https://js.stripe.com/v3/elements-inner-payment-1a2b.html"];
     assert.deepEqual(ids(checkPayment(makePage({ iframes: card }), db.providers)), ["card_hosted_iframe"]);
   });

@@ -9,7 +9,7 @@ import { hostOf } from "./page.js";
  * @property {string} name
  * @property {string[]} hosts
  * @property {string[]} [tokenScripts]
- * @property {string[]} [cardFrames]  iframe URL patterns that hold card entry; when absent, any frame on its hosts does
+ * @property {string[]} [cardFrames]  iframe URL patterns known to hold card entry; only these make card_hosted_iframe
  */
 
 /**
@@ -38,8 +38,7 @@ function providersIn(urls, providers) {
  */
 function isCardFrame(url, providers) {
   const provider = providerForHost(hostOf(url), providers);
-  if (!provider) return false;
-  return !provider.cardFrames || provider.cardFrames.some((re) => new RegExp(re, "i").test(url));
+  return (provider?.cardFrames ?? []).some((re) => new RegExp(re, "i").test(url));
 }
 
 /**
@@ -52,7 +51,8 @@ export function checkPayment(page, providers) {
   const cardFrames = page.iframes.filter((url) => isCardFrame(url, providers));
   const iframeProviders = providersIn(cardFrames, providers);
   const redirectProviders = providersIn([...page.links, ...page.forms.map((f) => f.action)], providers);
-  const scriptProviders = providersIn(scriptSrcs, providers);
+  // A provider's other frames (buttons, wallets, fraud checks) show it is used, not where the card is typed.
+  const scriptProviders = providersIn([...scriptSrcs, ...page.iframes], providers);
   const tokenizer = providers.find((p) => (p.tokenScripts ?? []).some((re) => scriptSrcs.some((src) => new RegExp(re, "i").test(src))));
 
   const cardInputs = cardFields(page.inputs);
