@@ -9,7 +9,7 @@ const THRESHOLD = 30;
 
 /**
  * @typedef {object} Signal
- * @property {"link" | "param" | "html" | "source" | "script" | "cookie" | "header" | "global" | "host"} type
+ * @property {"link" | "param" | "html" | "source" | "script" | "cookie" | "header" | "global" | "host" | "api"} type  "api": a URL the page itself fetched
  * @property {string} pattern
  * @property {number} weight
  * @property {string} note
@@ -89,6 +89,8 @@ function matchSignal(signal, page, traces) {
       return signal.pattern in page.globals ? `window.${signal.pattern}` : null;
     case "link":
       return firstMatch(signal.pattern, traces.paths);
+    case "api":
+      return firstMatch(signal.pattern, page.requests);
     case "param":
       return firstMatch(signal.pattern, traces.params);
     case "cookie":

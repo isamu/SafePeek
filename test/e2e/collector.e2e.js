@@ -218,4 +218,12 @@ describe("collector in Chromium", () => {
     const payment = report.findings.find((f) => f.area === "payment");
     assert.deepEqual([payment?.id, payment?.params.provider], ["card_tokenized_on_page", "GMO Payment Gateway"]);
   });
+
+  it("reads the API calls the page made, without their query strings", async () => {
+    const page = await collect("api-calls.html");
+    const call = page.requests.find((u) => u.endsWith("/sanctum/csrf-cookie"));
+    assert.ok(call, page.requests.join(", "));
+    assert.ok(!page.requests.some((u) => u.includes("SECRET")));
+    assert.ok(page.contactedHosts.includes("shop.test"));
+  });
 });

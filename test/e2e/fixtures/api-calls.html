@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>A page that calls its API</title>
+  </head>
+  <body>
+    <p>SPA</p>
+    <script>
+      fetch("/sanctum/csrf-cookie?token=SECRET", { credentials: "include" }).then(() => {
+        document.body.dataset.loaded = "1";
+      });
+    </script>
+  </body>
+</html>

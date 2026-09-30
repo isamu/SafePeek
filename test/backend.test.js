@@ -97,6 +97,27 @@ describe("inferBackends (real rules)", () => {
   });
 });
 
+describe("API calls the page made", () => {
+  it("infer frameworks and managed backends from the URLs the page fetched", () => {
+    const cases = {
+      Laravel: "https://shop.example/sanctum/csrf-cookie",
+      "Ruby on Rails": "https://shop.example/rails/active_storage/direct_uploads/",
+      Supabase: "https://abcdefgh.supabase.co/rest/v1/items",
+      "AWS Amplify / Cognito / AppSync": "https://cognito-idp.ap-northeast-1.amazonaws.com/",
+    };
+    for (const [name, url] of Object.entries(cases)) {
+      assert.ok(byName(inferBackends(makePage({ requests: [url] }), db.backends))[name], name);
+    }
+  });
+
+  it("do not read a matching path in the page's text or links as an API call", () => {
+    for (const text of ["https://abcdefgh.supabase.co/rest/v1/items", "/sanctum/csrf-cookie"]) {
+      const found = inferBackends(makePage({ html: text, text }), db.backends);
+      assert.ok(!found.some((b) => b.signals.some((sig) => sig.type === "api")), text);
+    }
+  });
+});
+
 describe("mentions are not traces", () => {
   // Text a page can show about these frameworks without running them: a README, a commit message, a blog post.
   const MENTIONS = [
@@ -202,7 +223,7 @@ describe("checkBackends", () => {
 describe("backend-signatures.json (contributed rules)", () => {
   const file = JSON.parse(readFileSync(new URL("../extension/data/backend-signatures.json", import.meta.url), "utf8"));
   const REPORT_THRESHOLD = 30;
-  const TYPES = ["link", "param", "html", "source", "script", "cookie", "header", "global", "host"];
+  const TYPES = ["link", "param", "html", "source", "script", "cookie", "header", "global", "host", "api"];
 
   for (const rule of file.backends) {
     it(rule.name, () => {
@@ -224,7 +245,7 @@ describe("backend-signatures.json (contributed rules)", () => {
 
   it("never lets a URL shape or hostname alone reach an end-of-life report", () => {
     for (const rule of file.backends.filter((/** @type {any} */ r) => r.status === "eol")) {
-      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "link" || x.type === "host")) {
+      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "link" || x.type === "host" || x.type === "api")) {
         assert.ok(s.weight < REPORT_THRESHOLD, `${rule.name}: ${s.pattern} weighs ${s.weight}`);
       }
     }

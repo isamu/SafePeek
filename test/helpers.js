@@ -46,6 +46,8 @@ export function makePage(overrides = {}) {
     text: "",
     dom: {},
     globals: {},
+    requests: [],
+    contactedHosts: [],
     ...overrides,
   };
 }

@@ -15,6 +15,8 @@
   const MAX_INPUTS = 200;
   const MAX_FORMS = 50;
   const MAX_FRAMES = 10;
+  const MAX_REQUESTS = 300;
+  const REQUEST_INITIATORS = ["fetch", "xmlhttprequest", "beacon"];
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
 
   /**
@@ -116,6 +118,63 @@
       .map((el) => ({ src: absolute(el.getAttribute("src") ?? "", el.baseURI), integrity: el.getAttribute("integrity") ?? "", content: "", fetched: false }))
       .filter((script) => script.src !== "")
       .slice(0, MAX_SCRIPTS);
+  }
+
+  /**
+   * What the page has loaded so far, from the browser's own resource-timing record: no new request is made.
+   * @returns {PerformanceResourceTiming[]}
+   */
+  function resourceEntries() {
+    return performance.getEntriesByType("resource").filter((e) => e instanceof PerformanceResourceTiming);
+  }
+
+  /**
+   * The URLs the page itself has fetched (fetch, XHR, beacons). Only scheme, host and path are kept; query strings and
+   * fragments often hold tokens.
+   * @param {PerformanceResourceTiming[]} entries
+   * @returns {string[]}
+   */
+  function readRequests(entries) {
+    const urls = entries
+      .filter((e) => REQUEST_INITIATORS.includes(e.initiatorType))
+      .map((e) => withoutQuery(e.name))
+      .filter((u) => u !== "");
+    return [...new Set(urls)].slice(0, MAX_REQUESTS);
+  }
+
+  /**
+   * Every host the page has contacted: scripts, styles, images, frames, fonts, fetches, beacons.
+   * @param {PerformanceResourceTiming[]} entries
+   * @returns {string[]}
+   */
+  function readContactedHosts(entries) {
+    const hosts = entries.map((e) => hostOfUrl(e.name)).filter((h) => h !== "");
+    return [...new Set(hosts)].slice(0, MAX_REQUESTS);
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}
+   */
+  function hostOfUrl(raw) {
+    try {
+      return new URL(raw).hostname;
+    } catch {
+      return "";
+    }
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}  scheme, host and path only
+   */
+  function withoutQuery(raw) {
+    try {
+      const url = new URL(raw);
+      return url.protocol === "https:" || url.protocol === "http:" ? `${url.origin}${url.pathname}` : "";
+    } catch {
+      return "";
+    }
   }
 
   /** @returns {{ meta: Record<string, string[]>, metaCsp: string[] }} */
@@ -329,6 +388,7 @@
    */
   async function collect(domQueries, paymentHosts) {
     const docs = documents();
+    const entries = resourceEntries();
     const [headers, scripts] = await Promise.all([readHeaders(), readScripts()]);
     return {
       url: location.href,
@@ -347,6 +407,8 @@
       html: document.documentElement.outerHTML.slice(0, MAX_HTML),
       text: (document.body?.innerText ?? "").slice(0, MAX_TEXT),
       dom: readDom(domQueries),
+      requests: readRequests(entries),
+      contactedHosts: readContactedHosts(entries),
     };
   }
 

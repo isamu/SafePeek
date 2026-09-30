@@ -23,6 +23,7 @@ Each trace is shown in the popup with its strength (strong ≥ 70, medium ≥ 40
 | `header` | `name: regex` against a response header |
 | `global` | a JavaScript property path that exists in the page (e.g. `Kumu`) |
 | `host` | the page's hostname (e.g. `\.web\.app$`) |
+| `api` | scheme + host + path of what the page itself fetched (fetch, XHR, beacons), from the browser's resource-timing record; no query strings (e.g. `/sanctum/csrf-cookie$`) |
 
 ## Status
 
