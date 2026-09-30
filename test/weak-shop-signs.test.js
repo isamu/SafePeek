@@ -56,6 +56,21 @@ describe("weak fake-shop signs, only together", () => {
     assert.deepEqual(signs(shop(FREE_MAIL, undefined, '<abbr href="https://facebook.com/">x</abbr>')), [], "not an <a> tag");
   });
 
+  it("ignores share buttons: they neither clear home-page links nor count on their own", () => {
+    const shares = [
+      "https://x.com/intent/tweet?text=a",
+      "https://twitter.com/share",
+      "https://www.facebook.com/sharer/sharer.php?u=a",
+      "https://www.facebook.com/share.php?u=a",
+      "https://line.me/R/msg/text/?a",
+    ]
+      .map((href) => `<a href="${href}">s</a>`)
+      .join("");
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, shares)), [], "share buttons only");
+    const withHome = `${shares}<a href="https://www.instagram.com/">i</a>`;
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, withHome))[0][1], ["free email only (gmail.com)", "social links go to home pages only"]);
+  });
+
   it("does not count a few or small discounts", () => {
     assert.deepEqual(signs(shop(`全品80%OFF 90%OFF\n${FREE_MAIL}`)), [], "two steep ones");
     assert.deepEqual(signs(shop(`10%OFF 20%OFF 30%OFF 50%OFF\n${FREE_MAIL}`)), [], "not steep");

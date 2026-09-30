@@ -38,6 +38,9 @@ const MIN_STEEP_DISCOUNTS = 3;
 // BEYOND PHISH found on fraudulent shops (https://yancomm.net/papers/2023%20-%20SP%20-%20Beyond%20Phish.pdf).
 const SOCIAL_HOSTS = new Set(["facebook.com", "instagram.com", "twitter.com", "x.com", "youtube.com", "tiktok.com", "line.me"]);
 const MAX_ANCHORS = 2000;
+// Share and intent buttons say nothing about the shop's own accounts: they neither count as a profile nor as a
+// home-page link. Small real shops often show only these.
+const SHARE_PATH = /^\/(?:intent|share|sharer|sharer\.php|share\.php|dialog\/share|r\/msg\/text)(?:\/|$)/i;
 const MIN_SIGNS = 2;
 const MEDIUM_SIGNS = 3;
 
@@ -118,13 +121,15 @@ function socialLinksGoNowhere(page) {
 /**
  * @param {string} href
  * @param {string} base
- * @returns {{ path: string } | null}  the path on a social network, without slashes; null when not a social link
+ * @returns {{ path: string } | null}  the path on a social network, without slashes; null when not a social link, or
+ *   only a share button
  */
 function socialLink(href, base) {
   try {
     const url = new URL(href, base);
     const host = url.hostname.replace(/^(?:www|m)\./, "");
-    return SOCIAL_HOSTS.has(host) ? { path: url.pathname.replaceAll("/", "") } : null;
+    if (!SOCIAL_HOSTS.has(host) || SHARE_PATH.test(url.pathname)) return null;
+    return { path: url.pathname.replaceAll("/", "") };
   } catch {
     return null;
   }
