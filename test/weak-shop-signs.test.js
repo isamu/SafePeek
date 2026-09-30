@@ -35,6 +35,17 @@ describe("weak fake-shop signs, only together", () => {
     assert.deepEqual(signs(shop(`${mixed}\n${FREE_MAIL}`, "https://shop.example/")), []);
   });
 
+  it("reads every payment section: a later list naming cards clears an earlier bank-only line", () => {
+    const faq = "よくある質問：お支払い方法は銀行振込のみですか？";
+    const list = "お支払方法一覧\nクレジットカード、PayPay、銀行振込";
+    assert.deepEqual(signs(shop(`${faq}\n${"商品説明です。".repeat(40)}\n${list}\n${FREE_MAIL}`)), []);
+    assert.equal(signs(shop(`${faq}\n${FREE_MAIL}`)).length, 1, "with no other section, bank only still counts");
+  });
+
+  it("reads full-width digits in discounts", () => {
+    assert.deepEqual(signs(shop(`全品８０％OFF ９０％OFF ７５％オフ\n${FREE_MAIL}`))[0][1], ["free email only (gmail.com)", "3 discounts of 70% or more"]);
+  });
+
   it("does not count a few or small discounts", () => {
     assert.deepEqual(signs(shop(`全品80%OFF 90%OFF\n${FREE_MAIL}`)), [], "two steep ones");
     assert.deepEqual(signs(shop(`10%OFF 20%OFF 30%OFF 50%OFF\n${FREE_MAIL}`)), [], "not steep");

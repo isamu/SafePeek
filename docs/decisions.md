@@ -188,7 +188,7 @@ JC3 and 国民生活センター list signs that real shops also show: an unfami
 - **None is reported alone.** A small shop may use Gmail or take only bank transfers; an outlet may run deep sales.
 - **Two together are low, three or more medium.**
 - **Only the TLDs JC3 names** (.xyz, .top, .bid). `.shop` is left out: many legitimate Japanese shops use it.
-- **Bank transfer only is read from the payment section**, the text after 支払方法 or 決済方法. A card or other method named there clears it. A notice that claims cards but offers only transfer at checkout cannot be seen from one page.
+- **Bank transfer only is read from every payment section**, the text after each 支払方法 or 決済方法. A card or other method named in any of them clears it, so a FAQ line saying transfer only does not outweigh the actual list. A notice that claims cards but offers only transfer at checkout cannot be seen from one page.
 
 ## Where a password is sent
 
