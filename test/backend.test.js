@@ -105,6 +105,9 @@ describe("mentions are not traces", () => {
     "<pre><code>&lt;!-- Powered by SAStruts --&gt;\nxmlns:te=&quot;http://www.seasar.org/teeda/extension&quot;</code></pre>",
     "<li>symfony 1, CakePHP 2, ColdFusion and Classic ASP are old; java.lang.NullPointerException is common.</li>",
     "Search index: SAStruts, Teeda, Seasar2, S2Container, org.seasar.framework migration guide",
+    "<article><p>My Struts 1 stack trace:</p><pre>\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre></article>",
+    "<main><p>Debugging old Seasar2:</p><pre>    at org.seasar.framework.container.S2Container.create(S2Container.java:101)</pre></main>",
+    '<td class="blob-code"><span>\tat org.apache.struts.action.ActionServlet.process(ActionServlet.java:1482)</span></td>',
   ];
 
   it("reports no end-of-life or old-generation backend for a page that only talks about them", () => {
@@ -121,16 +124,18 @@ describe("mentions are not traces", () => {
     }
   });
 
-  it("still reads real traces: a stack trace, a Teeda namespace, an HTML comment", () => {
-    const pages = {
-      "Apache Struts 1": "<pre>javax.servlet.ServletException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre>",
-      "Seasar2 (SAStruts / Teeda)": '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>',
-    };
-    for (const [name, html] of Object.entries(pages)) {
-      assert.ok(byName(inferBackends(makePage({ html }), db.backends))[name], name);
-    }
+  it("still reads what a running app emits: a Teeda namespace, an HTML comment", () => {
+    const namespace = byName(inferBackends(makePage({ html: '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>' }), db.backends));
+    assert.equal(namespace["Seasar2 (SAStruts / Teeda)"]?.confidence, 80);
     const comment = byName(inferBackends(makePage({ html: "<!-- Powered by SAStruts --><p>x</p>" }), db.backends));
     assert.equal(comment["Seasar2 (SAStruts / Teeda)"]?.confidence, 50);
+  });
+
+  it("counts a stack trace only together with another trace, since a page about the framework can show one", () => {
+    const trace = "<pre>javax.servlet.ServletException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre>";
+    assert.equal(byName(inferBackends(makePage({ html: trace }), db.backends))["Apache Struts 1"], undefined);
+    const withActions = byName(inferBackends(makePage({ html: `${trace}<a href="/reserve/list.do">x</a>` }), db.backends));
+    assert.equal(withActions["Apache Struts 1"]?.confidence, 35);
   });
 });
 

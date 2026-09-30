@@ -7,10 +7,11 @@ covers `org.seasar.` and `org.apache.struts.(action|util|config).` (any page tha
 bare `java.lang.XxxException` alternative of the Java signal.
 
 ## Change
-`data/backend-signatures.json`: `html` signals match the shape of a trace, not of a mention:
-- Struts 1 / Seasar / Java: a stack-trace frame `at <package>.…(`;
-- Seasar: a Teeda XML namespace in the markup (`xmlns:…="http://www.seasar.org/…"`);
-- SAStruts / Teeda by name: only inside an HTML comment.
+`data/backend-signatures.json`: an end-of-life claim rests only on what a running app emits:
+- Seasar: a Teeda XML namespace in the markup (80); SAStruts / Teeda by name only inside an HTML comment (50);
+- text a page about the framework can show as well only corroborates: stack-trace frames (Struts 1, Seasar: 15)
+  and Seasar names in script code (10), so a mention shown twice (markup + embedded JSON) stays below 30;
+- Java (info): a stack-trace frame only, no bare exception name.
 `docs/backend-signatures.md` states the rule for contributors.
 
 ## Verification
