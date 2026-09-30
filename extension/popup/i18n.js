@@ -175,6 +175,11 @@ const JA = {
     detail: () =>
       "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析・タグマネージャー・エラー監視だけなら「情報」、画面操作の記録（セッションリプレイ）や広告、正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
   },
+  secret_in_page: {
+    title: () => "ページのコードにサーバー用の秘密の鍵らしき値が含まれています",
+    detail: () =>
+      "決済やサービス連携に使う、本来サーバーの中だけに置くべき鍵の形をした値が、訪問者全員に送られるページやスクリプトの中にあります。悪用を避けるため、種類や場所は表示していません。サイトの運営者に知らせてください。",
+  },
   script_compromised_host: {
     title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
     detail: () =>
@@ -350,6 +355,11 @@ const EN = {
     title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
     detail: () =>
       "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics, tag managers and monitoring alone make this information; session replay, ads or unknown hosts make it low. Some may be the site's own asset domains.",
+  },
+  secret_in_page: {
+    title: () => "The page's code contains what looks like a server-side secret key",
+    detail: () =>
+      "A value shaped like a key meant to stay on the server (for payments or connected services) is in the page or scripts sent to every visitor. Its kind and place are not shown, to avoid helping misuse. Let the site know.",
   },
   script_compromised_host: {
     title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,
