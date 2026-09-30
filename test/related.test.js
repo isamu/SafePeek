@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { inferRelatedSystems, isRelatedHost } from "../extension/src/engine/related-systems.js";
-import { registrable } from "../extension/src/engine/public-suffix.js";
+import { indexPublicSuffixes, registrable } from "../extension/src/engine/public-suffix.js";
 import { checkRelatedSystems } from "../extension/src/checks/related.js";
 import { analyze } from "../extension/src/analyze.js";
 import { sha1 } from "../extension/src/engine/hash.js";
@@ -47,6 +47,14 @@ describe("related systems", () => {
     ]) {
       assert.ok(!related(a, b) && !related(b, a), `${a} ${b}`);
     }
+  });
+
+  it("keeps customers apart under a wildcard shared-host rule too", () => {
+    const synthetic = indexPublicSuffixes({ icann: ["example"], private: ["*.shared.example"] });
+    assert.equal(registrable("brand.tenant-a.shared.example", synthetic)?.shared, true);
+    assert.ok(!isRelatedHost("brand.tenant-a.shared.example", "order.brand.tenant-b.shared.example", synthetic));
+    assert.ok(!isRelatedHost("www.brand.tenant-a.shared.example", "www.brand-ec.tenant-b.shared.example", synthetic));
+    assert.ok(isRelatedHost("www.brand.tenant-a.shared.example", "api.brand.tenant-a.shared.example", synthetic), "the same customer");
   });
 
   it("does not relate two customers of one shared host, even with a shared name", () => {

@@ -12,7 +12,7 @@
  * @property {Set<string>} rules
  * @property {Set<string>} wildcards  parents of "*." rules
  * @property {Set<string>} exceptions
- * @property {Set<string>} privateSuffixes  every rule of the PRIVATE section, without its prefix
+ * @property {Set<string>} privateRules  the PRIVATE section's rules, prefix kept ("!x", "*.x", "x")
  */
 
 /**
@@ -25,7 +25,7 @@ export function indexPublicSuffixes(data) {
     rules: new Set(all.filter((r) => !r.startsWith("!") && !r.startsWith("*."))),
     wildcards: new Set(all.filter((r) => r.startsWith("*.")).map((r) => r.slice(2))),
     exceptions: new Set(all.filter((r) => r.startsWith("!")).map((r) => r.slice(1))),
-    privateSuffixes: new Set(data.private.map((r) => r.replace(/^(?:!|\*\.)/, ""))),
+    privateRules: new Set(data.private),
   };
 }
 
@@ -45,22 +45,24 @@ export function indexPublicSuffixes(data) {
  */
 export function registrable(host, index) {
   const labels = host.toLowerCase().replace(/\.$/, "").split(".");
-  const suffixLength = longestSuffix(labels, index);
-  if (labels.length <= suffixLength) return null;
-  const suffix = labels.slice(-suffixLength).join(".");
-  return { domain: labels.slice(-(suffixLength + 1)).join("."), suffix, shared: index.privateSuffixes.has(suffix) };
+  const match = longestSuffix(labels, index);
+  if (labels.length <= match.length) return null;
+  const suffix = labels.slice(-match.length).join(".");
+  return { domain: labels.slice(-(match.length + 1)).join("."), suffix, shared: index.privateRules.has(match.rule) };
 }
 
 /**
  * @param {string[]} labels
  * @param {SuffixIndex} index
- * @returns {number}  how many trailing labels form the public suffix
+ * @returns {{ length: number, rule: string }}  how many trailing labels form the public suffix, and the rule that won
  */
 function longestSuffix(labels, index) {
   for (let i = 0; i < labels.length; i++) {
     const candidate = labels.slice(i).join(".");
-    if (index.exceptions.has(candidate)) return labels.length - i - 1;
-    if (index.rules.has(candidate) || index.wildcards.has(labels.slice(i + 1).join("."))) return labels.length - i;
+    const parent = labels.slice(i + 1).join(".");
+    if (index.exceptions.has(candidate)) return { length: labels.length - i - 1, rule: `!${candidate}` };
+    if (index.rules.has(candidate)) return { length: labels.length - i, rule: candidate };
+    if (index.wildcards.has(parent)) return { length: labels.length - i, rule: `*.${parent}` };
   }
-  return 1;
+  return { length: 1, rule: "*" };
 }
