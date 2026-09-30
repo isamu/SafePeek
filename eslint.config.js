@@ -60,6 +60,8 @@ export default [
       "max-nested-callbacks": ["error", 4],
       "max-params": ["error", 6],
       "sonarjs/cognitive-complexity": ["error", 15],
+      // SafePeek inspects plain-HTTP sites, so http:// URLs are test data here; surface them, do not fail on them.
+      "sonarjs/no-clear-text-protocols": "warn",
     },
   },
 
