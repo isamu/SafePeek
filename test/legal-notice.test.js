@@ -145,6 +145,7 @@ describe("特定商取引法 notice", () => {
       ["利用料金 月額1,000円", "サービス開始時期 お申込み後すぐ"],
       ["サービス利用料金 各プランに記載", "視聴可能始期 決済完了後"],
       ["受講料 30,000円", "提供開始 入金確認後"],
+      ["月額利用料金 980円", "利用期間 お申込み日から1か月（自動更新）"],
     ]) {
       const text = [...withoutPriceOrTiming, price, timing].join("\n");
       assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", text)), [], price);
