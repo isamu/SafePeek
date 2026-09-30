@@ -759,7 +759,7 @@
         {
           "type": "header",
           "pattern": "x-amz-cf-id: .",
-          "weight": 30,
+          "weight": 20,
           "note": "served through CloudFront",
           "noteJa": "CloudFront 経由の配信"
         }

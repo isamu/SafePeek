@@ -215,8 +215,12 @@ describe("managed backends (BaaS / PaaS)", () => {
     assert.deepEqual(status({ url: "https://main.d1abc.amplifyapp.com/" }), { "AWS Amplify Hosting": "hosting" });
     assert.deepEqual(status({ url: "https://site.pages.dev/" }), { "Cloudflare Pages": "hosting" });
     assert.deepEqual(status({ url: "https://api.me.workers.dev/" }), { "Cloudflare Workers": "managed" });
-    assert.deepEqual(status({ headers: { ...makePage().headers, "x-amz-cf-id": "abc" } }), {}, "CloudFront alone says too little");
-    assert.equal(status({ url: "https://omochi.web.app/", globals: { __FIREBASE_DEFAULTS__: {} } }).Firebase, "managed");
+    const cloudFrontOnly = inferBackends(makePage({ headers: { ...makePage().headers, "x-amz-cf-id": "abc" } }), db.backends);
+    assert.deepEqual(cloudFrontOnly, [], "a CloudFront edge header alone says nothing about the origin");
+    assert.deepEqual(status({ url: "https://omochi.web.app/", globals: { __FIREBASE_DEFAULTS__: {} } }), {
+      Firebase: "managed",
+      "Firebase Hosting": "hosting",
+    });
   });
 
   it("reports a strong managed backend as information, not a problem", () => {
