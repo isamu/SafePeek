@@ -48,11 +48,11 @@ Everything is inference from what the page exposes. "No problems found" is never
 
 1. The user clicks the toolbar icon; the popup opens (this grants `activeTab` for the current tab).
 2. The popup loads bundled data from `extension/data/`.
-3. `chrome.scripting.executeScript` injects `src/page/collector.js` (isolated world), then calls `SafePeekCollector.collect(domQueries, paymentHosts)`.
+3. `chrome.scripting.executeScript` injects the collector's classic scripts in the order `src/page/collector-files.js` lists (`collect-network.js`, `collect-dom.js`, `collector.js`; isolated world), then calls `SafePeekCollector.collect(domQueries, paymentHosts)`.
 4. A second call runs `probeGlobals(paths)` in the page's MAIN world to read library globals by property path (no code strings evaluated).
 5. `analyze(page, db, env)` (pure, no browser APIs) returns the report; `popup/render.js` renders it.
 
-Only `collector.js`, `probe.js` and `popup/scan.js` touch browser APIs. Everything under `src/engine` and `src/checks` is pure and unit-tested.
+Only the collector (`collect-network.js`, `collect-dom.js`, `collector.js`), `probe.js` and `popup/scan.js` touch browser APIs. Everything under `src/engine` and `src/checks` is pure and unit-tested.
 
 ## 4. Collected page data (`PageData`, see `src/types.js`)
 

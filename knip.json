@@ -3,6 +3,8 @@
   "entry": [
     "extension/popup/popup.js",
     "extension/src/index.js",
+    "extension/src/page/collect-network.js",
+    "extension/src/page/collect-dom.js",
     "extension/src/page/collector.js",
     "extension/src/types.js",
     "tools/*.mjs",

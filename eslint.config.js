@@ -66,8 +66,8 @@ export default [
   },
 
   {
-    // Runs inside the inspected page as one serialised closure; its size is bounded by the page API it reads.
-    files: ["extension/src/page/collector.js"],
+    // Run inside the inspected page as classic scripts, each one closure; their size is bounded by the page API they read.
+    files: ["extension/src/page/collector.js", "extension/src/page/collect-network.js", "extension/src/page/collect-dom.js"],
     languageOptions: { sourceType: "script" },
     rules: { "max-lines-per-function": "off" },
   },

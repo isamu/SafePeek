@@ -42,7 +42,7 @@ Never judge these through a pipe — `yarn lint | tail` exits with `tail`'s stat
 
 ## Architecture rule
 
-Browser APIs live in three files only: `extension/src/page/collector.js`, `extension/src/page/probe.js`, `extension/popup/scan.js`. Everything in `extension/src/engine` and `extension/src/checks` is a pure function over `PageData` and is unit-tested without a browser. Keep it that way: a new check takes `PageData` and returns findings.
+Browser APIs live in the page collector and two other files only. The collector is `extension/src/page/collect-network.js`, `collect-dom.js` and `collector.js`: classic scripts injected in the order `collector-files.js` lists, sharing one isolated world. The other two are `extension/src/page/probe.js` and `extension/popup/scan.js`. Everything in `extension/src/engine` and `extension/src/checks` is a pure function over `PageData` and is unit-tested without a browser. Keep it that way: a new check takes `PageData` and returns findings.
 
 A new finding id needs a message in both languages in `extension/popup/i18n.js` (a test enforces this) and a row in the SPEC table.
 

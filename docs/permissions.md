@@ -5,7 +5,7 @@ SafePeek declares two permissions. There are no host permissions, no content scr
 | Permission | Why | What it cannot do |
 | --- | --- | --- |
 | `activeTab` | When you click the SafePeek icon, Chrome grants temporary access to the tab you are on. | Nothing happens on tabs where you did not click the icon, and access ends when you navigate away. |
-| `scripting` | Lets the popup inject the read-only collector (`src/page/collector.js`) and the globals probe (`src/page/probe.js`) into that tab. | Without `activeTab` access to a tab, scripting cannot touch it. |
+| `scripting` | Lets the popup inject the read-only collector (`src/page/collect-network.js`, `collect-dom.js` and `collector.js`) and the globals probe (`src/page/probe.js`) into that tab. | Without `activeTab` access to a tab, scripting cannot touch it. |
 
 ## What the injected code does
 

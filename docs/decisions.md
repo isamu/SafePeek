@@ -209,4 +209,4 @@ Fake-shop networks reuse one checkout kit across hundreds of storefronts, which 
 - **Only the form's default target is checked.** A submit button's `formaction` can send the form elsewhere, and so can a script. Neither is seen: the collector does not read `formaction`, and the values a script sends are never read.
   - A determined phishing page can therefore avoid this finding.
   - The check is for misconfigured forms and plain phishing kits, not a guarantee.
-  - Reading `formaction` would also need room in the collector, which is at its size limit.
+  - Reading `formaction` would also need a new collector field.

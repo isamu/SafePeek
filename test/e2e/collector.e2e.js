@@ -17,10 +17,11 @@ import { retireGlobalPaths } from "../../extension/src/engine/retire.js";
 import { backendGlobalPaths } from "../../extension/src/engine/backend.js";
 import { checkoutGlobalPaths } from "../../extension/src/checks/cart-traces.js";
 import { probeGlobals } from "../../extension/src/page/probe.js";
+import { COLLECTOR_FILES } from "../../extension/src/page/collector-files.js";
 import { loadDb } from "../helpers.js";
 
 const fixtures = fileURLToPath(new URL("./fixtures/", import.meta.url));
-const collectorPath = fileURLToPath(new URL("../../extension/src/page/collector.js", import.meta.url));
+const collectorPaths = COLLECTOR_FILES.map((file) => fileURLToPath(new URL(`../../extension/${file}`, import.meta.url)));
 
 /** Response headers per fixture, standing in for what a real server would send. */
 const HEADERS = {
@@ -103,7 +104,7 @@ async function collect(name, waitUntil = "load", scans = 1) {
   await page.goto(`${base}/${name}`, { waitUntil });
   // A fixture that makes its own requests marks data-loaded="0" until they have all finished.
   await page.waitForFunction(() => document.body?.dataset.loaded !== "0");
-  await page.addScriptTag({ path: collectorPath });
+  for (const path of collectorPaths) await page.addScriptTag({ path });
   const hosts = db.providers.flatMap((p) => p.hosts);
   const scan = () =>
     page.evaluate(([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h), [buildDomQueries(db.technologies), hosts]);
