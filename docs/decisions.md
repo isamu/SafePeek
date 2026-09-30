@@ -134,7 +134,7 @@ Every public body's fake-shop checklist starts with this notice (`docs/fake-shop
 
 - **The page must name the notice in its title or a top heading**, so a footer link on every page does not make a page the notice.
 - **An item counts when its label appears anywhere in the text.** This is lenient on purpose: it misses a fake that fills in labels with made-up values, and it never reports a real notice laid out with unusual wording as missing everything.
-- **A statement that details are given on request counts** for the address, phone and representative, as the law allows.
+- **A statement that details are given on request counts** for the items the 消費者庁 table lets it replace: seller, address, phone, representative, payment and delivery timing. It never replaces the price and shipping or the return terms. It has to say 遅滞なく and that the details are provided or disclosed, so an invoice sent without delay does not count.
 - **Only the kinds of missing item are shown**, never a value: an address or phone number on the page is the seller's, and is left to the page.
 - **A shop page with no link to the notice is a separate check**, because the collected HTML and text can be cut off before the footer.
 

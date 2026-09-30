@@ -183,7 +183,7 @@ const JA = {
   legal_notice_incomplete: {
     title: (p) => `特定商取引法に基づく表記に、必要な項目が見当たりません（${p.count}項目）`,
     detail: () =>
-      "通信販売の事業者は、販売業者名・所在地・電話番号・代表者または責任者・支払方法・引渡し時期・返品の条件などを表示する義務があります。見当たらない項目の種類を根拠に挙げています。販売業者名・所在地・電話番号が無い場合は特に注意してください。表示があっても、実在する会社のものか（法人番号の検索など）確かめると安心です。",
+      "通信販売の事業者は、販売業者名・所在地・電話番号・代表者または責任者・販売価格と送料・支払方法・引渡し時期・返品の条件などを表示する義務があります（一部は「請求があれば遅滞なく提供する」と書けば省略できます）。見当たらない項目の種類を根拠に挙げています。販売業者名・所在地・電話番号が無い場合は特に注意してください。表示があっても、実在する会社のものか（法人番号の検索など）確かめると安心です。",
   },
   secret_in_page: {
     title: () => "ページのコードにサーバー用の秘密の鍵らしき値が含まれています",
@@ -375,7 +375,7 @@ const EN = {
   legal_notice_incomplete: {
     title: (p) => `The 特定商取引法 notice lacks required items (${p.count})`,
     detail: () =>
-      "Japanese law requires mail-order sellers to show their name, address, phone number, the person responsible, payment method, delivery timing and return terms. The missing kinds are listed as evidence. Be especially careful when the seller's name, address or phone number is missing. Even when they are shown, checking that the company exists (for example in the corporate number search) is worthwhile.",
+      "Japanese law requires mail-order sellers to show their name, address, phone number, the person responsible, price and shipping, payment method, delivery timing and return terms (some may be left out when the notice says they are given without delay on request). The missing kinds are listed as evidence. Be especially careful when the seller's name, address or phone number is missing. Even when they are shown, checking that the company exists (for example in the corporate number search) is worthwhile.",
   },
   secret_in_page: {
     title: () => "The page's code contains what looks like a server-side secret key",

@@ -1,21 +1,24 @@
 // On a page showing the notice the 特定商取引法 requires of mail-order sellers, whether each required item is there.
-// Required items: https://www.no-trouble.caa.go.jp/what/mailorder/advertising.html
+// Items, and which may be left out on request: https://www.no-trouble.caa.go.jp/what/mailorder/ (広告の表示事項を省略できる場合)
 
 import { finding } from "./finding.js";
 
 const NOTICE_HEADING = /特定商取引法|特商法|特定商取引に関する法律|通信販売に関する表示/;
 const HEADINGS = /<(title|h1|h2)\b[^>]*>([^<]{0,200})<\/\1>/gi;
-// 特定商取引法 11 lets a seller leave some items out when it says it will give them without delay on request.
-const ON_REQUEST = /請求[^。]{0,30}(?:遅滞なく|速やかに)|(?:遅滞なく|速やかに)[^。]{0,30}(?:開示|提供|通知)/;
+// 特定商取引法 11 lets a seller leave some items out when the notice says it will give them without delay on request;
+// an invoice (請求書) sent without delay is not that statement.
+const ON_REQUEST = /請求(?!書)[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付|通知)/;
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
+// onRequest: the law lets the item be left out after the on-request statement. Price and returns never may.
 const ITEMS = [
-  { label: "販売業者", pattern: /販売業者|販売事業者|事業者|会社名|商号|運営会社|販売元|店舗名/, onRequest: false },
+  { label: "販売業者", pattern: /販売業者|販売事業者|事業者|会社名|商号|運営会社|販売元|店舗名/, onRequest: true },
   { label: "所在地", pattern: /所在地|住所/, onRequest: true },
-  { label: "電話番号", pattern: /電話|TEL|連絡先/i, onRequest: true },
+  { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
-  { label: "支払方法", pattern: /支払|決済/, onRequest: false },
-  { label: "引渡し時期", pattern: /引渡|引き渡|発送|配送|お届け/, onRequest: false },
-  { label: "返品・キャンセル", pattern: /返品|返金|キャンセル|交換|解約/, onRequest: false },
+  { label: "販売価格・送料", pattern: /価格|代金|送料|料金/, onRequest: false },
+  { label: "支払方法", pattern: /支払|決済/, onRequest: true },
+  { label: "引渡し時期", pattern: /引渡|引き渡|受渡|受け渡|発送|配送|お届け/, onRequest: true },
+  { label: "返品", pattern: /返品|返金|キャンセル|交換|解約/, onRequest: false },
 ];
 
 /**
