@@ -44,3 +44,26 @@ describe("analyze", () => {
     assert.ok(report.findings.some((f) => f.id === "eol" && f.params.name === "jQuery"));
   });
 });
+
+describe("analyze on a managed backend", () => {
+  it("drops a server stack that is only implied when the site runs on Firebase", async () => {
+    const page = makePage({
+      url: "https://omochi.web.app/",
+      scripts: [script("https://omochi.web.app/__/firebase/init.js", 'firebase.initializeApp({authDomain:"omochi.firebaseapp.com"})')],
+      globals: { firebase: true },
+      meta: { generator: ["WordPress 6.4.2"] },
+    });
+    const report = await analyze(page, db, env);
+    const names = report.technologies.map((t) => t.name);
+    assert.ok(names.includes("WordPress"), "seen directly, so kept");
+    assert.ok(!names.includes("PHP"), "only implied by WordPress, contradicts Firebase");
+    assert.ok(!names.includes("MySQL"));
+    assert.ok(report.findings.some((f) => f.id === "backend_managed"));
+  });
+
+  it("keeps implied technologies, marked as implied, on a normal site", async () => {
+    const report = await analyze(makePage({ meta: { generator: ["WordPress 6.4.2"] } }), db, env);
+    const php = report.technologies.find((t) => t.name === "PHP");
+    assert.equal(php?.impliedBy, "WordPress");
+  });
+});
