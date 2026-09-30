@@ -85,6 +85,8 @@ Hosts are listed with *other*, *session replay* and *ads* first.
   - Only the site's own HTML, forms, API calls and scripts are read; a vendor script's body names the vendor's hosts.
   - The result never feeds the page's own backend or an end-of-life verdict.
 
+- **Backend evidence shows fixed text only.** A PHP warning or a stack trace is strong evidence of the backend, and its text is where server paths, database user names and internal addresses leak; script code beside a project URL can hold a token, and a script URL can be signed. So `html`, `source` and `script` traces show only what a fixed-text pattern matched, and otherwise just their note ("PHP error message shown in the page"). This is decided from the pattern's shape, not a per-rule flag, so a new rule cannot forget it.
+
 ## The page's own requests
 
 - **Read, never made.** SafePeek reads the browser's record of what the page fetched. Its own re-requests are left out, including those from an earlier scan of the same page.
