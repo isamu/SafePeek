@@ -63,8 +63,8 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 
 | Area | id | Severity | Condition |
 | --- | --- | --- | --- |
-| transport | `not_https` | high | page served over plain `http:` (other schemes, such as `file:` passed through the npm API, are not judged) |
-| transport | `password_over_http` | high | HTTP page with a password field |
+| transport | `not_https` | high | page served over plain `http:`, except on the local machine (`localhost`, `*.localhost`, with or without a final dot, `127.0.0.0/8` also as IPv4-mapped IPv6, `[::1]`), which browsers treat as a secure context (other schemes, such as `file:` passed through the npm API, are not judged) |
+| transport | `password_over_http` | high | HTTP page with a password field (not on the local machine, as above) |
 | payment | `card_on_page` | high | card-like fields in the page and no known tokenization script |
 | payment | `card_tokenized_on_page` | medium | card-like fields + a provider tokenization script (e.g. GMO-PG token.js, PAY.JP v1, Stripe v1/v2) |
 | payment | `card_hosted_iframe` | good | an iframe matching a provider's `cardFrames` (card-entry frames known for that provider, e.g. Stripe `elements-inner-card`); other frames of a provider — buttons, wallets, Stripe's hidden `m-outer` — only count as the provider being used |
