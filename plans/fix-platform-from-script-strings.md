@@ -7,8 +7,9 @@ PHP from any `.php?` string in a bundle, and through `implies` MySQL/PHP as well
 (Fourthwall) was also reported although it is meant only to add a version.
 
 ## Change
-`engine/technologies.js`: after matching, drop hits whose total confidence is 0, and platform hits (CMS, ecommerce,
-blogs, web frameworks, web servers, languages, databases) whose only evidence is script content. Non-platform
+`engine/technologies.js`: drop hits whose total confidence is 0 before `implies` (so they imply nothing), and after
+`implies` drop platform hits (CMS, ecommerce, blogs, web frameworks, web servers, languages, databases) whose only
+evidence is script content; implied hits inherit that from the technology that implied them. Non-platform
 tools (analytics, ads, widgets) still come from script content, including tags configured in a tag manager.
 
 ## Verification

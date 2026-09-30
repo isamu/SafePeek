@@ -21,6 +21,17 @@ describe("technology detection", () => {
     assert.ok(!found.includes("WordPress"));
   });
 
+  it("does not let a script-only tool bring a platform in through implies", () => {
+    const found = names(makePage({ scripts: [script("https://app.example/build/app.js", "import('media-library-pro-core')")] }));
+    assert.ok(!found.includes("Laravel"), found.join(", "));
+    assert.ok(!found.includes("PHP"), found.join(", "));
+  });
+
+  it("still lets a directly seen platform imply others", () => {
+    const found = names(makePage({ meta: { generator: ["WordPress 7.1.2"] } }));
+    assert.ok(found.includes("PHP") && found.includes("MySQL"), found.join(", "));
+  });
+
   it("still detects a platform from direct traces", () => {
     assert.ok(names(makePage({ meta: { generator: ["WordPress 7.1.2"] } })).includes("WordPress"));
     assert.ok(names(makePage({ headers: { ...makePage().headers, "x-powered-by": "PHP/8.3.1" } })).includes("PHP"));
@@ -29,6 +40,14 @@ describe("technology detection", () => {
   it("still detects a tool configured in a tag manager's code", () => {
     const gtm = script("https://www.googletagmanager.com/gtm.js?id=GTM-X", 'var s=document.createElement("script");s.src="https://live.adenzo.com/tag.js";');
     assert.ok(names(makePage({ scripts: [gtm] })).includes("Adenzo"));
+  });
+
+  it("does not let a confidence:0 hit imply anything", () => {
+    const tiny = {
+      technologies: { Theme: { meta: { version: "^(.+)$\\;version:\\1\\;confidence:0" }, implies: "Shop", cats: [] }, Shop: { cats: [] } },
+      categories: {},
+    };
+    assert.deepEqual(detectTechnologies(makePage({ meta: { version: ["1.2.3"] } }), tiny), []);
   });
 
   it("does not report a fingerprint that only carries a confidence:0 pattern", () => {

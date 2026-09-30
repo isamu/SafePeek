@@ -43,8 +43,9 @@ export function detectTechnologies(page, db) {
   for (const [name, tech] of Object.entries(db.technologies)) {
     matchTechnology(name, tech, page, report);
   }
-  dropUnsupported(hits, db.technologies);
+  dropZeroConfidence(hits);
   applyImplies(hits, db.technologies);
+  dropScriptOnlyPlatforms(hits, db.technologies);
   applyRequirements(hits, db.technologies);
   return toResults(hits, db);
 }
@@ -162,16 +163,27 @@ function matchDom(dom, results, onMatch) {
 }
 
 /**
- * Drops hits that are not evidence on their own: patterns marked confidence:0 (they only add a version),
- * and a platform known only from a string inside script code — a bundle that mentions ".php?" or
- * "/wp-content" talks about another site as often as about this one.
+ * A pattern marked confidence:0 only adds a version; a technology seen only through such patterns is not one.
+ * Runs before implies, so it cannot bring in other technologies either.
+ * @param {Map<string, Hit>} hits
+ */
+function dropZeroConfidence(hits) {
+  for (const [name, hit] of [...hits]) {
+    if (hit.confidence === 0) hits.delete(name);
+  }
+}
+
+/**
+ * A platform known only from a string inside script code is dropped — a bundle that mentions ".php?" or
+ * "/wp-content" talks about another site as often as about this one. Runs after implies, and implied hits
+ * inherit directness from what implied them, so a script-only hit cannot bring a platform in either.
  * @param {Map<string, Hit>} hits
  * @param {Record<string, any>} technologies
  */
-function dropUnsupported(hits, technologies) {
+function dropScriptOnlyPlatforms(hits, technologies) {
   for (const [name, hit] of [...hits]) {
     const platform = (technologies[name]?.cats ?? []).some((/** @type {number} */ c) => PLATFORM_CATEGORIES.has(c));
-    if (hit.confidence === 0 || (platform && !hit.direct)) hits.delete(name);
+    if (platform && !hit.direct) hits.delete(name);
   }
 }
 
@@ -186,7 +198,13 @@ function applyImplies(hits, technologies) {
     for (const implied of toList(technologies[name]?.implies)) {
       const pattern = parsePattern(implied);
       if (!technologies[pattern.source] || hits.has(pattern.source)) continue;
-      hits.set(pattern.source, { confidence: pattern.confidence, versions: [], evidence: [`implied by ${name}`], impliedBy: name });
+      hits.set(pattern.source, {
+        confidence: pattern.confidence,
+        versions: [],
+        evidence: [`implied by ${name}`],
+        impliedBy: name,
+        direct: hits.get(name)?.direct,
+      });
       queue.push(pattern.source);
     }
   }
