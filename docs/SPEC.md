@@ -73,8 +73,8 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | payment | `payment_redirect` | good | a form posting (`method=post`, no password field) to a known provider host, or a link matching a provider's `checkoutLinks` (e.g. Stripe Checkout / Payment Links, PayPal checkout) — a link to a provider's information pages does not count |
 | payment | `payment_scripts_only` | info | provider script or non-card provider frame, but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
-| payment | `checkout_saas` | good | a directly seen product listed as `hosted` in `data/checkout-platforms.json` (Shopify, BASE, STORES, MakeShop, カラーミーショップ, futureshop …): a cart service provides the shop |
-| payment | `checkout_self_hosted` | info | a directly seen product listed as `self` (EC-CUBE, Magento, WooCommerce …): shop software the site runs and must keep updated |
+| payment | `checkout_saas` | good | a directly seen product listed as `hosted` in `data/checkout-platforms.json` (Shopify, BASE, STORES, MakeShop, カラーミーショップ …): a cart service provides the shop |
+| payment | `checkout_self_hosted` | info | a directly seen product listed as `self` (Magento, WooCommerce, PrestaShop …): shop software the site runs and must keep updated |
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
 | backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |

@@ -23,8 +23,13 @@ describe("who runs the checkout", () => {
   it("tells a hosted cart service from shop software the site runs itself", () => {
     assert.deepEqual(summary(checkCheckout([tech("Shopify")], db.checkout)), ["checkout_saas:Shopify"]);
     assert.deepEqual(
-      summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/html/template/default/js/eccube.js", "html eccube"])], db.checkout)),
-      ["checkout_self_hosted:EC-CUBE"],
+      summary(
+        checkCheckout(
+          [tech("Magento", ["script https://shop.example/static/frontend/Magento/luma/en_US/requirejs/require.js", "dom body.cms-home"])],
+          db.checkout,
+        ),
+      ),
+      ["checkout_self_hosted:Magento"],
     );
     assert.deepEqual(summary(checkCheckout([tech("MakeShop"), tech("WooCommerce")], db.checkout)), [
       "checkout_saas:MakeShop",
@@ -59,9 +64,8 @@ describe("who runs the checkout", () => {
   it("does not take one trace an embedded asset or copied markup could leave", () => {
     const embeddable = [
       tech("MakeShop", ["dom img[src*='gigaplus.makeshop.jp']"]),
-      tech("Future Shop", ["script https://blog.example/js/future-shop-widget.js"]),
+      tech("BigCommerce", ["script https://blog.example/js/bigcommerce-widget.js"]),
       tech("osCommerce", ["dom td.infoBoxHeading"]),
-      tech("EC-CUBE", ["script https://shop.example/js/eccube.js"]),
     ];
     for (const t of embeddable) assert.deepEqual(checkCheckout([t], db.checkout), [], t.evidence[0]);
   });
@@ -111,6 +115,21 @@ const RUNTIME_FIELDS = new Map([
   ["meta", "meta"],
 ]);
 
+const FIELD_KINDS = new Map([
+  ["headers", "header"],
+  ["cookies", "cookie"],
+  ["js", "js"],
+  ["meta", "meta"],
+  ["scriptSrc", "script"],
+  ["scripts", "script"],
+  ["html", "html"],
+  ["text", "page"],
+  ["url", "url"],
+  ["dom", "dom"],
+]);
+/** @param {Record<string, unknown>} fingerprint */
+const possibleKinds = (fingerprint) => new Set([...FIELD_KINDS].filter(([field]) => field in fingerprint).map(([, kind]) => kind)).size;
+
 describe("checkout-platforms.json", () => {
   const { platforms } = JSON.parse(readFileSync(new URL("../extension/data/checkout-platforms.json", import.meta.url), "utf8"));
   for (const p of platforms) {
@@ -120,6 +139,7 @@ describe("checkout-platforms.json", () => {
       assert.ok(p.kind === "hosted" || p.kind === "self", "kind");
       assert.match(p.source, /^https:\/\//, "source link");
       assert.equal("singleTraces" in p, "singleTraceReason" in p, "single traces come with their reason");
+      assert.ok("singleTraces" in p || possibleKinds(db.technologies[p.name]) >= 2, "can ever reach a verdict with the current fingerprint");
       if ("singleTraceReason" in p) assert.ok(p.singleTraceReason.length > 20, "says why one trace is enough");
       for (const label of p.singleTraces ?? []) {
         const [kind, key] = label.split(" ");
