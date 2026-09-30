@@ -82,7 +82,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
 | backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |
 | backend | `backend_hosting` | info | a static or edge hosting platform (S3 / CloudFront, Vercel, Netlify, Cloudflare Pages, Firebase Hosting, Amplify Hosting) inferred at ≥ 60; SDKs and API calls of the same vendors stay `backend_managed`: it serves the page itself; the APIs behind it may run elsewhere |
-| backend | `backend_related` | info | other hosts of the same organisation (same registrable domain, or a domain sharing a brand word of four or more letters) that the page's HTML, forms, API calls or script bodies point to, with the backend URL-shape rules their paths match (e.g. an order system at `…/order.do`); kept apart from the page's own backend |
+| backend | `backend_related` | info | other hosts that look like the same organisation's (same registrable domain, one label below a shared hosting suffix such as `vercel.app`; or a domain sharing a non-generic brand word of four or more letters) that the page's HTML, forms, API calls or inline / same-host script bodies name, with the backend URL-shape rules their paths match (e.g. an order system at `…/order.do`); kept apart from the page's own backend |
 | cms | `wp_core_eol` | high | WordPress below 4.7 (no security backports since 2025-07) |
 | cms | `wp_core_outdated` | medium | WordPress older than the latest series in `wordpress.json` |
 | cms | `wp_version_exposed` | low | WordPress version readable from the page |

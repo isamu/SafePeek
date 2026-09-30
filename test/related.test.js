@@ -40,6 +40,37 @@ describe("related systems", () => {
     );
   });
 
+  it("does not relate two customers of one shared hosting domain", () => {
+    assert.equal(registrableDomain("tenant-a.vercel.app"), "tenant-a.vercel.app");
+    assert.ok(!isRelatedHost("tenant-a.vercel.app", "tenant-b.vercel.app"));
+    assert.ok(!isRelatedHost("alice.github.io", "bob.github.io"));
+    assert.ok(!isRelatedHost("acme-shop.vercel.app", "acme-blog.vercel.app"), "no brand-word relation between tenants");
+    assert.ok(isRelatedHost("tenant-a.vercel.app", "api.tenant-a.vercel.app"), "the same tenant");
+    const page = makePage({
+      url: "https://tenant-a.netlify.app/",
+      forms: [{ action: "https://tenant-b.netlify.app/order.action", method: "post", hasPassword: false }],
+    });
+    assert.deepEqual(inferRelatedSystems(page, db.backends), []);
+  });
+
+  it("does not relate domains that share only a common word", () => {
+    for (const [a, b] of [
+      ["www.acme-shop.jp", "www.shop-plus.jp"],
+      ["www.tokyo-bank.jp", "news.tokyo-news.jp"],
+      ["www.acme-online.com", "www.online-mall.jp"],
+    ]) {
+      assert.ok(!isRelatedHost(a, b), `${a} ${b}`);
+    }
+  });
+
+  it("does not take URLs from a third-party script's body", () => {
+    const page = makePage({
+      url: "https://www.acme-ec.com/",
+      scripts: [script("https://cdn.vendor.example/widget.js", "// see https://order.acme.jp/cart.do for the demo shop")],
+    });
+    assert.deepEqual(inferRelatedSystems(page, db.backends), []);
+  });
+
   it("leaves out unrelated hosts and related ones whose URLs say nothing", () => {
     const page = makePage({
       url: "https://shop.example.jp/",
