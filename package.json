@@ -1,6 +1,6 @@
 {
   "name": "safepeek",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Browser extension that shows what a website is built with and how safely it handles your data. Runs entirely in the browser.",
   "homepage": "https://github.com/isamu/SafePeek",
