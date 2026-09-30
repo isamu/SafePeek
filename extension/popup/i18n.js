@@ -156,6 +156,16 @@ const JA = {
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
   no_clickjacking: { title: () => "クリックジャッキング対策がありません", detail: () => "X-Frame-Options も CSP の frame-ancestors もありません。" },
+  card_page_third_party: {
+    title: (p) => `カード番号を入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
+    detail: () =>
+      "カード番号はこのページ自身の入力欄に入力します。そのため、ここで動く別ドメインのスクリプト（広告・解析など）からも読み取れます。カード情報を盗む攻撃は、こうしたスクリプトの改ざんを入口にします。自社の配信用ドメインの場合もあるので、根拠のドメインを確かめてください。決済会社の入力画面（iframe）なら、ほかのスクリプトからは読めません。",
+  },
+  login_page_third_party: {
+    title: (p) => `パスワードを入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
+    detail: () =>
+      "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。自社の配信用ドメインや、ロボット対策（reCAPTCHA など）の一般的なものも含まれますが、ログイン画面では少ないほど安全です。",
+  },
   third_party_scripts: {
     title: (p) => `外部のスクリプトを読み込んでいます（${p.hosts}ドメイン, ${p.count}件）`,
     detail: () => "外部スクリプトはページ上の入力内容をすべて読み取れます。広告・解析タグなど多くは一般的なものです。",
@@ -308,6 +318,16 @@ const EN = {
   csp_unsafe_inline: { title: () => "CSP allows inline scripts", detail: () => "'unsafe-inline' largely disables CSP's protection against injected scripts." },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
   no_clickjacking: { title: () => "No clickjacking protection", detail: () => "Neither X-Frame-Options nor CSP frame-ancestors is set." },
+  card_page_third_party: {
+    title: (p) => `Scripts from other domains run where you type your card number (${p.count} hosts)`,
+    detail: () =>
+      "The card number goes into this page's own fields, so scripts from other domains running here (ads, analytics …) can read it too. Card-skimming attacks come in through exactly these scripts. Some may be the site's own asset domains, so check the listed hosts. A payment provider's card frame would keep them all out.",
+  },
+  login_page_third_party: {
+    title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
+    detail: () =>
+      "The password goes into this page's own field, so scripts from other domains running here can read it too. Some are the site's own asset domains or common bot checks such as reCAPTCHA, but on a login page, the fewer the safer.",
+  },
   third_party_scripts: {
     title: (p) => `Third-party scripts (${p.hosts} domains, ${p.count} files)`,
     detail: () => "Third-party scripts can read everything typed on the page. Most are ordinary analytics or tags.",

@@ -110,6 +110,8 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | page | `mixed_active` | medium | HTTPS page referencing http: scripts/stylesheets/iframes |
 | page | `mixed_passive` | low | HTTPS page referencing http: images |
 | page | `form_insecure_action` | high | HTTPS page with a form posting to http: |
+| page | `card_page_third_party` | medium | card fields sit in the page itself (not a provider's frame) and scripts from other domains run on it (hosts that look like the same organisation's, see `backend_related`, and payment providers left out; an asset domain unlike the site's name still counts, so the wording says "other domains"): each can read the card number, the way card skimming starts |
+| page | `login_page_third_party` | low | a password field sits in the page and scripts from other domains run on it (same exclusions) |
 | page | `third_party_scripts` | info | scripts from other origins |
 | page | `no_sri` | info | third-party scripts without `integrity` |
 

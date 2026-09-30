@@ -5,6 +5,7 @@ import { checkEol, checkLibraries } from "./checks/eol.js";
 import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
+import { checkSensitivePage } from "./checks/sensitive-page.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
 import { checkBackends } from "./checks/backend.js";
@@ -76,6 +77,7 @@ export async function analyze(page, db, env) {
     ...checkHeaders(page),
     ...checkCookies(page),
     ...checkPage(page),
+    ...checkSensitivePage(page, db.providers, db.suffixes),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };
   for (const f of findings) counts[f.severity]++;

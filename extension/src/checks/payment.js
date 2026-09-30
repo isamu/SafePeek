@@ -18,7 +18,7 @@ import { hostOf } from "./page.js";
  * @param {Provider[]} providers
  * @returns {Provider | undefined}
  */
-function providerForHost(host, providers) {
+export function providerForHost(host, providers) {
   return providers.find((p) => p.hosts.some((h) => host === h || host.endsWith("." + h)));
 }
 
