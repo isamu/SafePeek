@@ -243,7 +243,7 @@ const UI = {
     evidence: "根拠",
     unsupported: "このページは調べられません（http/httpsのページで開いてください）。",
     failed: "調査に失敗しました: ",
-    footer: "解析はすべてこのブラウザ内で行われ、外部には何も送信しません。",
+    footer: "解析はすべてこのブラウザ内で行われ、SafePeekが自分から外部へ送ることはありません。",
     data: "データ",
     backend: "バックエンド（推定）",
     backend_note: "サーバー側の技術は直接は見えません。ページに残った痕跡から推定しています。",
@@ -262,6 +262,8 @@ const UI = {
     copy_report: "推定結果をコピー",
     copied: "コピーしました",
     report_link: "推定の誤りや新しい痕跡を報告",
+    report_false: "誤判定を報告",
+    report_false_tech: "検出の誤りを報告",
   },
   en: {
     scanning: "Scanning…",
@@ -281,7 +283,7 @@ const UI = {
     evidence: "Evidence",
     unsupported: "This page cannot be inspected (open an http/https page).",
     failed: "Scan failed: ",
-    footer: "Everything is analysed inside this browser. Nothing is sent anywhere.",
+    footer: "Everything is analysed inside this browser. SafePeek sends nothing on its own.",
     data: "Data",
     backend: "Backend (inferred)",
     backend_note: "Server-side technology is not directly visible; this is inferred from traces left in the page.",
@@ -300,6 +302,8 @@ const UI = {
     copy_report: "Copy the inference",
     copied: "Copied",
     report_link: "Report a wrong guess or a new trace",
+    report_false: "Report a false result",
+    report_false_tech: "Report a wrong detection",
   },
 };
 

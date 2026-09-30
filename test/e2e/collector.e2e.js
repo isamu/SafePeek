@@ -45,6 +45,7 @@ let server;
 /** @type {import("playwright").Browser} */
 let browser;
 let base = "";
+const FIXTURE_HOST = "shop.test";
 
 before(async () => {
   server = createServer(async (req, res) => {
@@ -66,8 +67,13 @@ before(async () => {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(undefined)));
   const address = server.address();
-  base = `http://127.0.0.1:${typeof address === "object" && address ? address.port : 0}`;
-  browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args: ["--no-sandbox"] });
+  // A non-loopback name for the local server: SafePeek does not judge transport on localhost, and the fixtures
+  // need to be judged like any site served over plain HTTP.
+  base = `http://${FIXTURE_HOST}:${typeof address === "object" && address ? address.port : 0}`;
+  browser = await chromium.launch({
+    executablePath: process.env.CHROMIUM_PATH || undefined,
+    args: ["--no-sandbox", `--host-resolver-rules=MAP ${FIXTURE_HOST} 127.0.0.1`],
+  });
 });
 
 after(async () => {
