@@ -192,16 +192,8 @@
    * @returns {string[]}
    */
   function readContactedHosts(entries) {
-    const hosts = entries.map((e) => hostOfUrl(e.name)).filter((h) => h !== "");
+    const hosts = entries.map((e) => parseUrl(e.name)?.hostname ?? "").filter((h) => h !== "");
     return [...new Set(hosts)].slice(0, MAX_REQUESTS);
-  }
-
-  /**
-   * @param {string} raw
-   * @returns {string}
-   */
-  function hostOfUrl(raw) {
-    return parseUrl(raw)?.hostname ?? "";
   }
 
   /**
@@ -301,8 +293,32 @@
    * @returns {boolean}
    */
   function hasPasswordField(form) {
-    return [...form.elements].some((el) => isField(el) && el.tagName === "INPUT" && el.type === "password");
+    return formElements(form).some((el) => isField(el) && el.tagName === "INPUT" && el.type === "password");
   }
+
+  // A form's named fields shadow its own properties and methods (<input name="action">, name="getAttribute"), so an
+  // element that may be a form is read through the prototypes, never through its own properties.
+  const ELEMENTS_GETTER = Object.getOwnPropertyDescriptor(HTMLFormElement.prototype, "elements")?.get;
+  const TEXT_GETTER = Object.getOwnPropertyDescriptor(Node.prototype, "textContent")?.get;
+
+  /**
+   * @param {HTMLFormElement} form
+   * @returns {Element[]}
+   */
+  const formElements = (form) => [...(ELEMENTS_GETTER ? Reflect.apply(ELEMENTS_GETTER, form, []) : [])];
+
+  /**
+   * @param {Element} el
+   * @param {string} name
+   * @returns {string | null}
+   */
+  const attributeOf = (el, name) => Reflect.apply(Element.prototype.getAttribute, el, [name]);
+
+  /**
+   * @param {Element} el
+   * @returns {string}
+   */
+  const textOf = (el) => (TEXT_GETTER ? Reflect.apply(TEXT_GETTER, el, []) : "") ?? "";
 
   /**
    * @param {Document[]} docs
@@ -341,11 +357,11 @@
    */
   function readForms(docs) {
     return docs
-      .flatMap((doc) => [...doc.forms])
+      .flatMap((doc) => [...doc.forms].map((form) => ({ doc, form })))
       .slice(0, MAX_FORMS)
-      .map((form) => ({
-        action: form.action,
-        method: (form.getAttribute("method") ?? "get").toLowerCase(),
+      .map(({ doc, form }) => ({
+        action: absolute(attributeOf(form, "action") ?? "", doc.baseURI) || doc.URL,
+        method: (attributeOf(form, "method") ?? "get").toLowerCase(),
         hasPassword: hasPasswordField(form),
       }));
   }
@@ -389,9 +405,9 @@
       /** @type {Record<string, string[]>} */
       const attributes = {};
       for (const attr of query.attributes) {
-        attributes[attr] = elements.map((el) => el.getAttribute(attr)).filter((v) => v !== null);
+        attributes[attr] = elements.map((el) => attributeOf(el, attr)).filter((v) => v !== null);
       }
-      const texts = query.text ? elements.map((el) => (el.textContent ?? "").slice(0, 1000)) : [];
+      const texts = query.text ? elements.map((el) => textOf(el).slice(0, 1000)) : [];
       results[query.selector] = { count: elements.length, attributes, texts };
     }
     return results;

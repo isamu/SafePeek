@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>A login form whose field names shadow form properties</title>
+  </head>
+  <body>
+    <form action="/u/login" method="post">
+      <input type="hidden" name="action" value="default" />
+      <input type="hidden" name="elements" value="x" />
+      <input type="hidden" name="getAttribute" value="x" />
+      <input name="username" />
+      <input type="password" name="password" />
+    </form>
+    <form><input name="action" /></form>
+    <footer>
+      <div>
+        <form><input name="textContent" /></form>
+      </div>
+    </footer>
+  </body>
+</html>

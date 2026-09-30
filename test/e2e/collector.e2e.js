@@ -252,6 +252,18 @@ describe("collector in Chromium", () => {
     assert.ok(page.contactedHosts.includes("shop.test"));
   });
 
+  it("reads a form whose field names shadow the form's own properties", async () => {
+    const page = await collect("clobbered-form.html");
+    assert.deepEqual(
+      page.forms.map((f) => ({ ...f, action: new URL(f.action).pathname })),
+      [
+        { action: "/u/login", method: "post", hasPassword: true },
+        { action: "/clobbered-form.html", method: "get", hasPassword: false },
+        { action: "/clobbered-form.html", method: "get", hasPassword: false },
+      ],
+    );
+  });
+
   it("does not count its own earlier re-requests as the page's on a second scan", async () => {
     const page = await collect("api-calls.html", "load", 2);
     assert.ok(
