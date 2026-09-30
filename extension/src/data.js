@@ -14,7 +14,7 @@ import { indexPublicSuffixes } from "./engine/public-suffix.js";
  */
 export async function loadDatabases(readText) {
   const json = async (/** @type {string} */ name) => JSON.parse(await readText(name));
-  const [technologies, categories, retireText, eol, payment, backends, wordpress, checkout, auth, publicSuffixes, sources] = await Promise.all([
+  const [technologies, categories, retireText, eol, payment, backends, wordpress, checkout, auth, destinations, publicSuffixes, sources] = await Promise.all([
     json("technologies.json"),
     json("categories.json"),
     readText("retire.json"),
@@ -24,6 +24,7 @@ export async function loadDatabases(readText) {
     json("wordpress.json"),
     json("checkout-platforms.json"),
     json("auth-services.json"),
+    json("data-destinations.json"),
     json("public-suffixes.json"),
     json("sources.json"),
   ]);
@@ -37,6 +38,7 @@ export async function loadDatabases(readText) {
     wordpress,
     checkout: checkout.platforms,
     auth: auth.services,
+    destinations: { purposes: destinations.purposes, services: destinations.services },
     suffixes: indexPublicSuffixes(publicSuffixes),
     sources,
   };

@@ -125,7 +125,8 @@ export function renderReport(root, report, db) {
   const context = { extensionVersion: chrome.runtime.getManifest().version, dataVersions: dataVersions(db) };
   const render = findingRenderer(report.url, context);
   const payment = report.findings.filter((f) => f.area === "payment");
-  const others = report.findings.filter((f) => f.area !== "payment" && f.area !== "backend");
+  const destinations = report.findings.filter((f) => f.area === "destinations");
+  const others = report.findings.filter((f) => !["payment", "backend", "destinations"].includes(f.area));
   const technologies = section(t("technologies"), renderTechnologies(report, db.categories));
   if (report.technologies.length > 0) technologies.append(reportLink(t("report_false_tech"), technologiesReportUrl(report.technologies, report.url, context)));
   root.replaceChildren(
@@ -133,6 +134,7 @@ export function renderReport(root, report, db) {
     section(t("payment"), payment.map(render)),
     renderBackendSection(report, render),
     section(t("findings"), others.map(render)),
+    section(t("destinations"), destinations.map(render)),
     technologies,
     renderFooter(db),
   );
