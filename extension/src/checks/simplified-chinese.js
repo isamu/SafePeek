@@ -3,8 +3,12 @@
 
 import { finding } from "./finding.js";
 
-// Simplified forms that Japanese writes differently (这 for 這, 购 for 購 …), so none of them occurs in Japanese text.
-const SIMPLIFIED_ONLY = new Set("这们东华货购优价质飞说为发过买卖页务头关员个设际顾选择请联运费订单实");
+// Simplified forms that Japanese normally writes differently (这 for 這, 购 for 購 …). 个 is left out: Japanese knows it
+// as an old form related to 個 and 箇.
+const SIMPLIFIED_ONLY = new Set("这们东华货购优价质飞说为发过买卖页务头关员设际顾选择请联运费订单实");
+// A page about learning Chinese quotes simplified text on purpose, so its characters are not a sign; the language and
+// the days still are.
+const CHINESE_STUDY = /中国語|簡体字|ピンイン|拼音|HSK|中検/;
 const MIN_SIMPLIFIED = 3;
 const KANA = /[ぁ-ゖァ-ヺ]/g;
 const MIN_KANA = 200;
@@ -31,7 +35,7 @@ export function checkSimplifiedChinese(page) {
 function chineseSigns(page) {
   const simplified = [...new Set([...page.text].filter((char) => SIMPLIFIED_ONLY.has(char)))];
   const signs = [];
-  if (simplified.length >= MIN_SIMPLIFIED) signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
+  if (simplified.length >= MIN_SIMPLIFIED && !CHINESE_STUDY.test(page.text)) signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
   if (CHINESE_LANG.test(htmlTag(page.html))) signs.push('<html lang="zh…">');
   const days = CHINESE_DAYS.exec(page.text);
   if (days) signs.push(days[0]);

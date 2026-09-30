@@ -26,8 +26,31 @@ describe("simplified Chinese on a Japanese shop", () => {
     assert.deepEqual([found.severity, found.evidence], ["medium", ['<html lang="zh…">', "365天"]]);
   });
 
-  it("does not count one or two characters, such as a quoted name", () => {
-    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}上海の「东方」ブランド`)), []);
+  it("needs three distinct characters: two, such as a quoted name, are not enough", () => {
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}上海の「东货」ブランド`)), []);
+    assert.equal(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}「东货购」`)).length, 1);
+  });
+
+  it("reports the language or the days on their own", () => {
+    assert.deepEqual(
+      checkSimplifiedChinese(shop(JAPANESE_SHOP, '<html lang="zh-Hans"><body></body></html>')).map((f) => [f.severity, f.evidence]),
+      [["low", ['<html lang="zh…">']]],
+    );
+    assert.deepEqual(
+      checkSimplifiedChinese(shop(`${JAPANESE_SHOP}24天以内に発送`)).map((f) => [f.severity, f.evidence]),
+      [["low", ["24天"]]],
+    );
+  });
+
+  it("does not count the characters a page about learning Chinese quotes, nor 个", () => {
+    const textbook = `${JAPANESE_SHOP}中国語テキスト：例文「这是我们的新书，请订购。」`;
+    assert.deepEqual(checkSimplifiedChinese(shop(textbook)), []);
+    assert.deepEqual(
+      checkSimplifiedChinese(shop(`${textbook}365天受付`)).map((f) => f.evidence),
+      [["365天"]],
+      "other signs still count",
+    );
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}「个东货」`)), [], "个 is not counted, so this is two");
   });
 
   it("stays out of pages that are not Japanese shops", () => {
