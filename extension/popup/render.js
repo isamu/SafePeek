@@ -7,7 +7,8 @@ import { renderBackendSection, renderSignals } from "./render-backend.js";
 import { findingReportUrl, technologiesReportUrl } from "./false-report.js";
 
 /**
- * A link that opens a pre-filled issue form on GitHub; nothing is sent until the user submits it there.
+ * A link that opens a pre-filled issue form on GitHub. GitHub receives the pre-filled values when the user opens it;
+ * they become a public issue only if the user submits the form.
  * @param {string} text
  * @param {string} href
  * @returns {HTMLElement}

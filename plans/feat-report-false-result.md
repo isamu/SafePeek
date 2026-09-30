@@ -14,7 +14,8 @@ already filled in, without SafePeek sending anything itself.
   - Left out: evidence lines, header values (`value`), cookie names (`names`), URL paths, anything else the page controls.
   - The technology-list URL is cut ("… and N more") to stay below GitHub's 414 limit.
 - `popup/render.js`: a "Report a false result" link inside every finding and under the technology list.
-- Opening the link is a user click to github.com; the form is submitted (or not) by the user there.
+- Opening the link is a user click to github.com: GitHub receives the pre-filled values in the URL, and they become a
+  public issue only if the user submits the form there. SafePeek itself sends nothing.
 
 ## Verification
 Unit tests for the allowlist (secrets in URL path, header value, evidence and a non-plain version never appear),

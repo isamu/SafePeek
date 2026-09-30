@@ -1,5 +1,6 @@
-// Links that open the "False result" issue form with the result already filled in. The form opens on
-// GitHub and nothing is sent until the user submits it there. What goes in is decided per parameter, not by
+// Links that open the "False result" issue form with the result already filled in. Opening one is a visit to
+// GitHub, which receives the pre-filled values in the URL; they become a public issue only if the user submits
+// the form. What goes in is decided per parameter, not by
 // the shape of its value: the page's origin, the finding's id and severity, the parameters listed in
 // DATA_PARAMS (values from SafePeek's own data), numbers, a detected version when it is a plain version
 // number, and the extension and data versions. Header values, cookie names, evidence lines and anything else
