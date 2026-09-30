@@ -13,6 +13,12 @@ const MAX_SIMPLIFIED_PER_KANA = 0.1;
 // Japanese prose, even kanji-heavy, stays well below this.
 const HAN = /[\u4e00-\u9fff]/g;
 const MAX_HAN_PER_KANA = 2;
+// A line with no kana is a line of Chinese (a shipping note for overseas customers …) when it has this many Han
+// characters or the comma Chinese writes (，, where Japanese writes 、); a shorter one without it is a label such as
+// 「休業日：365天受付」, part of the Japanese page.
+const MIN_HAN_IN_CHINESE_LINE = 12;
+const HAS_KANA = /[ぁ-ゖァ-ヺ]/;
+const CHINESE_COMMA = "，";
 // A page about learning Chinese quotes simplified text on purpose, so its characters are not a sign; the language and
 // the days still are.
 const CHINESE_STUDY = /中国語|簡体字|ピンイン|拼音|HSK|中検/;
@@ -44,9 +50,11 @@ export function checkSimplifiedChinese(page) {
  * @returns {string[]}  one evidence line per kind of sign
  */
 function chineseSigns(page, kana) {
-  const occurrences = [...page.text].filter((char) => SIMPLIFIED_ONLY.has(char));
+  // Chinese uses its characters and 天 for days as a matter of course: only the Japanese lines are read, and a page
+  // written mostly in Chinese is not read at all.
+  const japanese = japaneseLines(page.text);
+  const occurrences = [...japanese].filter((char) => SIMPLIFIED_ONLY.has(char));
   const simplified = [...new Set(occurrences)];
-  // A page with a section written in Chinese uses its characters and 天 for days as a matter of course.
   const han = (page.text.match(HAN) ?? []).length;
   const chineseSection = occurrences.length > kana * MAX_SIMPLIFIED_PER_KANA || han > kana * MAX_HAN_PER_KANA;
   const signs = [];
@@ -54,9 +62,22 @@ function chineseSigns(page, kana) {
     signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
   }
   if (CHINESE_LANG.test(htmlTag(page.html))) signs.push('<html lang="zh…">');
-  const days = CHINESE_DAYS.exec(page.text);
+  const days = CHINESE_DAYS.exec(japanese);
   if (days && !chineseSection) signs.push(days[0]);
   return signs;
+}
+
+/**
+ * @param {string} text
+ * @returns {string}  the text without its lines of Chinese
+ */
+function japaneseLines(text) {
+  const isChinese = (/** @type {string} */ line) =>
+    !HAS_KANA.test(line) && (line.includes(CHINESE_COMMA) || (line.match(HAN) ?? []).length >= MIN_HAN_IN_CHINESE_LINE);
+  return text
+    .split("\n")
+    .filter((line) => !isChinese(line))
+    .join("\n");
 }
 
 /**

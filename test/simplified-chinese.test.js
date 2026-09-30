@@ -53,6 +53,16 @@ describe("simplified Chinese on a Japanese shop", () => {
     );
   });
 
+  it("skips a short section written in Chinese on a Japanese page, but not stray characters in Japanese lines", () => {
+    const shipping = ["国际配送说明：我们提供海外配送服务，订单确认后发货。", "运费根据地区计算，请联系客服了解详情。", "订购后3天发货，节假日除外。"].join(
+      "\n",
+    );
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}\n${shipping}\n`)), []);
+    const stray = `${JAPANESE_SHOP}\n优质商品です。这是新货をお届けします。我们のお店です。\n休業日：365天受付`;
+    const [found] = checkSimplifiedChinese(shop(stray));
+    assert.equal(found?.evidence.length, 2, "stray characters in a Japanese line and a short label both count");
+  });
+
   it("treats a section in Traditional Chinese as a Chinese section too", () => {
     const traditional = "歡迎光臨本店。購物指南：訂購後3天發貨，海外配送費用請參閱說明。會員註冊免費，支援信用卡付款。".repeat(20);
     assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${traditional}3天`)), []);
