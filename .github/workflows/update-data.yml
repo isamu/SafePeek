@@ -1,0 +1,63 @@
+# Weekly refresh of the bundled signature data (webappanalyzer fingerprints, Retire.js vulnerability
+# repository). Opens a pull request so every change to what SafePeek detects is reviewed as a diff.
+#
+# Requires the repository setting "Allow GitHub Actions to create and approve pull requests".
+# Pull requests opened with GITHUB_TOKEN do not trigger other workflows, so the tests run here,
+# before the pull request is opened.
+name: update-data
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - run: yarn install --frozen-lockfile
+
+      - run: yarn update-data
+
+      - name: Stop when nothing changed
+        id: diff
+        run: |
+          if git diff --quiet -- extension/data; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --stat -- extension/data
+          fi
+
+      - if: steps.diff.outputs.changed == 'true'
+        run: yarn test
+
+      - if: steps.diff.outputs.changed == 'true'
+        name: Open pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          branch="data/update-$(date -u +%Y%m%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "${branch}"
+          git add extension/data
+          git commit -m "Update signature data $(date -u +%Y-%m-%d)"
+          git push --force origin "${branch}"
+          gh pr create --base main --head "${branch}" --title "Update signature data $(date -u +%Y-%m-%d)" \
+            --body "Automated refresh of extension/data from webappanalyzer and Retire.js. Unit tests passed in the update-data run. See sources.json for the upstream commits." \
+            || echo "A pull request for ${branch} already exists."
