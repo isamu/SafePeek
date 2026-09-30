@@ -39,3 +39,8 @@ Any script on a page can read what is typed into that page's own fields. Widely 
 - *other*: anything else
 
 Hosts are listed with *other* and *ads* first.
+
+**Scripts known only by host.** A script can be inserted and then removed from the DOM. The loading record still shows it, but only by host (`scriptHosts`).
+- Such scripts are counted like any other.
+- On a card page, a host-only script on a payment provider's host that has a tokenizer is given the benefit of the doubt. Without its path, a tokenizer cannot be told from the same provider's SDK, and wrongly flagging the tokenizer would contradict the payment finding.
+- A label is decided per host. A product's evidence keeps only a few of its script URLs, and the other scripts on the same host are the same product.

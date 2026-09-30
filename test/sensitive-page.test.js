@@ -91,6 +91,26 @@ describe("login pages", () => {
   });
 });
 
+describe("labels and the loading record", () => {
+  it("label every script of a host by what was detected from any of them, beyond the evidence cap", () => {
+    const urls = Array.from({ length: 6 }, (_, i) => `https://www.googletagmanager.com/gtm.js?id=GTM-${i}`);
+    const detected = { ...tech("Google Tag Manager", urls[0]), evidence: urls.slice(0, 5).map((u) => `script ${u}`) };
+    const found = check({ inputs: passwordInput, scripts: urls.map((u) => script(u)) }, [detected]);
+    assert.deepEqual(summary(found), ["login_page_third_party:info:1"]);
+    assert.deepEqual(found[0].evidence, ["analytics: www.googletagmanager.com"]);
+  });
+
+  it("count scripts known only from the loading record, inserted and then removed", () => {
+    assert.deepEqual(summary(check({ inputs: cardInputs, scriptHosts: ["evil.example"] })), ["card_page_third_party:medium:1"]);
+    assert.deepEqual(summary(check({ inputs: passwordInput, scriptHosts: ["www.googletagmanager.com"] })), ["login_page_third_party:info:1"]);
+  });
+
+  it("give a provider's host the benefit of the doubt on a card page when only the host is known", () => {
+    assert.deepEqual(check({ inputs: cardInputs, scriptHosts: ["js.stripe.com"] }), []);
+    assert.deepEqual(summary(check({ inputs: passwordInput, scriptHosts: ["js.stripe.com"] })), ["login_page_third_party:low:1"]);
+  });
+});
+
 describe("pages with both", () => {
   it("judge the card and the password separately: a tokenizer is expected only where the card is typed", () => {
     const found = check({ inputs: [...cardInputs, ...passwordInput], scripts: [script("https://js.stripe.com/v2/")] });
