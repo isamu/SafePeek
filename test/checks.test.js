@@ -78,6 +78,10 @@ describe("transport and headers", () => {
     }
     assert.deepEqual(withHsts("max-age=31536000, max-age=0"), [], "the first header counts");
     assert.deepEqual(withHsts("max-age=0, max-age=31536000"), ["no_hsts"], "only the first header counts");
+    assert.deepEqual(withHsts('foo="a,b"; max-age=31536000'), [], "a comma inside a quoted value does not start another header");
+    assert.deepEqual(withHsts('foo="a;max-age=0"; max-age=31536000'), [], "nor does a semicolon start another directive");
+    assert.deepEqual(withHsts('max-age="3153\\6000"'), [], "a quoted value is unescaped");
+    assert.deepEqual(withHsts('max-age="31536000"x'), ["no_hsts"], "text after the closing quote is malformed");
   });
 
   it("counts only X-Frame-Options values and frame-ancestors that browsers honour", () => {
