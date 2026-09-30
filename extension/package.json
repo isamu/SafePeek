@@ -1,6 +1,6 @@
 {
   "name": "safepeek",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Infer a website's tech stack, outdated backends and card-payment handling from page data. The analysis engine of the SafePeek browser extension.",
   "keywords": [
     "security",
