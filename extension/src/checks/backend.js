@@ -33,5 +33,6 @@ function backendFinding(b, today) {
   }
   if (b.status === "legacy") return finding("backend_legacy", strong ? "medium" : "low", "backend", params, evidence);
   if (b.status === "managed" && strong) return finding("backend_managed", "info", "backend", params, evidence);
+  if (b.status === "hosting" && strong) return finding("backend_hosting", "info", "backend", params, evidence);
   return null;
 }

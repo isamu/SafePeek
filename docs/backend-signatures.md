@@ -29,7 +29,8 @@ Each trace is shown in the popup with its strength (strong ≥ 70, medium ≥ 40
 
 - `eol` — upstream support has ended. Needs `eol` (date) and `source` (link to the announcement). Reported as **high** at confidence ≥ 60, otherwise medium.
 - `legacy` — an old generation that is often left unmaintained. Needs `source`. Medium at ≥ 60, otherwise low.
-- `managed` — BaaS / PaaS / serverless / static hosting. Reported as information at ≥ 60, and a server stack that appears only through another fingerprint's "implies" is then dropped as contradictory.
+- `managed` — BaaS / PaaS / serverless: the platform runs the backend. Reported as information at ≥ 60, and a server stack that appears only through another fingerprint's "implies" is then dropped as contradictory.
+- `hosting` — static or edge hosting (S3 / CloudFront, Vercel, Netlify, Cloudflare Pages, Firebase Hosting, Amplify Hosting): it proves only where the page itself is served from; the APIs behind it may run anywhere. Reported as information at ≥ 60 ("served from"), and implied server stacks are dropped as for `managed`, since none of these run PHP or MySQL for the page.
 - `info` — identifies a framework or language, no judgement.
 
 ## Contributing a rule
