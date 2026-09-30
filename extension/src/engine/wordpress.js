@@ -43,6 +43,23 @@ function remember(into, slug, version) {
 }
 
 /**
+ * An asset belongs to the inspected site when its host is the page's host or one is a subdomain of the
+ * other (www., cdn., static.). Another site's WordPress embedded here says nothing about this one.
+ * @param {string} raw
+ * @param {string} pageUrl
+ * @returns {boolean}
+ */
+function isOwnAsset(raw, pageUrl) {
+  try {
+    const asset = new URL(raw.replace(/&amp;/g, "&"), pageUrl).hostname;
+    const page = new URL(pageUrl).hostname;
+    return asset === page || asset.endsWith(`.${page}`) || page.endsWith(`.${asset}`);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @param {import("../types.js").PageData} page
  * @returns {WordPressInfo}
  */
@@ -51,7 +68,7 @@ export function extractWordPress(page) {
     ...[...page.html.matchAll(ASSET_URL)].map((m) => m[1]),
     ...page.scripts.map((s) => s.src ?? "").filter((s) => s.includes("/wp-")),
     ...page.stylesheets.filter((s) => s.includes("/wp-")),
-  ];
+  ].filter((url) => isOwnAsset(url, page.url));
   /** @type {Map<string, string>} */
   const plugins = new Map();
   /** @type {Map<string, string>} */

@@ -106,7 +106,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 - **EOL**: hand-maintained `data/eol.json`; a version maps to the first cycle whose `below` it is under. Retire.js versions for jQuery, AngularJS, Vue, Bootstrap also feed this check.
 
 - **Backends**: hand-maintained `data/backend-signatures.json` (see `docs/backend-signatures.md`). Trace types: link, param, html, source, script, cookie, header, global, host. Confidence = sum of matched weights, capped at 100, reported from 30. When a strong `managed` backend is found, technologies that are only implied (no trace of their own) in the web framework, web server, language and database categories are dropped.
-- **WordPress**: `data/wordpress.json` holds the latest series and the backport cut-off; core version from the generator meta tag, else the most common `?ver=` of core assets under `/wp-includes/` (`css/`, `blocks/`, `js/dist/` except `vendor/`, `js/wp-*.js`, `comment-reply`; bundled libraries such as jQuery carry their own version and are ignored); plugins and themes from `/wp-content/` asset paths.
+- **WordPress**: `data/wordpress.json` holds the latest series and the backport cut-off; core version from the generator meta tag, else the most common `?ver=` of core assets under `/wp-includes/` (`css/`, `blocks/`, `js/dist/` except `vendor/`, `js/wp-*.js`, `comment-reply`; bundled libraries such as jQuery carry their own version and are ignored); plugins and themes from `/wp-content/` asset paths. Only assets on the page's own host or its subdomains (or a parent domain) count; another site's WordPress embedded in the page is ignored.
 
 ## 7. Data
 
@@ -122,7 +122,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 
 ## 8. UI
 
-Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button, which copies names and paths only — no query strings, path parameters such as `;jsessionid=`, or page excerpts — and a link to the issue form; nothing is sent by SafePeek itself), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
+Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button, which copies the page's origin and, per trace, its note plus only identifier names (form field, cookie, JS global, hostname) — never URL paths, header values or page/script excerpts — and a link to the issue form; nothing is sent by SafePeek itself), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
 
 ## 9. Quality gates
 

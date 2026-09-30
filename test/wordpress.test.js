@@ -52,6 +52,24 @@ describe("extractWordPress", () => {
     }
   });
 
+  it("ignores another site's WordPress assets embedded in the page", () => {
+    const html = [
+      '<script src="https://blog.other.example/wp-includes/js/wp-emoji-release.min.js?ver=4.6.1"></script>',
+      '<link href="https://blog.other.example/wp-includes/css/dist/block-library/style.min.css?ver=4.6.1">',
+      '<script src="https://blog.other.example/wp-content/plugins/old-plugin/x.js?ver=1.0"></script>',
+    ].join("");
+    const wp = extractWordPress(makePage({ url: "https://shop.example/", html }));
+    assert.deepEqual([wp.detected, wp.version, wp.plugins], [false, "", []]);
+  });
+
+  it("counts the site's own subdomains and relative URLs as its own", () => {
+    const version = (/** @type {string} */ url, /** @type {string} */ asset) =>
+      extractWordPress(makePage({ url, html: `<link href="${asset}/wp-includes/css/dashicons.min.css?ver=7.1.2">` })).version;
+    assert.equal(version("https://blog.example/", "https://cdn.blog.example"), "7.1.2", "subdomain");
+    assert.equal(version("https://www.blog.example/", "https://blog.example"), "7.1.2", "parent domain");
+    assert.equal(version("https://blog.example/", ""), "7.1.2", "relative");
+  });
+
   it("prefers the generator meta tag", () => {
     const wp = extractWordPress(makePage({ html: WP_HTML, meta: { generator: ["WordPress 6.2.1"] } }));
     assert.equal(wp.version, "6.2.1");

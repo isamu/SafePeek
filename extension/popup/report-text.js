@@ -1,16 +1,22 @@
 // The text "Copy the inference" puts on the clipboard, meant to be pasted into a public GitHub issue.
-// Only names and paths go in: no query strings, no path parameters such as ";jsessionid=", and no
-// excerpts of the page's HTML or scripts, which can hold tokens or personal data.
+// It lists what is allowed and drops everything else: the page's origin (never its path), and for
+// each trace only an identifier name — form field, cookie, JS global, the site's hostname. URL paths,
+// header values and page or script excerpts can carry session ids, tokens or personal data, so they
+// are never copied; the trace's note still says what kind of trace fired.
 
-/** Trace types whose match is a name, path or header, never free page text. */
-const COPYABLE_TYPES = new Set(["link", "param", "cookie", "global", "host", "header", "script"]);
+/** Trace types whose match is an identifier name rather than a value. */
+const COPYABLE_TYPES = new Set(["param", "cookie", "global", "host"]);
 
 /**
  * @param {string} url
- * @returns {string}  the URL without query string, fragment or ";name=value" path parameters
+ * @returns {string}  scheme and host only
  */
 export function publicUrl(url) {
-  return url.split(/[?#]/)[0].replace(/;[^/]*/g, "");
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "(unknown page)";
+  }
 }
 
 /**
@@ -18,7 +24,7 @@ export function publicUrl(url) {
  * @returns {string}
  */
 function signalLine(signal) {
-  const match = COPYABLE_TYPES.has(signal.type) ? `\`${publicUrl(signal.match).replace(/`/g, "'")}\`` : "(page excerpt not copied)";
+  const match = COPYABLE_TYPES.has(signal.type) ? `\`${signal.match.replace(/`/g, "'")}\`` : "(value not copied)";
   return `  - [${signal.weight}] ${signal.note}: ${match}`;
 }
 

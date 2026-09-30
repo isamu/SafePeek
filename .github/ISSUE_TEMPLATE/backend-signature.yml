@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for helping SafePeek recognise abandoned backends. Please do **not** paste session ids, tokens or personal data.
-        In the popup, **Copy the inference** puts SafePeek's current guess and its traces on your clipboard (names and paths only: no query strings, session ids or page excerpts); paste it below.
+        In the popup, **Copy the inference** puts SafePeek's current guess and its traces on your clipboard (the site's origin and identifier names only: no URL paths, header values or page excerpts); paste it below.
   - type: dropdown
     id: kind
     attributes:
