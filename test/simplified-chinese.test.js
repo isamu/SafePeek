@@ -82,6 +82,15 @@ describe("simplified Chinese on a Japanese shop", () => {
     );
   });
 
+  it("does not take a Japanese word starting with 天 after a number for days", () => {
+    for (const text of ["10天体セット", "全12天体の図鑑", "3天然石ブレスレット"]) {
+      assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${text}`)), [], text);
+    }
+    for (const text of ["365天受付", "7天无理由退货", "3天后发货", "お届けまで5天。"]) {
+      assert.equal(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${text}`)).length, 1, text);
+    }
+  });
+
   it("does not take 天 in Japanese words for days", () => {
     assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}天然素材、天気、晴天の日に発送`)), []);
   });

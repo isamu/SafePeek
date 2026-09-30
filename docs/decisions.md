@@ -150,6 +150,7 @@ Fake shops are often machine-translated from Chinese, and the police name simpli
 - **Only stray characters count.** A Japanese shop's page for Chinese-speaking customers is written in Chinese under a Japanese header and footer, so simplified characters are common there. A fake shop's Japanese carries a few. Above a small share of the kana, the page has a Chinese section, where the characters and 天 for days are ordinary, so neither is a sign; the declared language still is.
 - **A page about learning Chinese** (中国語, 簡体字, ピンイン, HSK, 中検) quotes simplified text on purpose, so its characters are not counted; the language and the days still are. A review found a Chinese-textbook catalogue reported otherwise.
 - **Only on a mainly Japanese page with shop words.** A Chinese-language site, or a page about China, is not what this is for.
+- **天 counts as days only before what Chinese writes after a day count** (受付, 以内, 后, 无理由 …) or the end of a phrase. Japanese words starting with 天 (天体, 天然) follow numbers on real shop pages.
 - **Chinese font names are left out.** CSS frameworks list them as fallbacks, so ordinary Japanese sites carry them.
 - **Machine translation without these marks is not judged.** It cannot be told from awkward human Japanese without a language model.
 

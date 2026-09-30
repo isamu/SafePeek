@@ -17,8 +17,10 @@ const KANA = /[ぁ-ゖァ-ヺ]/g;
 const MIN_KANA = 200;
 const SHOP_WORDS = /カート|買い物かご|ショッピング|購入|税込|送料/;
 const CHINESE_LANG = /\blang=["']?zh/i;
-// 天 counts days in Chinese; Japanese writes 日 (「365天受付」 on a Japanese page).
-const CHINESE_DAYS = /(?<!\d)\d{1,4}天/;
+// 天 counts days in Chinese; Japanese writes 日 (「365天受付」 on a Japanese page). Japanese words starting with 天 (天体,
+// 天然 …) follow numbers too, so only what Chinese writes after a day count, or the end of a phrase, counts.
+const AFTER_DAYS = ["受付", "营业", "以内", "内", "后", "後", "左右", "无理由", "退", "包"];
+const CHINESE_DAYS = new RegExp(`(?<!\\d)\\d{1,4}天(?=${AFTER_DAYS.join("|")}|[、。，,！!？?\\s）)」]|$)`);
 
 /**
  * @param {import("../types.js").PageData} page
