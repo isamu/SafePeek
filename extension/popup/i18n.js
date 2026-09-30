@@ -199,7 +199,7 @@ const JA = {
   shop_template_leftovers: {
     title: (p) => `ショップのテンプレートの仮の文字が残っています（${p.count}種類）`,
     detail: () =>
-      "「株式会社〇〇」「000-0000-0000」のような、テンプレートに最初から入っている仮の会社名・電話番号・文章がそのまま表示されています。偽ショップは共通のテンプレートから作られることが多く、こうした消し忘れが残りがちです。作りかけのサイトの場合もありますが、会社名・住所・電話番号が本物か確かめてください。",
+      "「株式会社〇〇」「000-0000-0000」のような、テンプレートに最初から入っている仮の会社名・電話番号・店名がそのまま表示されています。偽ショップは共通のテンプレートから作られることが多く、こうした消し忘れが残りがちです。作りかけのサイトの場合もありますが、会社名・住所・電話番号が本物か確かめてください。",
   },
   legal_notice_link_missing: {
     title: () => "このショップのページには、特定商取引法に基づく表記へのリンクが見当たりません",
@@ -417,7 +417,7 @@ const EN = {
   shop_template_leftovers: {
     title: (p) => `The shop still shows a template's placeholder text (${p.count} kinds)`,
     detail: () =>
-      "Placeholder company names, phone numbers or filler text that a template ships with (such as 株式会社〇〇 or 000-0000-0000) are shown as they are. Fake shops are often built from shared templates and leave these behind. It may also be a site still being built; check that the company, address and phone number are real.",
+      "Placeholder company names, phone numbers or store names that a template ships with (such as 株式会社〇〇 or 000-0000-0000) are shown as they are. Fake shops are often built from shared templates and leave these behind. It may also be a site still being built; check that the company, address and phone number are real.",
   },
   legal_notice_link_missing: {
     title: () => "This shop page has no link to a 特定商取引法 notice",

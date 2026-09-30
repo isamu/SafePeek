@@ -168,7 +168,7 @@ Fake shops come from shared kits, and a kit's placeholders are often left in (`d
 
 - **Only placeholders no real shop publishes count:** a name made of 〇 or ×, a phone number or postal code of zeros, template filler. A real number that happens to contain zeros does not match.
 - **Names and numbers count only where the seller's identity is given, never in a form example.** Real checkout and contact forms show 「入力例：000-0000-0000」, reviews mask names as 〇〇様, and pages mention partners as 株式会社××. Input placeholders are not read at all, since they are nearly always examples.
-- **"Lorem Ipsum" alone can be a product's name**, so only the filler passage counts.
+- **Lorem ipsum is not used.** Real shops keep the filler in size guides and hidden blocks, and name products "Lorem Ipsum".
 - **Low, and only on a Japanese shop page.** A site still being built shows the same, so the message says so.
 
 ## Where a password is sent

@@ -58,11 +58,12 @@ describe("template leftovers on a shop page", () => {
     }
   });
 
-  it("does not take a product called Lorem Ipsum for template filler", () => {
+  it("does not take lorem ipsum for a leftover: real shops keep it in size guides", () => {
     assert.deepEqual(checkTemplateLeftovers(shop("Tシャツ「Lorem Ipsum」ホワイト")), []);
+    assert.deepEqual(checkTemplateLeftovers(shop("サイズガイド\nLorem ipsum dolor sit amet, consectetur adipiscing elit.")), []);
   });
 
   it("stays out of pages that are not Japanese shops", () => {
-    assert.deepEqual(checkTemplateLeftovers(makePage({ text: "Lorem ipsum dolor sit amet. Your Store Name.", html: "<html></html>" })), []);
+    assert.deepEqual(checkTemplateLeftovers(makePage({ text: "Your Store Name. Default Store View.", html: "<html></html>" })), []);
   });
 });
