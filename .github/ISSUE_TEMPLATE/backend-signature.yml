@@ -39,6 +39,7 @@ body:
         - End of life (upstream support has ended)
         - Old generation (still runs, often unmaintained)
         - Managed service (BaaS / PaaS / serverless)
+        - Static or edge hosting (serves the page only)
         - Current
         - Not sure
   - type: input

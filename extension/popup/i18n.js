@@ -5,6 +5,11 @@
 
 /** @type {Record<string, Message>} */
 const JA = {
+  backend_hosting: {
+    title: (p) => `このページは ${p.name} から配信されています`,
+    detail: (p) =>
+      `ページそのものは ${p.name} が配信しています（確度「${confidenceLabel(Number(p.confidence))}」${p.confidence}）。前段にCDNがあったり、商品・会員・注文などのデータを扱うAPIは別のサーバーで動いていたりすることがよくあるため、サイト全体のバックエンドが ${p.name} だとは限りません。`,
+  },
   backend_managed: {
     title: (p) => `バックエンドはマネージドサービスと推定: ${p.name}`,
     detail: (p) =>
@@ -155,6 +160,11 @@ const JA = {
 
 /** @type {Record<string, Message>} */
 const EN = {
+  backend_hosting: {
+    title: (p) => `This page is served from ${p.name}`,
+    detail: (p) =>
+      `${p.name} serves the page itself (confidence: ${confidenceLabel(Number(p.confidence))}, ${p.confidence}). A CDN often sits in front, and the APIs holding products, accounts or orders often run elsewhere, so the site's backend as a whole is not necessarily ${p.name}.`,
+  },
   backend_managed: {
     title: (p) => `Backend runs on a managed service: ${p.name}`,
     detail: (p) =>
@@ -330,6 +340,7 @@ const UI = {
     status_eol: "サポート終了",
     status_legacy: "旧世代",
     status_managed: "マネージド",
+    status_hosting: "配信元",
     implied_by: "推定: {name} から",
     copy_report: "推定結果をコピー",
     copied: "コピーしました",
@@ -371,6 +382,7 @@ const UI = {
     status_eol: "End of life",
     status_legacy: "Old generation",
     status_managed: "Managed",
+    status_hosting: "Hosting",
     implied_by: "implied by {name}",
     copy_report: "Copy the inference",
     copied: "Copied",

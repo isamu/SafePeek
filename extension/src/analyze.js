@@ -115,15 +115,15 @@ function levelOf(counts) {
 const SERVER_CATEGORIES = new Set([18, 22, 27, 34]);
 
 /**
- * When the backend is a managed platform (BaaS, serverless, static hosting) inferred from strong
- * traces, a server stack that only appears through another fingerprint's "implies" contradicts
- * it and is dropped. Anything seen directly is kept.
+ * When the page comes from a managed platform (BaaS, serverless, static or edge hosting) inferred from
+ * strong traces, a server stack that only appears through another fingerprint's "implies" contradicts
+ * it and is dropped: none of these platforms runs PHP or MySQL for the page. Anything seen directly is kept.
  * @param {import("./types.js").Technology[]} technologies
  * @param {import("./types.js").Backend[]} backends
  * @returns {import("./types.js").Technology[]}
  */
 function dropImpliedServerStack(technologies, backends) {
-  const managed = backends.some((b) => b.status === "managed" && b.confidence >= 60);
+  const managed = backends.some((b) => (b.status === "managed" || b.status === "hosting") && b.confidence >= 60);
   if (!managed) return technologies;
   return technologies.filter((t) => !t.impliedBy || !t.categories.some((c) => SERVER_CATEGORIES.has(c)));
 }

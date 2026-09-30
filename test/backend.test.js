@@ -196,6 +196,33 @@ describe("managed backends (BaaS / PaaS)", () => {
     assert.ok(found["Vercel"]);
   });
 
+  it("says a hosting platform serves the page, not that it runs the backend", () => {
+    const found = byName(inferBackends(makePage({ headers: { ...makePage().headers, server: "Vercel", "x-vercel-id": "hnd1::abc" } }), db.backends));
+    assert.equal(found.Vercel?.status, "hosting");
+    const [f] = checkBackends([found.Vercel], today);
+    assert.equal(f.id, "backend_hosting");
+    assert.equal(f.severity, "info");
+  });
+
+  it("splits what a trace proves: a hosting domain serves the page, an SDK or API call runs the backend", () => {
+    const status = (/** @type {Partial<import("../extension/src/types.js").PageData>} */ over) =>
+      Object.fromEntries(
+        inferBackends(makePage(over), db.backends)
+          .filter((b) => b.confidence >= 60)
+          .map((b) => [b.name, b.status]),
+      );
+    assert.deepEqual(status({ url: "https://omochi.web.app/" }), { "Firebase Hosting": "hosting" });
+    assert.deepEqual(status({ url: "https://main.d1abc.amplifyapp.com/" }), { "AWS Amplify Hosting": "hosting" });
+    assert.deepEqual(status({ url: "https://site.pages.dev/" }), { "Cloudflare Pages": "hosting" });
+    assert.deepEqual(status({ url: "https://api.me.workers.dev/" }), { "Cloudflare Workers": "managed" });
+    const cloudFrontOnly = inferBackends(makePage({ headers: { ...makePage().headers, "x-amz-cf-id": "abc" } }), db.backends);
+    assert.deepEqual(cloudFrontOnly, [], "a CloudFront edge header alone says nothing about the origin");
+    assert.deepEqual(status({ url: "https://omochi.web.app/", globals: { __FIREBASE_DEFAULTS__: {} } }), {
+      Firebase: "managed",
+      "Firebase Hosting": "hosting",
+    });
+  });
+
   it("reports a strong managed backend as information, not a problem", () => {
     const [f] = checkBackends([{ name: "Firebase", language: "BaaS", status: "managed", eol: "", source: "", confidence: 100, signals: [] }], today);
     assert.equal(f.id, "backend_managed");
@@ -251,7 +278,7 @@ describe("backend-signatures.json (contributed rules)", () => {
   for (const rule of file.backends) {
     it(rule.name, () => {
       assert.ok(rule.name && rule.language, "name and language");
-      assert.ok(["eol", "legacy", "managed", "info"].includes(rule.status), "status");
+      assert.ok(["eol", "legacy", "managed", "hosting", "info"].includes(rule.status), "status");
       if (rule.status === "eol") assert.ok(!Number.isNaN(Date.parse(rule.eol)), "eol date");
       if (rule.status === "eol" || rule.status === "legacy") assert.match(rule.source ?? "", /^https:\/\//, "eol and legacy rules need a source link");
       assert.ok(rule.signals.length > 0, "at least one signal");

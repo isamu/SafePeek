@@ -405,7 +405,8 @@ main {
   color: var(--info);
 }
 
-.pill.status-managed {
+.pill.status-managed,
+.pill.status-hosting {
   color: var(--info);
   background: var(--info-bg);
 }

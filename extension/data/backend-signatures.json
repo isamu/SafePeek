@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname; 'api' = URLs the page itself fetched (fetch / XHR / beacon), scheme, host and path only, with path segments not shaped like route names masked as {token}. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'info' = identifies the framework or language only.",
+  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname; 'api' = URLs the page itself fetched (fetch / XHR / beacon), scheme, host and path only, with path segments not shaped like route names masked as {token}. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'hosting' = a static or edge hosting platform serves the page itself, while the APIs behind it may run anywhere; 'info' = identifies the framework or language only.",
   "reviewed": "2026-09-30",
   "backends": [
     {
@@ -568,13 +568,6 @@
       "status": "managed",
       "signals": [
         {
-          "type": "host",
-          "pattern": "\\.(?:web\\.app|firebaseapp\\.com)$",
-          "weight": 80,
-          "note": "hosted on a Firebase Hosting domain",
-          "noteJa": "Firebase Hosting のドメイン"
-        },
-        {
           "type": "script",
           "pattern": "/__/firebase/|gstatic\\.com/firebasejs/",
           "weight": 70,
@@ -603,18 +596,32 @@
           "noteJa": "__FIREBASE_DEFAULTS__ 変数"
         },
         {
-          "type": "header",
-          "pattern": "vary: x-fh-requested-host",
-          "weight": 60,
-          "note": "Firebase Hosting response header",
-          "noteJa": "Firebase Hosting のレスポンスヘッダー"
-        },
-        {
           "type": "api",
           "pattern": "^https://(?:firestore|identitytoolkit|securetoken|firebaseinstallations)\\.googleapis\\.com/",
           "weight": 60,
           "note": "calls to Firebase APIs",
           "noteJa": "Firebase の API への通信"
+        }
+      ]
+    },
+    {
+      "name": "Firebase Hosting",
+      "language": "Hosting (Google)",
+      "status": "hosting",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.(?:web\\.app|firebaseapp\\.com)$",
+          "weight": 80,
+          "note": "hosted on a Firebase Hosting domain",
+          "noteJa": "Firebase Hosting のドメイン"
+        },
+        {
+          "type": "header",
+          "pattern": "vary: x-fh-requested-host",
+          "weight": 60,
+          "note": "Firebase Hosting response header",
+          "noteJa": "Firebase Hosting のレスポンスヘッダー"
         }
       ]
     },
@@ -659,13 +666,6 @@
       "status": "managed",
       "signals": [
         {
-          "type": "host",
-          "pattern": "\\.amplifyapp\\.com$",
-          "weight": 80,
-          "note": "hosted on an Amplify domain",
-          "noteJa": "Amplify のドメイン"
-        },
-        {
           "type": "source",
           "pattern": "cognito-idp\\.[a-z0-9-]+\\.amazonaws\\.com|\\.appsync-api\\.[a-z0-9-]+\\.amazonaws\\.com|aws_user_pools_id|aws_appsync_graphqlEndpoint",
           "weight": 70,
@@ -692,6 +692,20 @@
           "weight": 70,
           "note": "calls to AWS AppSync",
           "noteJa": "AWS AppSync への通信"
+        }
+      ]
+    },
+    {
+      "name": "AWS Amplify Hosting",
+      "language": "Hosting (AWS)",
+      "status": "hosting",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.amplifyapp\\.com$",
+          "weight": 80,
+          "note": "hosted on an Amplify domain",
+          "noteJa": "Amplify のドメイン"
         }
       ]
     },
@@ -733,7 +747,7 @@
     {
       "name": "AWS static hosting (S3 / CloudFront)",
       "language": "Hosting (AWS)",
-      "status": "managed",
+      "status": "hosting",
       "signals": [
         {
           "type": "header",
@@ -745,7 +759,7 @@
         {
           "type": "header",
           "pattern": "x-amz-cf-id: .",
-          "weight": 30,
+          "weight": 20,
           "note": "served through CloudFront",
           "noteJa": "CloudFront 経由の配信"
         }
@@ -754,7 +768,7 @@
     {
       "name": "Vercel",
       "language": "Hosting / serverless",
-      "status": "managed",
+      "status": "hosting",
       "signals": [
         {
           "type": "host",
@@ -775,7 +789,7 @@
     {
       "name": "Netlify",
       "language": "Hosting / serverless",
-      "status": "managed",
+      "status": "hosting",
       "signals": [
         {
           "type": "host",
@@ -794,16 +808,30 @@
       ]
     },
     {
-      "name": "Cloudflare Pages / Workers",
-      "language": "Hosting / serverless",
+      "name": "Cloudflare Pages",
+      "language": "Hosting (Cloudflare)",
+      "status": "hosting",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.pages\\.dev$",
+          "weight": 80,
+          "note": "hosted on a Cloudflare Pages domain",
+          "noteJa": "Cloudflare Pages のドメイン"
+        }
+      ]
+    },
+    {
+      "name": "Cloudflare Workers",
+      "language": "Serverless (Cloudflare)",
       "status": "managed",
       "signals": [
         {
           "type": "host",
-          "pattern": "\\.(?:pages|workers)\\.dev$",
+          "pattern": "\\.workers\\.dev$",
           "weight": 80,
-          "note": "hosted on a Cloudflare Pages / Workers domain",
-          "noteJa": "Cloudflare Pages / Workers のドメイン"
+          "note": "runs on a Cloudflare Workers domain",
+          "noteJa": "Cloudflare Workers のドメイン"
         }
       ]
     },

@@ -5,8 +5,8 @@ import { el } from "./dom.js";
 import { confidenceLabel, signalNote, strengthLabel, t } from "./i18n.js";
 import { backendReportText } from "./report-text.js";
 
-/** @type {Record<"eol" | "legacy" | "managed", "status_eol" | "status_legacy" | "status_managed">} */
-const STATUS_LABEL = { eol: "status_eol", legacy: "status_legacy", managed: "status_managed" };
+/** @type {Record<"eol" | "legacy" | "managed" | "hosting", "status_eol" | "status_legacy" | "status_managed" | "status_hosting">} */
+const STATUS_LABEL = { eol: "status_eol", legacy: "status_legacy", managed: "status_managed", hosting: "status_hosting" };
 
 const ISSUE_FORM = "https://github.com/isamu/SafePeek/issues/new?template=backend-signature.yml";
 
