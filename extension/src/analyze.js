@@ -12,6 +12,7 @@ import { checkExposedSecrets } from "./checks/secrets.js";
 import { checkLegalNotice } from "./checks/legal-notice.js";
 import { checkLegalNoticeLink } from "./checks/legal-notice-link.js";
 import { checkTemplateLeftovers } from "./checks/template-leftovers.js";
+import { checkCopiedShop } from "./checks/copied-shop.js";
 import { checkSimplifiedChinese } from "./checks/simplified-chinese.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
@@ -102,6 +103,7 @@ export async function analyze(page, db, env) {
     ...checkLegalNotice(page),
     ...checkLegalNoticeLink(page),
     ...checkTemplateLeftovers(page),
+    ...checkCopiedShop(page, db.suffixes),
     ...checkSimplifiedChinese(page),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };

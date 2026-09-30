@@ -16,7 +16,9 @@ SafePeek is a browser extension you open on any page to see:
 8. **Fake-shop signs** — signs of fake or tampered shops, from the police, consumer centres and security research:
    - a card field in the page beside the payment provider's own card frame (a skimming shape);
    - a Japanese shop page with no link to its 特定商取引法 notice, or a notice missing required items;
-   - traces of Simplified Chinese on a Japanese shop page.
+   - traces of Simplified Chinese on a Japanese shop page;
+   - a notice whose seller name or phone is left as a template placeholder (株式会社〇〇, 000-0000-0000);
+   - a shop page that names another organisation's site as its own address (a copied shop).
 
    A hosted cart service is shown as information, not as a good sign, since anyone can open a shop on one.
 

@@ -42,6 +42,7 @@ export function isRelatedHost(pageHost, host, suffixes) {
   if (ours.shared || theirs.shared) return false;
   const a = nameOf(ours);
   const b = nameOf(theirs);
+  if (a === b) return a.length >= MIN_NAME_LENGTH;
   return (a.length >= MIN_NAME_LENGTH && b.split("-").includes(a)) || (b.length >= MIN_NAME_LENGTH && a.split("-").includes(b));
 }
 
