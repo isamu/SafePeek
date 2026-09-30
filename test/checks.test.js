@@ -111,6 +111,15 @@ describe("payment", () => {
     assert.deepEqual(finding.evidence, ['<input name="cvc" id="cvc">'], "another form's CVC does not confirm the login form");
   });
 
+  it("reports a login form only when it asks for a card number and its security code or expiry", () => {
+    const inLogin = { form: 0, inPasswordForm: true };
+    for (const alone of [inputField("security_code", inLogin), inputField("cvc", inLogin), inputField("x", { ...inLogin, hints: "セキュリティコード" })]) {
+      assert.deepEqual(ids(checkPayment(makePage({ inputs: [alone] }), db.providers)), ["no_card_form"], alone.name);
+    }
+    const card = [inputField("card_number", inLogin), inputField("exp", { ...inLogin, autocomplete: "cc-exp" })];
+    assert.equal(checkPayment(makePage({ inputs: card }), db.providers)[0].id, "card_on_page");
+  });
+
   it("does not take an expiry date alone for a card", () => {
     assert.deepEqual(ids(checkPayment(makePage({ inputs: [inputField("limit", { hints: "有効期限" })] }), db.providers)), ["no_card_form"]);
     assert.equal(checkPayment(makePage({ inputs: [inputField("exp", { autocomplete: "cc-exp" })] }), db.providers)[0].id, "card_on_page");

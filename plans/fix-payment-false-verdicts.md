@@ -9,8 +9,8 @@
 
 ## Change
 - `checks/cardfield.js`: classify fields as number / security / expiry. An expiry field counts only by `cc-exp*`
-  autocomplete. In a form with a password field, card-number fields count only when that form also has a security
-  code or expiry field, so a guest checkout that creates an account is still caught.
+  autocomplete. A form with a password field holds a card only when it asks for both a card number and a security
+  code or expiry, so a guest checkout that creates an account is still caught and a login "security code" is not.
 - `collector.js`: each input carries its owner form and whether that form has a password field, judged by form
   ownership (`form.elements`), so fields attached with `form="…"` and forms beyond the collected 50 count too.
 - `payment-providers.json` + `checks/payment.js`: `card_hosted_iframe` is opt-in per provider through `cardFrames`

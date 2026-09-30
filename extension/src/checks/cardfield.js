@@ -32,18 +32,22 @@ function autocompleteKind(token) {
 
 /**
  * The fields that take a payment card. An expiry field alone is not one (coupons and points expire too).
- * In a form with a password field — a login — a "card number" is usually a membership card, so there it
- * counts only when the same form also asks for a security code or an expiry date.
+ * A form with a password field — a login or sign-up — holds a payment card only when it asks for both a card
+ * number and a security code or expiry date; anything less there (a membership card number, a login
+ * "security code") is not reported. This deliberately misses a login form that takes a bare card number.
  * @param {import("../types.js").InputField[]} inputs
  * @returns {import("../types.js").InputField[]}
  */
 export function cardFields(inputs) {
   const kinds = inputs.map((field) => ({ field, kind: cardFieldKind(field) }));
-  const confirmed = (/** @type {number} */ form) => kinds.some((k) => k.field.form === form && (k.kind === "security" || k.kind === "expiry"));
+  const formHas = (/** @type {number} */ form, /** @type {(kind: string | null) => boolean} */ test) =>
+    kinds.some((k) => k.field.form === form && test(k.kind));
+  const holdsCard = (/** @type {number} */ form) =>
+    formHas(form, (kind) => kind === "number") && formHas(form, (kind) => kind === "security" || kind === "expiry");
   return kinds
     .filter(({ field, kind }) => {
       if (kind === null || (kind === "expiry" && !CARD_AUTOCOMPLETE.test(field.autocomplete.trim()))) return false;
-      return !field.inPasswordForm || confirmed(field.form);
+      return !field.inPasswordForm || holdsCard(field.form);
     })
     .map(({ field }) => field);
 }
