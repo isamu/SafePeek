@@ -22,6 +22,8 @@ describe("public suffixes", () => {
     assert.equal(r("www.shop.kawasaki.jp")?.domain, "www.shop.kawasaki.jp", "a wildcard rule: *.kawasaki.jp is a suffix");
     assert.equal(r("co.jp"), null, "a public suffix has no registrable domain");
     assert.equal(r("shop.example.com.")?.domain, "example.com");
+    assert.equal(r("192.168.0.5")?.domain, "192.168.0.5", "an IP address is its own site");
+    assert.equal(r("[::1]")?.domain, "[::1]");
   });
 });
 
@@ -44,6 +46,7 @@ describe("related systems", () => {
       ["shop.ec-app.jp", "www.ec-mall.jp"],
       ["www.ec.jp", "www.ec-mall.jp"],
       ["shop.example.jp", "www.google.com"],
+      ["192.168.0.5", "10.168.0.5"],
     ]) {
       assert.ok(!related(a, b) && !related(b, a), `${a} ${b}`);
     }

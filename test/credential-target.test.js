@@ -44,6 +44,15 @@ describe("where a password form sends the password", () => {
     assert.deepEqual(found[0]?.evidence, ["login.mybank.net"]);
   });
 
+  it("treats an IP address as its own site", () => {
+    const at = (/** @type {string} */ page, /** @type {string} */ target) =>
+      checkCredentialTarget(makePage({ url: page, forms: [form(target)] }), db.auth, db.suffixes).length;
+    assert.equal(at("https://127.0.0.1/login", "https://8.0.0.1/steal"), 1);
+    assert.equal(at("https://192.168.0.5/login", "https://10.168.0.5/steal"), 1);
+    assert.equal(at("https://[::1]/login", "https://[::2]/steal"), 1);
+    assert.equal(at("https://127.0.0.1/login", "https://127.0.0.1/session"), 0);
+  });
+
   it("does not let a sign-in path on an unrelated host through: a path fits any host", () => {
     assert.deepEqual(check([form("https://evil-login.test/realms/shop/protocol/openid-connect/auth")])[0]?.evidence, ["evil-login.test"]);
   });
