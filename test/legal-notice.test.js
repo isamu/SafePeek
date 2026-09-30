@@ -59,7 +59,7 @@ describe("特定商取引法 notice", () => {
       "上記以外の事項は、請求された場合には遅滞なく電子メールで提供します",
       "上記以外の事項は、ご請求をいただきましたら遅滞なく提供いたします",
       "上記以外の事項は、お申し出次第、遅滞なく開示いたします",
-      "上記以外の事項は、お申出があれば遅滞なく通知いたします",
+      "上記以外の事項は、お申出があれば遅滞なく書面を送付いたします",
     ]) {
       assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...kept, statement].join("\n"))), [], statement);
     }
@@ -74,13 +74,15 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(found.evidence, ["引渡し時期"]);
   });
 
-  it("does not take an invoice sentence, or 速やかに, for the on-request statement", () => {
+  it("does not take an invoice sentence, 速やかに, or a mere 通知 for the on-request statement", () => {
     const withoutAddress = COMPLETE.split("\n").filter((line) => !/所在地/.test(line));
     for (const sentence of [
       "請求書は遅滞なく送付いたします",
       "ご請求いただければ速やかに開示します",
       "遅滞なく発送します。ご請求は不要です",
       "ご請求額は遅滞なくお振込みください",
+      "代金の請求額は遅滞なく通知します",
+      "ご請求があれば遅滞なく通知します",
     ]) {
       const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutAddress, sentence].join("\n")));
       assert.deepEqual(found?.evidence, ["所在地"], sentence);
@@ -97,7 +99,7 @@ describe("特定商取引法 notice", () => {
   it("reads a heading whose text sits in nested markup", () => {
     const nested = makePage({ html: '<html><body><h1 class="t"><span>特定商取引法に基づく<br>表記</span></h1></body></html>', text: COMPLETE });
     assert.deepEqual(checkLegalNotice(nested), []);
-    const nestedIncomplete = makePage({ html: "<html><body><h1><span>特定商取引法に基づく表記</span></h1></body></html>", text: "" });
+    const nestedIncomplete = makePage({ html: "<html><body><h1><span>特定商取引法に基づく<br>表記</span></h1></body></html>", text: "" });
     assert.equal(checkLegalNotice(nestedIncomplete).length, 1);
   });
 
@@ -129,6 +131,13 @@ describe("特定商取引法 notice", () => {
     assert.equal(checkLegalNotice(h2).length, 1);
     const footer = makePage({ html: '<html><body><footer><a href="/law">特定商取引法に基づく表記</a></footer></body></html>', text: "" });
     assert.deepEqual(checkLegalNotice(footer), []);
+    const page = (/** @type {string} */ heading) => makePage({ html: `<html><head>${heading}</head><body></body></html>`, text: "" });
+    for (const heading of ["<title>特商法とは？わかりやすく解説</title>", "<h1>特定商取引法の改正について</h1>"]) {
+      assert.deepEqual(checkLegalNotice(page(heading)), [], heading);
+    }
+    for (const heading of ["<title>特商法表記</title>", "<h1>特定商取引法による表示</h1>", "<h2>通信販売に関する表示</h2>"]) {
+      assert.equal(checkLegalNotice(page(heading)).length, 1, heading);
+    }
   });
 
   it("never shows a value from the page", () => {

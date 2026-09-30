@@ -132,7 +132,7 @@ A server-side key in the page's code means the site does not keep its own secret
 
 Every public body's fake-shop checklist starts with this notice (`docs/fake-shop-research.md`, item 3). SafePeek sees one page, so it judges the notice only when the visitor scans the notice itself.
 
-- **The page must name the notice in its title or a top heading**, so a footer link on every page does not make a page the notice.
+- **The page must name the notice in its title or a top heading** (…に基づく表記, …による表示), so a footer link on every page, or an article about the law (特商法とは), does not make a page the notice.
 - **An item counts when its label appears anywhere in the text.** This is lenient on purpose: it misses a fake that fills in labels with made-up values, and it never reports a real notice laid out with unusual wording as missing everything.
 - **A statement that details are given on request counts** for the items the 消費者庁 table lets it replace: seller, address, phone, representative, payment and delivery timing. It never replaces the price, the shipping and other charges, or the return terms. Only phrasings of the consumer's request count (請求があった場合, 請求があれば …), followed by 遅滞なく and a promise to provide or disclose, so billing prose about an invoice or an amount due never does.
 - **Only an on-request statement that names no item excuses the rest.** One that names the phone already puts the phone's label on the page; letting it also excuse a missing delivery timing would read a narrow promise as a general one.

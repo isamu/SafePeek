@@ -3,14 +3,16 @@
 
 import { finding } from "./finding.js";
 
-const NOTICE_HEADING = /特定商取引法|特商法|特定商取引に関する法律|通信販売に関する表示/;
+// The notice itself (…に基づく表記 / 表示), not a page about the law (特商法とは).
+const NOTICE_HEADING = /(?:特定商取引法|特商法|特定商取引に関する法律)[\s\S]{0,12}?(?:表記|表示)|通信販売に関する表示/;
 const HEADINGS = /<(title|h1|h2)\b[^>]*>([\s\S]{0,400}?)<\/\1>/gi;
 // 特定商取引法 11 lets a seller leave some items out when the notice says it will give them without delay when the
-// consumer asks; only phrasings of such a request count, so billing prose (請求書, 請求額) never does.
+// consumer asks; only phrasings of such a request count, so billing prose (請求書, 請求額) never does, and the details
+// must be provided, not merely notified.
 const REQUEST_PHRASES = ["があった場合", "がある場合", "があれば", "あり次第", "次第", "により", "された場合", "に応じ", "を受け"];
 const POLITE_REQUEST_PHRASES = ["いただいた場合", "いただければ", "いただきましたら", "いただき次第"];
 const ON_REQUEST = new RegExp(
-  `(?:請求|申し?出)(?:${REQUEST_PHRASES.join("|")}|を?(?:${POLITE_REQUEST_PHRASES.join("|")}))[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付|通知)`,
+  `(?:請求|申し?出)(?:${REQUEST_PHRASES.join("|")}|を?(?:${POLITE_REQUEST_PHRASES.join("|")}))[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付)`,
 );
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement. Price and returns never may.
