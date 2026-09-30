@@ -196,6 +196,11 @@ const JA = {
     detail: () =>
       "日本語のページなのに、日本では使わない簡体字、中国語の言語指定、「◯天」（日数）のような表現があります。警察や国民生活センターは、中国語から機械翻訳された偽ショップの特徴として挙げています。これだけで偽物とは言えませんが、会社の実在や特定商取引法に基づく表記も確かめてください。",
   },
+  shop_template_leftovers: {
+    title: (p) => `ショップのテンプレートの仮の文字が残っています（${p.count}種類）`,
+    detail: () =>
+      "「株式会社〇〇」「000-0000-0000」のような、テンプレートに最初から入っている仮の会社名・電話番号・店名がそのまま表示されています。偽ショップは共通のテンプレートから作られることが多く、こうした消し忘れが残りがちです。作りかけのサイトの場合もありますが、会社名・住所・電話番号が本物か確かめてください。",
+  },
   legal_notice_link_missing: {
     title: () => "このショップのページには、特定商取引法に基づく表記へのリンクが見当たりません",
     detail: () =>
@@ -408,6 +413,11 @@ const EN = {
     title: () => "A Japanese shop page shows traces of Simplified Chinese",
     detail: () =>
       "The page is in Japanese but uses Simplified Chinese characters Japanese does not use, declares Chinese as its language, or counts days with 天. The police and the National Consumer Affairs Center list this as a sign of a fake shop machine-translated from Chinese. It is not proof on its own; check that the company exists and read its 特定商取引法 notice.",
+  },
+  shop_template_leftovers: {
+    title: (p) => `The shop still shows a template's placeholder text (${p.count} kinds)`,
+    detail: () =>
+      "Placeholder company names, phone numbers or store names that a template ships with (such as 株式会社〇〇 or 000-0000-0000) are shown as they are. Fake shops are often built from shared templates and leave these behind. It may also be a site still being built; check that the company, address and phone number are real.",
   },
   legal_notice_link_missing: {
     title: () => "This shop page has no link to a 特定商取引法 notice",

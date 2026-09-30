@@ -139,7 +139,7 @@ A server-side key in the page's code means the site does not keep its own secret
 
 Every public body's fake-shop checklist starts with this notice (`docs/fake-shop-research.md`, item 3). SafePeek sees one page, so it judges the notice only when the visitor scans the notice itself.
 
-- **A title part or a top heading must be the notice's own name** (…に基づく表記, …による表示), so a footer link on every page, an article about the law (特商法とは), or a guide to writing the notice (…の書き方) does not make a page the notice.
+- **A title part or a top heading must be the notice's own name** (…に基づく表記, …による表示), so a footer link on every page, an article about the law (特商法とは), or a guide to writing the notice (…の書き方; or the notice name with マニュアル, テンプレート, 記載例 … anywhere in the same heading) does not make a page the notice.
 - **An item counts when its label appears anywhere in the text.** This is lenient on purpose: it misses a fake that fills in labels with made-up values, and it never reports a real notice laid out with unusual wording as missing everything.
 - **A statement that details are given on request counts** for the items the 消費者庁 table lets it replace: seller, address, phone, representative, payment and delivery timing. It may replace the price and the other charges too (消費者庁 Q&A, advertising Q5), but never the return terms. Only phrasings of the consumer's request count (請求があった場合, 請求があれば …), followed by 遅滞なく and a promise to provide or disclose, so billing prose about an invoice or an amount due never does.
 - **Only an on-request statement that names no item excuses the rest.** One that names the phone already puts the phone's label on the page; letting it also excuse a missing delivery timing would read a narrow promise as a general one.
@@ -161,6 +161,17 @@ Fake shops are often machine-translated from Chinese, and the police name simpli
 - **天 counts as days only before what Chinese writes after a day count** (受付, 以内, 后, 无理由 …) or the end of a phrase. Japanese words starting with 天 (天体, 天然) follow numbers on real shop pages.
 - **Chinese font names are left out.** CSS frameworks list them as fallbacks, so ordinary Japanese sites carry them.
 - **Machine translation without these marks is not judged.** It cannot be told from awkward human Japanese without a language model.
+
+## Template leftovers
+
+Fake shops come from shared kits, and a kit's placeholders are often left in (`docs/fake-shop-research.md`, item 13).
+
+- **Only placeholders no real shop publishes count:** a name made of 〇 or ×, a phone number or postal code of zeros. A real number that happens to contain zeros does not match.
+- **Names and numbers count only where the seller's identity is given, never in a form example.** Real checkout and contact forms show 「入力例：000-0000-0000」, reviews mask names as 〇〇様, and pages mention partners as 株式会社××. Input placeholders are not read at all, since they are nearly always examples.
+- **Only the notice itself is read.** There the identity is the seller's own. On other pages the same labels mean something else: a checkout form's example, what a buyer wants printed on a stamp or card, a guide to writing the notice. Reviews found each of these on real pages.
+- **English template wording is not used.** Real shops keep lorem ipsum in size guides and name products "Lorem Ipsum", write "your store name" in prose, and leave Magento's "Default Store View" label unchanged. Only the seller's identity filled with placeholders counts.
+- **A FAX of zeros and a demo store are not leftovers.** A zero FAX means the seller has no fax; a demo or test store says so and shows placeholders on purpose, while a fake shop never calls itself one.
+- **Low.** A shop still being built shows the same, so the message says so.
 
 ## Where a password is sent
 

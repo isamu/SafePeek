@@ -8,6 +8,8 @@ const NOTICE_TITLE = /^(?:(?:特定商取引法|特商法|特定商取引に関�
 // Separators between a page's name and the site's name in a title.
 const TITLE_SEPARATORS = /[|｜:：/／\-－–—]/;
 const TRAILING_NOTE = /[（(][^）)]{0,20}[）)]$/;
+// A heading naming the notice that also calls itself a guide, on either side of a separator, is about writing one.
+const GUIDE_WORDS = /書き方|テンプレート|雛形|ひな形|記載例|例文|マニュアル|作り方|サンプル|解説/;
 const HEADINGS = /<(title|h1|h2)\b[^>]*>([\s\S]{0,400}?)<\/\1>/gi;
 // 特定商取引法 11 lets a seller leave some items out when the notice says it will give them without delay when the
 // consumer asks; only phrasings of such a request count, so billing prose (請求書, 請求額) never does, and the details
@@ -93,8 +95,11 @@ function hasGeneralOnRequest(text) {
  * @param {string} html
  * @returns {boolean}
  */
-function isNoticePage(html) {
-  return [...html.matchAll(HEADINGS)].some((match) => withoutTags(match[2]).split(TITLE_SEPARATORS).some(isNoticeTitle));
+export function isNoticePage(html) {
+  return [...html.matchAll(HEADINGS)].some((match) => {
+    const heading = withoutTags(match[2]);
+    return heading.split(TITLE_SEPARATORS).some(isNoticeTitle) && !GUIDE_WORDS.test(heading);
+  });
 }
 
 /**
