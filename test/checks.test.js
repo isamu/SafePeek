@@ -87,6 +87,18 @@ describe("transport and headers", () => {
     assert.deepEqual(withCsp("script-src 'self'; default-src *; frame-ancestors 'none'"), []);
   });
 
+  it("resolves script-src-elem and script-src-attr before script-src, as CSP Level 3 does", () => {
+    const withCsp = (/** @type {string} */ csp) =>
+      ids(checkHeaders(makePage({ headers: { ...makePage().headers, "content-security-policy": `${csp}; frame-ancestors 'none'` } })));
+    assert.deepEqual(withCsp("script-src *; script-src-elem 'self'"), []);
+    assert.deepEqual(withCsp("script-src 'self'; script-src-elem *"), ["csp_any_script_host"]);
+    assert.deepEqual(withCsp("script-src 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'none'"), []);
+    assert.deepEqual(withCsp("script-src 'self'; script-src-elem 'self' 'unsafe-inline'"), ["csp_unsafe_inline"]);
+    assert.deepEqual(withCsp("script-src 'self'; script-src-attr 'unsafe-inline'"), ["csp_unsafe_inline"]);
+    assert.deepEqual(withCsp("script-src-attr 'unsafe-inline', script-src 'self'"), []);
+    assert.deepEqual(withCsp("img-src *; style-src 'unsafe-inline'"), []);
+  });
+
   it("does not flag unsafe-inline that another enforced policy blocks", () => {
     const csp = "script-src 'self', script-src 'self' 'unsafe-inline'; frame-ancestors 'none'";
     assert.deepEqual(ids(checkHeaders(makePage({ headers: { ...makePage().headers, "content-security-policy": csp } }))), []);

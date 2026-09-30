@@ -5,10 +5,13 @@ import { finding } from "./finding.js";
 /** @typedef {import("../types.js").Finding} Finding */
 
 const MAX_POLICY_EVIDENCE = 300;
-const ANY_HOST_SOURCES = new Set(["*", "http:", "https:", "data:"]);
+const ANY_SCRIPT_SOURCES = new Set(["*", "http:", "https:", "data:"]);
+const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
+const SCRIPT_ATTRIBUTES = ["script-src-attr", "script-src", "default-src"];
+// A weakness is reported when, for one of its directive chains, every policy that governs it allows the weakness.
 const CSP_WEAKNESSES = [
-  { id: "csp_unsafe_inline", allows: allowsInlineScript },
-  { id: "csp_any_script_host", allows: allowsAnyScriptHost },
+  { id: "csp_unsafe_inline", chains: [SCRIPT_ELEMENTS, SCRIPT_ATTRIBUTES], allows: allowsInlineScript },
+  { id: "csp_any_script_host", chains: [SCRIPT_ELEMENTS], allows: allowsAnyScriptSource },
 ];
 
 const SESSION_COOKIE =
@@ -76,43 +79,58 @@ function cspPolicies(header) {
 }
 
 /**
- * Every policy is enforced, so a script runs only when each policy that governs scripts allows it.
+ * Every policy is enforced, so a script runs only when each policy that governs it allows it.
  * @param {string[]} policies
  * @returns {Finding[]}
  */
 function checkCsp(policies) {
   if (policies.length === 0) return [finding("no_csp", "low", "headers")];
-  const scriptPolicies = policies.filter((p) => scriptDirective(p) !== null);
-  if (scriptPolicies.length === 0) return [];
-  const evidence = scriptPolicies.map((p) => p.slice(0, MAX_POLICY_EVIDENCE));
-  return CSP_WEAKNESSES.filter(({ allows }) => scriptPolicies.every(allows)).map(({ id }) => finding(id, "low", "headers", {}, evidence));
+  return CSP_WEAKNESSES.flatMap(({ id, chains, allows }) => {
+    const governing = chains.map((chain) => policies.filter((p) => effectiveDirective(p, chain) !== null));
+    const index = chains.findIndex((chain, i) => governing[i].length > 0 && governing[i].every((p) => allows(effectiveDirective(p, chain) ?? "")));
+    if (index < 0) return [];
+    return [
+      finding(
+        id,
+        "low",
+        "headers",
+        {},
+        governing[index].map((p) => p.slice(0, MAX_POLICY_EVIDENCE)),
+      ),
+    ];
+  });
 }
 
 /**
+ * The first of the fallback chain that the policy sets, as CSP Level 3 resolves script directives.
  * @param {string} policy
+ * @param {string[]} chain
  * @returns {string | null}
  */
-function scriptDirective(policy) {
-  return directive(policy, "script-src") ?? directive(policy, "default-src");
+function effectiveDirective(policy, chain) {
+  for (const name of chain) {
+    const found = directive(policy, name);
+    if (found !== null) return found;
+  }
+  return null;
 }
 
 /**
- * @param {string} policy
+ * @param {string} sourceList
  * @returns {boolean}
  */
-function allowsInlineScript(policy) {
-  const scriptSrc = scriptDirective(policy) ?? "";
-  return scriptSrc.includes("'unsafe-inline'") && !/'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(scriptSrc);
+function allowsInlineScript(sourceList) {
+  return sourceList.includes("'unsafe-inline'") && !/'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(sourceList);
 }
 
 /**
  * 'strict-dynamic' makes browsers ignore host and scheme sources, so a wildcard beside it admits nothing.
- * @param {string} policy
+ * @param {string} sourceList
  * @returns {boolean}
  */
-function allowsAnyScriptHost(policy) {
-  const sources = (scriptDirective(policy) ?? "").toLowerCase().split(/\s+/);
-  return !sources.includes("'strict-dynamic'") && sources.some((source) => ANY_HOST_SOURCES.has(source));
+function allowsAnyScriptSource(sourceList) {
+  const sources = sourceList.toLowerCase().split(/\s+/);
+  return !sources.includes("'strict-dynamic'") && sources.some((source) => ANY_SCRIPT_SOURCES.has(source));
 }
 
 /**

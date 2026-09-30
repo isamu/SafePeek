@@ -155,8 +155,8 @@ const JA = {
     detail: () => "'unsafe-inline' によりCSPのスクリプト対策がほぼ無効になっています。",
   },
   csp_any_script_host: {
-    title: () => "CSPがどのサイトのスクリプトも許可しています",
-    detail: () => "スクリプトの読み込み元が * や https: などで制限されておらず、CSPで読み込み元を絞る効果がありません。",
+    title: () => "CSPがスクリプトの読み込み元を制限していません",
+    detail: () => "* や https:、data: などにより、任意のサイトや data: URL からスクリプトを読み込めます。",
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
   no_clickjacking: { title: () => "クリックジャッキング対策がありません", detail: () => "X-Frame-Options も CSP の frame-ancestors もありません。" },
@@ -331,8 +331,8 @@ const EN = {
   no_csp: { title: () => "No Content Security Policy", detail: () => "Nothing limits which scripts may run on the page." },
   csp_unsafe_inline: { title: () => "CSP allows inline scripts", detail: () => "'unsafe-inline' largely disables CSP's protection against injected scripts." },
   csp_any_script_host: {
-    title: () => "CSP allows scripts from any site",
-    detail: () => "A source such as * or https: lets scripts load from anywhere, so the policy does not limit where scripts come from.",
+    title: () => "CSP does not limit where scripts load from",
+    detail: () => "A source such as *, https: or data: lets scripts load from any site or from data: URLs.",
   },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
   no_clickjacking: { title: () => "No clickjacking protection", detail: () => "Neither X-Frame-Options nor CSP frame-ancestors is set." },
