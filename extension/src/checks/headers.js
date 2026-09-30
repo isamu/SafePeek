@@ -5,8 +5,9 @@ import { finding } from "./finding.js";
 /** @typedef {import("../types.js").Finding} Finding */
 
 const MAX_POLICY_EVIDENCE = 300;
-const ANY_SCRIPT_SOURCES = new Set(["*", "http:", "https:", "data:"]);
-const ANY_HOST_OF_SCHEME = /^https?:\/\/\*(?::\*)?\/?$/;
+const ANY_HOST_SCHEMES = new Set(["http:", "https:", "data:"]);
+// A host-source's host part: after an optional scheme, up to a port or path.
+const HOST_OF_SOURCE = /^(?:[a-z][a-z\d+.-]*:\/\/)?([^:/]*)/;
 // Browsers ignore 'unsafe-inline' when a nonce, a hash or 'strict-dynamic' is present.
 const INLINE_ALLOW_LISTS = /^'(?:nonce-|sha(?:256|384|512)-|strict-dynamic')/;
 const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
@@ -143,7 +144,16 @@ function allowsInlineScript(sourceList) {
  */
 function allowsAnyScriptSource(sourceList) {
   const sources = sourceTokens(sourceList);
-  return !sources.includes("'strict-dynamic'") && sources.some((source) => ANY_SCRIPT_SOURCES.has(source) || ANY_HOST_OF_SCHEME.test(source));
+  return !sources.includes("'strict-dynamic'") && sources.some(admitsAnyHost);
+}
+
+/**
+ * A scheme source admits every host of its scheme; a host-source admits every host when its host is "*", whatever its port or path.
+ * @param {string} source
+ * @returns {boolean}
+ */
+function admitsAnyHost(source) {
+  return ANY_HOST_SCHEMES.has(source) || HOST_OF_SOURCE.exec(source)?.[1] === "*";
 }
 
 /**
@@ -154,7 +164,7 @@ function allowsAnyScriptSource(sourceList) {
 function directive(policy, name) {
   for (const part of policy.split(";")) {
     const trimmed = part.trim();
-    if (trimmed.toLowerCase().startsWith(name + " ") || trimmed.toLowerCase() === name) return trimmed;
+    if (trimmed.split(/\s+/)[0].toLowerCase() === name) return trimmed;
   }
   return null;
 }

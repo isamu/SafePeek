@@ -77,10 +77,19 @@ describe("transport and headers", () => {
       assert.deepEqual(withCsp(csp), ["csp_any_script_host"], csp);
     }
     assert.deepEqual(withCsp("script-src 'self' https: 'unsafe-inline'; frame-ancestors 'none'"), ["csp_unsafe_inline", "csp_any_script_host"]);
-    for (const csp of ["script-src https://*; frame-ancestors 'none'", "script-src 'self' HTTP://*:*; frame-ancestors 'none'"]) {
+    for (const csp of [
+      "script-src https://*; frame-ancestors 'none'",
+      "script-src 'self' HTTP://*:*; frame-ancestors 'none'",
+      "script-src https://*:443; frame-ancestors 'none'",
+      "script-src https://*/app.js; frame-ancestors 'none'",
+      "script-src *:8080; frame-ancestors 'none'",
+      "script-src\thttps:; frame-ancestors 'none'",
+      "script-src-elem\t*; frame-ancestors 'none'",
+    ]) {
       assert.deepEqual(withCsp(csp), ["csp_any_script_host"], csp);
     }
     assert.deepEqual(withCsp("script-src 'self' https://*.example.com; frame-ancestors 'none'"), []);
+    assert.deepEqual(withCsp("script-src 'self' https://cdn.example:* blob: 'nonce-*'; frame-ancestors 'none'"), []);
   });
 
   it("does not flag host wildcards that strict-dynamic, a named host or another policy rules out", () => {
