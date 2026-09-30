@@ -183,4 +183,15 @@ describe("collector in Chromium", () => {
     assert.ok(report.findings.some((f) => f.id === "backend_managed"));
     assert.ok(!report.technologies.some((t) => t.impliedBy && ["PHP", "MySQL"].includes(t.name)));
   });
+
+  it("does not take a membership card number in a login form for a payment card", async () => {
+    for (const fixture of ["member-login.html", "member-login-detached.html"]) {
+      const report = await scan(fixture);
+      assert.deepEqual(
+        report.findings.filter((f) => f.area === "payment").map((f) => f.id),
+        ["no_card_form"],
+        fixture,
+      );
+    }
+  });
 });
