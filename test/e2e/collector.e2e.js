@@ -254,6 +254,10 @@ describe("collector in Chromium", () => {
 
   it("reads a form whose field names shadow the form's own properties", async () => {
     const page = await collect("clobbered-form.html");
+    assert.ok(
+      page.inputs.some((i) => i.name === "password" && i.type === "password"),
+      "an input type is kept in lower case, whatever the markup's case",
+    );
     assert.deepEqual(
       page.forms.map((f) => ({ ...f, action: new URL(f.action).pathname })),
       [

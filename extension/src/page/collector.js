@@ -332,7 +332,7 @@
       .slice(0, MAX_INPUTS)
       .map((el) => ({
         tag: el.tagName.toLowerCase(),
-        type: el.getAttribute("type") ?? "",
+        type: (el.getAttribute("type") ?? "").toLowerCase(),
         name: el.getAttribute("name") ?? "",
         id: el.id,
         autocomplete: el.getAttribute("autocomplete") ?? "",

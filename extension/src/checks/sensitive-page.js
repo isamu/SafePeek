@@ -3,6 +3,7 @@
 
 import { finding } from "./finding.js";
 import { cardFieldKind, cardFields } from "./cardfield.js";
+import { providerForHost } from "./payment.js";
 import { isRelatedHost } from "../engine/related-systems.js";
 
 /**
@@ -27,8 +28,20 @@ export function checkSensitivePage(page, providers, suffixes) {
  */
 function sensitiveKind(page) {
   if (cardFields(page.inputs).some((f) => cardFieldKind(f) === "number")) return "card";
-  if (page.inputs.some((i) => i.type === "password") || page.forms.some((f) => f.hasPassword)) return "password";
+  if (page.inputs.some((i) => i.type.toLowerCase() === "password") || page.forms.some((f) => f.hasPassword)) return "password";
   return null;
+}
+
+/**
+ * A provider's tokenizer: the script's host is the provider's, and its URL matches one of that provider's
+ * tokenScripts. A URL on another host that merely contains the pattern is not one.
+ * @param {URL} url
+ * @param {import("./payment.js").Provider[]} tokenizers
+ * @returns {boolean}
+ */
+function isTokenizer(url, tokenizers) {
+  const provider = providerForHost(url.hostname, tokenizers);
+  return (provider?.tokenScripts ?? []).some((re) => new RegExp(re, "i").test(url.href));
 }
 
 /**
@@ -43,11 +56,10 @@ function sensitiveKind(page) {
  */
 function otherDomainScriptHosts(page, tokenizers, suffixes) {
   const pageHost = new URL(page.url).hostname;
-  const tokenScripts = tokenizers.flatMap((p) => (p.tokenScripts ?? []).map((re) => new RegExp(re, "i")));
   const hosts = page.scripts.flatMap((s) => {
-    if (!s.src || tokenScripts.some((re) => re.test(s.src ?? ""))) return [];
     try {
-      return [new URL(s.src).hostname];
+      const url = s.src ? new URL(s.src) : null;
+      return url && !isTokenizer(url, tokenizers) ? [url.hostname] : [];
     } catch {
       return [];
     }

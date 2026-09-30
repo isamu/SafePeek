@@ -33,6 +33,16 @@ describe("scripts from other sites where a card number or password is typed", ()
     assert.deepEqual(summary(tokenizerOnLogin), ["login_page_third_party:low:1"], "a tokenizer is expected only on a card page");
   });
 
+  it("does not take a look-alike URL on another host for a provider's tokenizer", () => {
+    const found = check({ inputs: cardInputs, scripts: [script("https://evil.example/js.stripe.com/v2/skim.js")] });
+    assert.deepEqual(summary(found), ["card_page_third_party:medium:1"]);
+  });
+
+  it("reads a password field typed in any letter case", () => {
+    const found = check({ inputs: [inputField("pw", { type: "PASSWORD" })], scripts: [script("https://www.googletagmanager.com/gtm.js")] });
+    assert.deepEqual(summary(found), ["login_page_third_party:low:1"]);
+  });
+
   it("needs a card number field, not a security code or expiry alone", () => {
     const gtm = [script("https://www.googletagmanager.com/gtm.js")];
     assert.deepEqual(check({ inputs: [inputField("cvc", { autocomplete: "cc-csc" })], scripts: gtm }), []);
