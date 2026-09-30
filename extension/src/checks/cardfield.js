@@ -8,10 +8,21 @@ const EXPIRY_HINT = /expir|(?<![a-z])(?:cc.?)?exp.?(?:month|year|date|mm|yy)|有
 const NOT_CARD_HINT = /(?<![a-z])(point|member|gift|loyalty|coupon|otp)|one.?time|sms|ポイント|会員|ギフト|クーポン|ワンタイム|認証/i;
 
 /**
+ * A card number is typed, so a select named for it is a saved-card chooser, not a place to enter a card; an expiry
+ * month or year select still counts.
  * @param {import("../types.js").InputField} field
  * @returns {"number" | "security" | "expiry" | null}  what the field asks for, when it is part of a card
  */
 export function cardFieldKind(field) {
+  const kind = kindFromAttributes(field);
+  return kind === "number" && field.tag === "select" ? null : kind;
+}
+
+/**
+ * @param {import("../types.js").InputField} field
+ * @returns {"number" | "security" | "expiry" | null}
+ */
+function kindFromAttributes(field) {
   const autocomplete = CARD_AUTOCOMPLETE.exec(field.autocomplete.trim());
   if (autocomplete) return autocompleteKind(autocomplete[1].toLowerCase());
   const hints = [field.name, field.id, field.hints].join(" ");
