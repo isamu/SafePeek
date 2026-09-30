@@ -16,6 +16,10 @@ describe("transport and headers", () => {
     assert.deepEqual(ids(checkTransport(page)), ["not_https", "password_over_http"]);
   });
 
+  it("judges transport only for http and https pages", () => {
+    assert.deepEqual(ids(checkTransport(makePage({ protocol: "chrome-error:" }))), []);
+  });
+
   it("is quiet for a well-configured site", () => {
     assert.deepEqual(checkHeaders(makePage()), []);
   });

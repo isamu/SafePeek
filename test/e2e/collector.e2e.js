@@ -26,6 +26,7 @@ const HEADERS = {
   "/old-shop.html": { Server: "Apache/2.2.15 (CentOS)", "X-Powered-By": "PHP/5.4.16", "Set-Cookie": "PHPSESSID=abc123; path=/" },
   "/tokenized.html": { Server: "nginx" },
   "/hosted.html": { "Content-Security-Policy": "frame-ancestors 'self'", "X-Content-Type-Options": "nosniff" },
+  "/sandboxed.html": { "Content-Security-Policy": "sandbox allow-scripts" },
   "/sastruts.html": { "X-Powered-By": "Servlet/2.5 JSP/2.1", "Set-Cookie": "JSESSIONID=A1B2C3D4; path=/" },
 };
 
@@ -145,6 +146,12 @@ describe("collector in Chromium", () => {
     assert.equal(huge?.content.length, MAX_SCRIPT_CHARS);
     assert.equal(huge?.fetched, false);
     assert.equal(endless?.fetched, false);
+  });
+
+  it("still collects a page served with a CSP sandbox, whose cookies cannot be read", async () => {
+    const page = await collect("sandboxed.html");
+    assert.deepEqual(page.cookies, {});
+    assert.ok(page.html.includes("Sandboxed"));
   });
 
   it("recognises provider-hosted card fields", async () => {
