@@ -142,7 +142,7 @@ describe("who runs the checkout", () => {
     );
     const found = report.findings.find((f) => f.id === "checkout_saas");
     assert.equal(found?.area, "payment");
-    assert.equal(found?.severity, "good");
+    assert.equal(found?.severity, "info", "a cart service handles the checkout; it does not vouch for the seller");
   });
 });
 

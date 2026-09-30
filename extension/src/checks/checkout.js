@@ -88,7 +88,7 @@ function seenPlatform(platform, technologies, page) {
 export function checkCheckout(technologies, platforms, page) {
   const seen = platforms.map((p) => seenPlatform(p, technologies, page)).filter(isEnoughEvidence);
   const of = (/** @type {"hosted" | "self"} */ kind) => seen.filter((s) => s.platform.kind === kind);
-  return [...platformFinding("checkout_saas", "good", of("hosted")), ...platformFinding("checkout_self_hosted", "info", of("self"))];
+  return [...platformFinding("checkout_saas", "info", of("hosted")), ...platformFinding("checkout_self_hosted", "info", of("self"))];
 }
 
 /**
