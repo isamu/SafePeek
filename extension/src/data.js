@@ -13,7 +13,7 @@ import { parseRetireRepository } from "./engine/retire.js";
  */
 export async function loadDatabases(readText) {
   const json = async (/** @type {string} */ name) => JSON.parse(await readText(name));
-  const [technologies, categories, retireText, eol, payment, backends, wordpress, sources] = await Promise.all([
+  const [technologies, categories, retireText, eol, payment, backends, wordpress, checkout, sources] = await Promise.all([
     json("technologies.json"),
     json("categories.json"),
     readText("retire.json"),
@@ -21,6 +21,7 @@ export async function loadDatabases(readText) {
     json("payment-providers.json"),
     json("backend-signatures.json"),
     json("wordpress.json"),
+    json("checkout-platforms.json"),
     json("sources.json"),
   ]);
   return {
@@ -31,6 +32,7 @@ export async function loadDatabases(readText) {
     providers: payment.providers,
     backends: backends.backends,
     wordpress,
+    checkout: checkout.platforms,
     sources,
   };
 }

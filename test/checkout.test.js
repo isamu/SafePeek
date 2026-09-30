@@ -1,5 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { checkCheckout } from "../extension/src/checks/checkout.js";
 import { analyze } from "../extension/src/analyze.js";
 import { sha1 } from "../extension/src/engine/hash.js";
@@ -7,7 +8,7 @@ import { loadDb, makePage } from "./helpers.js";
 
 const db = loadDb();
 /** @returns {import("../extension/src/types.js").Technology} */
-const tech = (/** @type {string} */ name, impliedBy = "", evidence = ["js a", "script b"]) => ({
+const tech = (/** @type {string} */ name, evidence = ["js a"], impliedBy = "") => ({
   name,
   version: "",
   confidence: 100,
@@ -19,24 +20,37 @@ const tech = (/** @type {string} */ name, impliedBy = "", evidence = ["js a", "s
 const summary = (/** @type {import("../extension/src/types.js").Finding[]} */ f) => f.map((x) => `${x.id}:${x.params.platforms}`);
 
 describe("who runs the checkout", () => {
-  it("tells a hosted cart service from shop software on the site's own server", () => {
-    assert.deepEqual(summary(checkCheckout([tech("Shopify")], db.technologies)), ["checkout_saas:Shopify"]);
-    assert.deepEqual(summary(checkCheckout([tech("EC-CUBE")], db.technologies)), ["checkout_self_hosted:EC-CUBE"]);
-    assert.deepEqual(summary(checkCheckout([tech("MakeShop"), tech("WooCommerce")], db.technologies)), [
+  it("tells a hosted cart service from shop software the site runs itself", () => {
+    assert.deepEqual(summary(checkCheckout([tech("Shopify")], db.checkout)), ["checkout_saas:Shopify"]);
+    assert.deepEqual(summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/html/template/default/js/eccube.js"])], db.checkout)), [
+      "checkout_self_hosted:EC-CUBE",
+    ]);
+    assert.deepEqual(summary(checkCheckout([tech("MakeShop"), tech("WooCommerce")], db.checkout)), [
       "checkout_saas:MakeShop",
       "checkout_self_hosted:WooCommerce",
     ]);
   });
 
-  it("says nothing for shop features that are neither, or for products only implied", () => {
-    assert.deepEqual(checkCheckout([tech("Cart Functionality")], db.technologies), []);
-    assert.deepEqual(checkCheckout([tech("WooCommerce", "WordPress")], db.technologies), []);
-    assert.deepEqual(checkCheckout([tech("Google Analytics")], db.technologies), []);
+  it("says nothing for products outside the list, or only implied", () => {
+    for (const name of ["Amazon Webstore", "Shopware", "1C-Bitrix", "Cart Functionality"]) assert.deepEqual(checkCheckout([tech(name)], db.checkout), [], name);
+    assert.deepEqual(checkCheckout([tech("WooCommerce", ["implied by WordPress"], "WordPress")], db.checkout), []);
   });
 
-  it("needs two traces, since a lone global or a link out also appears on pages that are not the shop", () => {
-    assert.deepEqual(checkCheckout([tech("Amazon Webstore", "", ["js amzn"])], db.technologies), []);
-    assert.deepEqual(checkCheckout([tech("Base", "", ["dom link[href*='.thebase.in/']", "dom link[href*='.thebase.in/']"])], db.technologies), []);
+  it("asks BASE for two kinds of trace, since its link rule also fires on pages that only link to shops", () => {
+    assert.deepEqual(checkCheckout([tech("Base", ["dom link[href*='.thebase.in/']", "dom link[href*='.thebase.in/']"])], db.checkout), []);
+    assert.deepEqual(
+      checkCheckout([tech("Base", ["dom link[href*='.thebase.in/']", "dom a[href*='.thebase.in/']"])], db.checkout),
+      [],
+      "two labels of one kind",
+    );
+    assert.deepEqual(summary(checkCheckout([tech("Base", ["script https://thebase.in/js/shop.js", "js BASE_API.shop_id"])], db.checkout)), [
+      "checkout_saas:Base",
+    ]);
+  });
+
+  it("carries the evidence it rests on", () => {
+    const [f] = checkCheckout([tech("Shopify", ["js Shopify", "meta shopify-digital-wallet"])], db.checkout);
+    assert.deepEqual(f.evidence, ["Shopify: js Shopify", "Shopify: meta shopify-digital-wallet"]);
   });
 
   it("reports it with the payment findings from real page data", async () => {
@@ -45,4 +59,16 @@ describe("who runs the checkout", () => {
     assert.equal(found?.area, "payment");
     assert.equal(found?.severity, "good");
   });
+});
+
+describe("checkout-platforms.json", () => {
+  const { platforms } = JSON.parse(readFileSync(new URL("../extension/data/checkout-platforms.json", import.meta.url), "utf8"));
+  for (const p of platforms) {
+    it(p.name, () => {
+      assert.ok(db.technologies[p.name], "is a webappanalyzer technology");
+      assert.ok(db.technologies[p.name].cats.includes(6), "is an ecommerce product");
+      assert.ok(p.kind === "hosted" || p.kind === "self", "kind");
+      assert.match(p.source, /^https:\/\//, "source link");
+    });
+  }
 });

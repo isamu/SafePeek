@@ -71,8 +71,8 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | payment | `payment_redirect` | good | link/form to a known provider host |
 | payment | `payment_scripts_only` | info | provider script or non-card provider frame, but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
-| payment | `checkout_saas` | good | a directly seen ecommerce product, backed by at least two different traces, that webappanalyzer marks as a hosted service (`saas`), e.g. Shopify, MakeShop: the cart service runs the checkout |
-| payment | `checkout_self_hosted` | info | a directly seen ecommerce product, backed by at least two different traces, marked as software the site runs itself (`oss`), e.g. EC-CUBE, Magento, WooCommerce: keeping it updated is the site's job |
+| payment | `checkout_saas` | good | a directly seen product listed as `hosted` in `data/checkout-platforms.json` (Shopify, BASE, STORES, MakeShop, カラーミーショップ, futureshop …): a cart service provides the shop |
+| payment | `checkout_self_hosted` | info | a directly seen product listed as `self` (EC-CUBE, Magento, WooCommerce …): shop software the site runs and must keep updated |
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
 | backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |
@@ -120,6 +120,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 | `sources.json` | written by the tool: upstream commits and dates | same |
 | `eol.json` | hand-maintained, `reviewed` date | by hand, with source links |
 | `payment-providers.json` | hand-maintained | by hand, with source links in the PR |
+| `checkout-platforms.json` | hand-maintained: who runs a shop's checkout (`hosted` cart service or `self`-run software), each with a source | by hand; only products whose kind is clear |
 | `backend-signatures.json` | hand-maintained, contributed through the issue form | by hand; validated by `test/backend.test.js` |
 | `wordpress.json` | hand-maintained, `reviewed` date | by hand when a WordPress major ships |
 

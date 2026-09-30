@@ -27,6 +27,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./checks/payment.js").Provider[]} providers
  * @property {import("./engine/backend.js").BackendRule[]} backends
  * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
+ * @property {import("./checks/checkout.js").CheckoutPlatform[]} checkout
  */
 
 /**
@@ -57,7 +58,7 @@ export async function analyze(page, db, env) {
   const findings = [
     ...checkTransport(page),
     ...checkPayment(page, db.providers),
-    ...checkCheckout(technologies, db.technologies),
+    ...checkCheckout(technologies, db.checkout),
     ...checkBackends(backends, env.today),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),

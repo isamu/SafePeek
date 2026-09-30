@@ -5,17 +5,16 @@ On a shop, say whether the checkout is run by a hosted cart service or by shop s
 the question behind "is this a self-built payment page?" beyond what the card-field checks already answer.
 
 ## Design
-- Data: `tools/update-data.mjs` keeps webappanalyzer's `saas` and `oss` flags. `technologies.json` was regenerated
-  from the same upstream commit recorded in `sources.json`; the only change is those two fields.
-- `checks/checkout.js` (pure): directly seen ecommerce products (category 6), not implied, backed by at least two
-  different traces:
-  - `saas: true` → `checkout_saas` (good) — e.g. Shopify, MakeShop, ecbeing;
-  - `oss: true` → `checkout_self_hosted` (info) — e.g. EC-CUBE, Magento, WooCommerce.
-- A lone trace is not enough: `window.amzn` (Amazon ads) matched "Amazon Webstore", and BASE's own site linking to
-  shops matched "Base".
-- Raw card fields on the merchant's page stay `card_on_page` (high) regardless.
+- `data/checkout-platforms.json` (hand-maintained, each with a source): webappanalyzer technology names classified as
+  `hosted` (a cart service runs the shop) or `self` (software the site installs and runs). Only products whose kind is
+  clear; ambiguous ones (Shopware, 1C-Bitrix, ecbeing) are left out. Upstream `saas`/`oss` flags were tried first and
+  dropped: they mark self-hostable products (Shopware, 1C-Bitrix) as `saas` and some as both.
+- `checks/checkout.js` (pure): a listed product, seen directly (not implied) → `checkout_saas` (good) or
+  `checkout_self_hosted` (info), with its evidence lines. `minEvidenceKinds` raises the bar per product: BASE needs two
+  kinds of trace, because its link rule also fires on BASE's own site, which links to shops.
+- Wording stays at "the shop is on a cart service"; how the card is entered is judged on the checkout page.
 
 ## Verification
-Unit tests for both flags, implied/neutral products, and the two-trace rule; each rule's removal turns one red.
+Unit tests for both kinds, unlisted and implied products, BASE's two-kind rule, evidence, and a data test (every listed name is a webappanalyzer ecommerce technology with a source); each rule's removal turns one red.
 Real pages: allbirds.com → checkout_saas (Shopify); thebase.com (BASE's own site) → nothing. Not verified on a real
 BASE shop or a real EC-CUBE shop.
