@@ -2,19 +2,8 @@
 // text (never as HTML), so a hostile page cannot inject markup into the extension.
 
 import { describe, t } from "./i18n.js";
-
-/**
- * @param {string} tag
- * @param {string} [className]
- * @param {string} [text]
- * @returns {HTMLElement}
- */
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
+import { el } from "./dom.js";
+import { renderBackendSection, renderSignals } from "./render-backend.js";
 
 /**
  * @param {import("../src/types.js").Finding} f
@@ -26,6 +15,7 @@ function renderFinding(f) {
   const summary = el("summary");
   summary.append(el("span", `pill sev-${f.severity}`, t(f.severity)), el("span", "finding-title", title));
   item.append(summary, el("p", "detail", detail));
+  if (f.signals && f.signals.length > 0) item.append(renderSignals(f.signals));
   if (f.evidence.length > 0) {
     const list = el("ul", "evidence");
     for (const line of f.evidence) list.append(el("li", undefined, line));
@@ -82,6 +72,10 @@ function renderTechnologies(report, categories) {
     item.title = tech.evidence.join("\n");
     item.append(el("span", "tech-name", tech.name));
     if (tech.version) item.append(el("span", "tech-version", tech.version));
+    if (tech.impliedBy) {
+      item.classList.add("implied");
+      item.append(el("span", "tech-implied", t("implied_by").replace("{name}", tech.impliedBy)));
+    }
     list.append(item);
   }
   return [...groups.entries()].map(([category, list]) => {
@@ -98,10 +92,11 @@ function renderTechnologies(report, categories) {
  */
 export function renderReport(root, report, db) {
   const payment = report.findings.filter((f) => f.area === "payment");
-  const others = report.findings.filter((f) => f.area !== "payment");
+  const others = report.findings.filter((f) => f.area !== "payment" && f.area !== "backend");
   root.replaceChildren(
     renderSummary(report),
     section(t("payment"), payment.map(renderFinding)),
+    renderBackendSection(report, renderFinding),
     section(t("findings"), others.map(renderFinding)),
     section(t("technologies"), renderTechnologies(report, db.categories)),
     renderFooter(db),

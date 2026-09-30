@@ -13,6 +13,8 @@ export function loadDb() {
     retire: parseRetireRepository(data("retire.json")),
     eol: JSON.parse(data("eol.json")),
     providers: JSON.parse(data("payment-providers.json")).providers,
+    backends: JSON.parse(data("backend-signatures.json")).backends,
+    wordpress: JSON.parse(data("wordpress.json")),
   };
 }
 
