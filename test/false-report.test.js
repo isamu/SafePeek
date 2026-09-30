@@ -78,8 +78,13 @@ describe("false-result issue links", () => {
         .filter((line) => line.startsWith("id: "))
         .map((line) => line.slice("id: ".length)),
     );
-    const url = findingReportUrl({ id: "no_csp", severity: "low", area: "headers", params: {}, evidence: [] }, page, context);
-    for (const key of Object.keys(fields(url)).filter((k) => k !== "template" && k !== "title"))
-      assert.ok(ids.has(key), `${key} is a field of false-result.yml`);
+    const urls = [
+      findingReportUrl({ id: "no_csp", severity: "low", area: "headers", params: {}, evidence: [] }, page, context),
+      technologiesReportUrl([], page, context),
+    ];
+    for (const url of urls) {
+      for (const key of Object.keys(fields(url)).filter((k) => k !== "template" && k !== "title"))
+        assert.ok(ids.has(key), `${key} is a field of false-result.yml`);
+    }
   });
 });
