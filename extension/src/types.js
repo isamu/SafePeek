@@ -19,7 +19,7 @@
  * @property {string | null} src  absolute URL, or null for an inline script
  * @property {string} integrity
  * @property {string} content  inline body, or the fetched body (may be truncated or empty)
- * @property {boolean} fetched
+ * @property {boolean} fetched  the whole external body was read, so its hash identifies the file
  */
 
 /**

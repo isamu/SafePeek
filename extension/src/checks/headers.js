@@ -48,21 +48,40 @@ function cspPolicies(header) {
 }
 
 /**
+ * Every policy is enforced, so inline scripts run only when each policy that governs scripts allows them.
  * @param {string[]} policies
  * @returns {Finding[]}
  */
 function checkCsp(policies) {
   if (policies.length === 0) return [finding("no_csp", "low", "headers")];
-  const findings = [];
-  for (const policy of policies) {
-    const scriptSrc = directive(policy, "script-src") ?? directive(policy, "default-src");
-    if (scriptSrc === null) continue;
-    const hasNonceOrHash = /'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(scriptSrc);
-    if (scriptSrc.includes("'unsafe-inline'") && !hasNonceOrHash) {
-      findings.push(finding("csp_unsafe_inline", "low", "headers", {}, [policy.slice(0, 300)]));
-    }
-  }
-  return findings;
+  const scriptPolicies = policies.filter((p) => scriptDirective(p) !== null);
+  if (scriptPolicies.length === 0 || !scriptPolicies.every(allowsInlineScript)) return [];
+  return [
+    finding(
+      "csp_unsafe_inline",
+      "low",
+      "headers",
+      {},
+      scriptPolicies.map((p) => p.slice(0, 300)),
+    ),
+  ];
+}
+
+/**
+ * @param {string} policy
+ * @returns {string | null}
+ */
+function scriptDirective(policy) {
+  return directive(policy, "script-src") ?? directive(policy, "default-src");
+}
+
+/**
+ * @param {string} policy
+ * @returns {boolean}
+ */
+function allowsInlineScript(policy) {
+  const scriptSrc = scriptDirective(policy) ?? "";
+  return scriptSrc.includes("'unsafe-inline'") && !/'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(scriptSrc);
 }
 
 /**

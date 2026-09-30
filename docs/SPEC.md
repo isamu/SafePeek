@@ -33,7 +33,7 @@ Only `collector.js`, `probe.js` and `popup/scan.js` touch browser APIs. Everythi
 
 ## 4. Collected page data (`PageData`, see `src/types.js`)
 
-URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, 2 MB each, 5 s timeout, `cache: force-cache`); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); attributes of up to 200 form fields (name, id, autocomplete, placeholder, aria-label — never their values), classified as card fields by `src/checks/cardfield.js`, which excludes loyalty/membership/gift cards and one-time codes; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
+URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, each download stopped at 2 MB and at 5 s including the body, `cache: force-cache`; only a completely read body is hashed); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); attributes of up to 200 form fields (name, id, autocomplete, placeholder, aria-label — never their values), classified as card fields by `src/checks/cardfield.js`, which excludes loyalty/membership/gift cards and one-time codes; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
 
 ## 5. Checks
 
@@ -58,7 +58,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | headers | `headers_unavailable` | info | header fetch failed |
 | headers | `no_hsts` | low | HTTPS without HSTS |
 | headers | `no_csp` | low | no CSP header or meta |
-| headers | `csp_unsafe_inline` | low | script-src/default-src has `'unsafe-inline'` without nonce/hash/strict-dynamic |
+| headers | `csp_unsafe_inline` | low | every policy that governs scripts (script-src, else default-src) allows `'unsafe-inline'` without nonce/hash/strict-dynamic |
 | headers | `no_nosniff` | low | no `X-Content-Type-Options: nosniff` |
 | headers | `no_clickjacking` | low | no `X-Frame-Options` and no `frame-ancestors` in a CSP header (browsers ignore it in `<meta>`) |
 | headers | `session_cookie_not_httponly` | medium | a well-known session cookie name readable from JS |

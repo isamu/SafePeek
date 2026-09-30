@@ -39,6 +39,13 @@ describe("transport and headers", () => {
     assert.deepEqual(ids(checkHeaders(page)), ["csp_unsafe_inline"]);
   });
 
+  it("does not flag unsafe-inline that another enforced policy blocks", () => {
+    const csp = "script-src 'self', script-src 'self' 'unsafe-inline'; frame-ancestors 'none'";
+    assert.deepEqual(ids(checkHeaders(makePage({ headers: { ...makePage().headers, "content-security-policy": csp } }))), []);
+    const header = { ...makePage().headers, "content-security-policy": "script-src 'self' 'unsafe-inline'; frame-ancestors 'none'" };
+    assert.deepEqual(ids(checkHeaders(makePage({ headers: header, metaCsp: ["script-src 'self'"] }))), []);
+  });
+
   it("ignores frame-ancestors in a meta policy, as browsers do", () => {
     const headers = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
     const page = makePage({ headers, metaCsp: ["frame-ancestors 'none'"] });

@@ -32,6 +32,46 @@
     }
   }
 
+  /**
+   * Downloads at most MAX_SCRIPT bytes of a script, all within FETCH_TIMEOUT_MS, so neither a huge nor a
+   * never-ending response is read whole.
+   * @param {string} url
+   * @returns {Promise<{ text: string, complete: boolean }>}
+   */
+  async function fetchScriptText(url) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, { cache: "force-cache", credentials: "same-origin", signal: controller.signal });
+      if (!response.ok || !response.body) return { text: "", complete: false };
+      return await readCapped(response.body.getReader());
+    } catch {
+      return { text: "", complete: false };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /**
+   * @param {ReadableStreamDefaultReader<Uint8Array>} reader
+   * @returns {Promise<{ text: string, complete: boolean }>}
+   */
+  async function readCapped(reader) {
+    const decoder = new TextDecoder();
+    const parts = [];
+    let bytes = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return { text: parts.join("") + decoder.decode(), complete: true };
+      parts.push(decoder.decode(value, { stream: true }));
+      bytes += value.byteLength;
+      if (bytes > MAX_SCRIPT) {
+        await reader.cancel();
+        return { text: parts.join("").slice(0, MAX_SCRIPT), complete: false };
+      }
+    }
+  }
+
   /** @returns {Promise<Record<string, string> | null>} */
   async function readHeaders() {
     let response = await fetchWithTimeout(location.href, { method: "HEAD", credentials: "include", cache: "no-store" });
@@ -54,9 +94,8 @@
       .map((s) => ({ src: null, integrity: "", content: (s.textContent ?? "").slice(0, MAX_SCRIPT), fetched: false }));
     const fetchedScripts = await Promise.all(
       external.map(async (s) => {
-        const response = await fetchWithTimeout(s.src, { cache: "force-cache", credentials: "same-origin" });
-        const body = response && response.ok ? await response.text().catch(() => "") : "";
-        return { src: s.src, integrity: s.integrity, content: body.slice(0, MAX_SCRIPT), fetched: body !== "" };
+        const { text, complete } = await fetchScriptText(s.src);
+        return { src: s.src, integrity: s.integrity, content: text, fetched: complete };
       }),
     );
     return [...fetchedScripts, ...inline];

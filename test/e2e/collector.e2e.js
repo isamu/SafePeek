@@ -27,6 +27,15 @@ const HEADERS = {
   "/hosted.html": { "Content-Security-Policy": "frame-ancestors 'self'", "X-Content-Type-Options": "nosniff" },
 };
 
+const MAX_SCRIPT_CHARS = 2_000_000;
+const HUGE_SCRIPT_BYTES = 3 * MAX_SCRIPT_CHARS;
+const CHUNK_BYTES = 64 * 1024;
+/** Scripts the collector must not read whole: one larger than its cap, one that never finishes. */
+const GENERATED = {
+  "/generated/huge.js": (/** @type {import("node:http").ServerResponse} */ res) => res.end("/*" + "x".repeat(HUGE_SCRIPT_BYTES) + "*/"),
+  "/generated/endless.js": (/** @type {import("node:http").ServerResponse} */ res) => res.write("/*" + "y".repeat(CHUNK_BYTES)),
+};
+
 const db = loadDb();
 /** @type {import("node:http").Server} */
 let server;
@@ -37,6 +46,12 @@ let base = "";
 before(async () => {
   server = createServer(async (req, res) => {
     const path = new URL(req.url ?? "/", "http://localhost").pathname;
+    const generate = GENERATED[/** @type {keyof typeof GENERATED} */ (path)];
+    if (generate) {
+      res.writeHead(200, { "Content-Type": "text/javascript", "Cache-Control": "no-store" });
+      generate(res);
+      return;
+    }
     try {
       const body = await readFile(fixtures + path.slice(1));
       const type = path.endsWith(".js") ? "text/javascript" : "text/html; charset=utf-8";
@@ -62,10 +77,20 @@ after(async () => {
  * @param {string} name
  */
 async function scan(name) {
+  const collected = await collect(name);
+  return analyze(collected, db, { today: new Date("2026-09-30T00:00:00Z"), sha1 });
+}
+
+/**
+ * @param {string} name
+ * @param {"load" | "domcontentloaded"} [waitUntil]  "domcontentloaded" for pages whose load event never fires
+ * @returns {Promise<import("../../extension/src/types.js").PageData>}
+ */
+async function collect(name, waitUntil = "load") {
   const page = await browser.newPage();
   // Third-party hosts in the fixtures are never contacted: tests must not depend on the network.
   await page.route(/^https:\/\//, (route) => route.abort());
-  await page.goto(`${base}/${name}`);
+  await page.goto(`${base}/${name}`, { waitUntil });
   await page.addScriptTag({ path: collectorPath });
   const hosts = db.providers.flatMap((p) => p.hosts);
   const collected = await page.evaluate(
@@ -75,7 +100,7 @@ async function scan(name) {
   const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire)])];
   const globals = await page.evaluate(probeGlobals, paths);
   await page.close();
-  return analyze({ ...collected, globals }, db, { today: new Date("2026-09-30T00:00:00Z"), sha1 });
+  return { ...collected, globals };
 }
 
 /** @param {import("../../extension/src/analyze.js").Report} report */
@@ -109,6 +134,15 @@ describe("collector in Chromium", () => {
     const payment = report.findings.find((f) => f.area === "payment");
     assert.equal(payment?.id, "card_tokenized_on_page");
     assert.equal(payment?.params.provider, "GMO Payment Gateway");
+  });
+
+  it("reads at most the cap of a huge script and gives up on one that never ends", { timeout: 30_000 }, async () => {
+    const { scripts } = await collect("large-scripts.html", "domcontentloaded");
+    const huge = scripts.find((s) => s.src?.endsWith("/huge.js"));
+    const endless = scripts.find((s) => s.src?.endsWith("/endless.js"));
+    assert.equal(huge?.content.length, MAX_SCRIPT_CHARS);
+    assert.equal(huge?.fetched, false);
+    assert.equal(endless?.fetched, false);
   });
 
   it("recognises provider-hosted card fields", async () => {
