@@ -5,12 +5,16 @@ import { normalizeDom } from "./queries.js";
 import { mostSpecificVersion } from "./version.js";
 
 const MAX_SUBJECT = 300_000;
+const SCRIPT_CONTENT = "script content";
+/** CMS, ecommerce, blogs, web frameworks, web servers, programming languages, databases: what the site is built on. */
+const PLATFORM_CATEGORIES = new Set([1, 6, 11, 18, 22, 27, 34]);
 
 /**
  * @typedef {object} Hit
  * @property {number} confidence
  * @property {string[]} versions
  * @property {string[]} evidence
+ * @property {boolean} [direct]  seen in something other than script code (a header, URL, meta tag, global …)
  * @property {string} [impliedBy]  set when the only reason for the hit is another technology's "implies"
  */
 
@@ -33,12 +37,15 @@ export function detectTechnologies(page, db) {
     hit.confidence = Math.min(100, hit.confidence + result.confidence);
     if (result.version) hit.versions.push(result.version);
     if (hit.evidence.length < 5) hit.evidence.push(evidence);
+    hit.direct ||= evidence !== SCRIPT_CONTENT;
     hits.set(name, hit);
   };
   for (const [name, tech] of Object.entries(db.technologies)) {
     matchTechnology(name, tech, page, report);
   }
+  dropZeroConfidence(hits);
   applyImplies(hits, db.technologies);
+  dropScriptOnlyPlatforms(hits, db.technologies);
   applyRequirements(hits, db.technologies);
   return toResults(hits, db);
 }
@@ -57,7 +64,7 @@ function matchTechnology(name, tech, page, report) {
   const srcs = page.scripts.map((s) => s.src).filter((s) => s !== null);
   matchEach(tech.scriptSrc, srcs, (value, subject) => report(name, value, `script ${subject}`));
   const bodies = page.scripts.map((s) => s.content.slice(0, MAX_SUBJECT));
-  matchEach(tech.scripts, bodies, (value) => report(name, value, "script content"));
+  matchEach(tech.scripts, bodies, (value) => report(name, value, SCRIPT_CONTENT));
   matchEach(tech.html, [page.html], (value) => report(name, value, "html"));
   matchEach(tech.text, [page.text], (value) => report(name, value, "page text"));
   matchEach(tech.url, [page.url], (value) => report(name, value, "url"));
@@ -156,6 +163,31 @@ function matchDom(dom, results, onMatch) {
 }
 
 /**
+ * A pattern marked confidence:0 only adds a version; a technology seen only through such patterns is not one.
+ * Runs before implies, so it cannot bring in other technologies either.
+ * @param {Map<string, Hit>} hits
+ */
+function dropZeroConfidence(hits) {
+  for (const [name, hit] of [...hits]) {
+    if (hit.confidence === 0) hits.delete(name);
+  }
+}
+
+/**
+ * A platform known only from a string inside script code is dropped — a bundle that mentions ".php?" or
+ * "/wp-content" talks about another site as often as about this one. Runs after implies, and implied hits
+ * inherit directness from what implied them, so a script-only hit cannot bring a platform in either.
+ * @param {Map<string, Hit>} hits
+ * @param {Record<string, any>} technologies
+ */
+function dropScriptOnlyPlatforms(hits, technologies) {
+  for (const [name, hit] of [...hits]) {
+    const platform = (technologies[name]?.cats ?? []).some((/** @type {number} */ c) => PLATFORM_CATEGORIES.has(c));
+    if (platform && !hit.direct) hits.delete(name);
+  }
+}
+
+/**
  * @param {Map<string, Hit>} hits
  * @param {Record<string, any>} technologies
  */
@@ -163,10 +195,22 @@ function applyImplies(hits, technologies) {
   const queue = [...hits.keys()];
   while (queue.length > 0) {
     const name = queue.shift() ?? "";
+    const source = hits.get(name);
     for (const implied of toList(technologies[name]?.implies)) {
       const pattern = parsePattern(implied);
-      if (!technologies[pattern.source] || hits.has(pattern.source)) continue;
-      hits.set(pattern.source, { confidence: pattern.confidence, versions: [], evidence: [`implied by ${name}`], impliedBy: name });
+      const existing = hits.get(pattern.source);
+      if (existing?.impliedBy && source?.direct && !existing.direct) {
+        existing.direct = true; // a directly seen technology implies it too; pass that on down the chain
+        queue.push(pattern.source);
+      }
+      if (!technologies[pattern.source] || existing) continue;
+      hits.set(pattern.source, {
+        confidence: pattern.confidence,
+        versions: [],
+        evidence: [`implied by ${name}`],
+        impliedBy: name,
+        direct: source?.direct,
+      });
       queue.push(pattern.source);
     }
   }
