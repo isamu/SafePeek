@@ -30,6 +30,7 @@ describe("transport and headers", () => {
       "http://127.0.0.1:8080/",
       "http://127.1.2.3/",
       "http://[::1]:5173/",
+      "http://[::ffff:127.0.0.1]/",
     ]) {
       assert.deepEqual(ids(checkTransport(makePage({ url, protocol: "http:", forms: login }))), [], url);
     }
@@ -37,7 +38,7 @@ describe("transport and headers", () => {
 
   it("still judges plain HTTP on hosts that only look local", () => {
     const lanAddress = ["192", "168", "0", "10"].join("."); // a private network still leaves the machine
-    for (const host of ["localhost.example.com", "mylocalhost", "127.0.0.1.nip.io", lanAddress]) {
+    for (const host of ["localhost.example.com", "mylocalhost", "127.0.0.1.nip.io", lanAddress, `[::ffff:${lanAddress}]`]) {
       const url = `http://${host}/`;
       assert.deepEqual(ids(checkTransport(makePage({ url, protocol: "http:" }))), ["not_https"], url);
     }

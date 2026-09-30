@@ -8,7 +8,7 @@ const SESSION_COOKIE =
   /^(phpsessid|jsessionid|asp\.net_sessionid|aspsessionid\w*|laravel_session|connect\.sid|_session_id|sessionid|session|sid|ci_session|cakephp|eccube)$/i;
 
 /**
- * Browsers treat http://localhost, *.localhost, 127.0.0.0/8 and [::1] as secure contexts: traffic never leaves
+ * Browsers treat http://localhost, *.localhost, 127.0.0.0/8 (also as IPv4-mapped IPv6) and [::1] as secure contexts: traffic never leaves
  * the machine, so plain HTTP there is how local development works, not a transport weakness.
  * @param {string} url
  * @returns {boolean}
@@ -16,7 +16,13 @@ const SESSION_COOKIE =
 export function isLoopback(url) {
   try {
     const host = new URL(url).hostname.replace(/\.$/, ""); // "localhost." is the same name
-    return host === "localhost" || host.endsWith(".localhost") || host === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(host);
+    return (
+      host === "localhost" ||
+      host.endsWith(".localhost") ||
+      host === "[::1]" ||
+      /^127(?:\.\d{1,3}){3}$/.test(host) ||
+      /^\[::ffff:7f[\da-f]{2}:[\da-f]{1,4}\]$/.test(host)
+    );
   } catch {
     return false;
   }
