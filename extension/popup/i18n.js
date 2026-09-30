@@ -76,19 +76,20 @@ const JA = {
       "セッションリプレイ（画面録画）のサービスは、マウスの動き、クリック、入力内容を記録して送ることがあります。多くは入力欄を伏せますが、設定次第です。フォームに個人情報を入れる前に、プライバシーポリシーを確かめてください。",
   },
   dest_monitoring: {
-    title: (p) => `エラーや動作ログを外部の監視サービスに送っています（${p.services}）`,
-    detail: () => "エラー監視やログ収集のサービスには、閲覧中のURLや操作の記録がエラー情報と一緒に送られることがあります。",
+    title: (p) => `エラー・動作ログの監視サービスを使っています（${p.services}）`,
+    detail: () =>
+      "エラー監視やログ収集のサービスには、閲覧中のURLや操作の記録がエラー情報と一緒に送られることがあります。自社のサーバーで動かしている場合もあります。",
   },
   dest_advertising: {
-    title: (p) => `広告サービスに閲覧情報を送っています（${p.services}）`,
-    detail: () => "広告やリターゲティングのサービスは、ほかのサイトをまたいで閲覧履歴をつなげることがあります。",
+    title: (p) => `広告サービスを使っています（${p.services}）`,
+    detail: () => "広告やリターゲティングのサービスには閲覧情報が送られ、ほかのサイトをまたいで閲覧履歴がつなげられることがあります。",
   },
   dest_analytics: {
-    title: (p) => `アクセス解析サービスに閲覧情報を送っています（${p.services}）`,
-    detail: () => "閲覧したページや操作の統計が、解析サービスに送られます。",
+    title: (p) => `アクセス解析を使っています（${p.services}）`,
+    detail: () => "閲覧したページや操作の統計は、多くの場合、解析サービスに送られます。解析ツールを自社のサーバーで動かしている場合もあります。",
   },
   dest_marketing: {
-    title: (p) => `マーケティング・顧客データのサービスに送っています（${p.services}）`,
+    title: (p) => `マーケティング・顧客データのサービスを使っています（${p.services}）`,
     detail: () => "メール配信、顧客データ基盤、A/B テストなどのサービスに、閲覧や属性の情報が送られることがあります。",
   },
   auth_services: {
@@ -220,19 +221,20 @@ const EN = {
       "Session replay services can record mouse movement, clicks and what you type, and send it to the service. Most mask input fields, but that depends on the site's settings; check the privacy policy before entering personal details.",
   },
   dest_monitoring: {
-    title: (p) => `Sends errors and activity logs to a monitoring service (${p.services})`,
-    detail: () => "Error and log monitoring services can receive the URL you are on and a trail of what you did along with each error.",
+    title: (p) => `Uses error and activity monitoring (${p.services})`,
+    detail: () =>
+      "Error and log monitoring services can receive the URL you are on and a trail of what you did along with each error. Some sites run the monitoring on their own servers.",
   },
   dest_advertising: {
-    title: (p) => `Sends browsing data to advertising services (${p.services})`,
-    detail: () => "Advertising and retargeting services can link what you view here with what you view on other sites.",
+    title: (p) => `Uses advertising services (${p.services})`,
+    detail: () => "Advertising and retargeting services receive browsing data and can link what you view here with what you view on other sites.",
   },
   dest_analytics: {
-    title: (p) => `Sends browsing data to analytics services (${p.services})`,
-    detail: () => "Statistics about the pages you view and what you do are sent to the analytics service.",
+    title: (p) => `Uses analytics (${p.services})`,
+    detail: () => "Statistics about the pages you view and what you do usually go to an analytics service; some sites run the analytics on their own servers.",
   },
   dest_marketing: {
-    title: (p) => `Sends data to marketing and customer-data services (${p.services})`,
+    title: (p) => `Uses marketing and customer-data services (${p.services})`,
     detail: () => "Email marketing, customer data platforms and A/B testing services can receive what you view and who you are.",
   },
   auth_services: {

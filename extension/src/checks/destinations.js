@@ -2,7 +2,7 @@
 // marketing services, from the hosts it contacts and the webappanalyzer products it runs.
 
 import { finding } from "./finding.js";
-import { hostMatches, pageHosts } from "./page-urls.js";
+import { hostMatches, requestHosts, resourceHosts } from "./page-urls.js";
 
 const MENTION_LABELS = ["script content", "page text", "html"];
 
@@ -53,7 +53,8 @@ export function checkDestinations(technologies, destinations, page) {
 }
 
 /**
- * Listed services, seen through a host the page contacted or one of their products. A product is named only by the
+ * Listed services, seen through a host the page loaded from or called (a form target is not sent to until submitted)
+ * or one of their products. A product is named only by the
  * kind of its trace, since its evidence can be a URL carrying account ids.
  * @param {DestinationService[]} services
  * @param {import("../types.js").Technology[]} direct
@@ -61,7 +62,7 @@ export function checkDestinations(technologies, destinations, page) {
  * @returns {SeenDestination[]}
  */
 function listedServices(services, direct, page) {
-  const hosts = pageHosts(page);
+  const hosts = [...resourceHosts(page), ...requestHosts(page)];
   return services
     .map((service) => ({
       name: service.name,

@@ -26,7 +26,7 @@ describe("where data goes", () => {
   });
 
   it("sees a listed service from the host the page sent data to, even without its script", () => {
-    const page = makePage({ contactedHosts: ["o123.ingest.us.sentry.io", "z.clarity.ms", "bam.nr-data.net"] });
+    const page = makePage({ contactedHosts: ["o123.ingest.sentry.io", "z.clarity.ms", "bam.nr-data.net"] });
     assert.deepEqual(summary(checkDestinations([], db.destinations, page)), ["dest_session_replay:Microsoft Clarity", "dest_monitoring:Sentry, New Relic"]);
   });
 
@@ -40,6 +40,41 @@ describe("where data goes", () => {
     const mentioned = [tech("Hotjar", ["script content"]), tech("Google Analytics", ["html"]), tech("Criteo", ["page text"])];
     assert.deepEqual(checkDestinations(mentioned, db.destinations, makePage()), []);
     assert.deepEqual(checkDestinations([tech("Hotjar", ["js hj"], "X")], db.destinations, makePage()), []);
+  });
+
+  it("does not take a vendor's website, docs, status page or dashboard for telemetry", () => {
+    const vendorPages = [
+      "docs.sentry.io",
+      "status.sentry.io",
+      "sentry.io",
+      "app.logrocket.com",
+      "docs.logrocket.com",
+      "www.contentsquare.com",
+      "docs.rollbar.com",
+      "app.rollbar.com",
+      "docs.trackjs.com",
+      "my.trackjs.com",
+      "app.raygun.com",
+      "docs.bugsnag.com",
+      "www.smartlook.com",
+      "help.hotjar.com",
+      "www.hotjar.com",
+      "help.fullstory.com",
+      "www.quantummetric.com",
+      "www.luckyorange.com",
+    ];
+    for (const host of vendorPages) assert.deepEqual(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] })), [], host);
+  });
+
+  it("does not count a form target, which is sent to only on submit", () => {
+    const page = makePage({ forms: [{ action: "https://api.rollbar.com/api/1/item/", method: "post", hasPassword: false }] });
+    assert.deepEqual(checkDestinations([], db.destinations, page), []);
+  });
+
+  it("files a product with a marketing category under marketing, even if it is also analytics", () => {
+    const both = tech("Braze");
+    assert.ok(both.categories.includes(10) && both.categories.some((c) => [32, 97, 86, 74, 94].includes(c)), "Braze is both");
+    assert.deepEqual(summary(checkDestinations([both], db.destinations, makePage())), ["dest_marketing:Braze"]);
   });
 
   it("does not match a shared host, or a neighbouring one", () => {
