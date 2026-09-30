@@ -51,6 +51,17 @@ describe("copy-to-issue report", () => {
     assert.equal(text.match(/\(value not copied\)/g)?.length, 5);
   });
 
+  it("copies only version numbers, never other page-controlled version text", () => {
+    const tech = (/** @type {string} */ name, /** @type {string} */ version) => ({ name, version, confidence: 100, categories: [], website: "", evidence: [] });
+    const base = report([signal("param", "x")]);
+    const text = backendReportText(
+      { ...base, technologies: [tech("Next.js", "SECRET9@example.com-123"), tech("PHP", "5.4.16"), tech("OpenSSL", "1.0.2k")] },
+      "0.2.0",
+    );
+    assert.ok(!text.includes("SECRET9"), text);
+    assert.match(text, /Versions seen: PHP 5\.4\.16, OpenSSL 1\.0\.2k/);
+  });
+
   it("keeps the identifier names maintainers need, and each trace's note", () => {
     const signals = [
       signal("param", "org.apache.struts.taglib.html.TOKEN"),

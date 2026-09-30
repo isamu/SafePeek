@@ -1,8 +1,12 @@
 // The text "Copy the inference" puts on the clipboard, meant to be pasted into a public GitHub issue.
 // It lists what is allowed and drops everything else: the page's origin (never its path), and for
-// each trace only an identifier name — form field, cookie, JS global, the site's hostname. URL paths,
+// each trace only an identifier name — form field, cookie, JS global, the site's hostname — plus plain
+// version numbers of the technologies seen. URL paths,
 // header values and page or script excerpts can carry session ids, tokens or personal data, so they
 // are never copied; the trace's note still says what kind of trace fired.
+
+/** A version number and nothing else; page-controlled strings that are not one are left out. */
+const PLAIN_VERSION = /^v?\d+(?:[._-]\d+)*(?:[a-z]\d*)?$/i;
 
 /** Trace types whose match is an identifier name rather than a value. */
 const COPYABLE_TYPES = new Set(["param", "cookie", "global", "host"]);
@@ -39,7 +43,7 @@ export function backendReportText(report, extensionVersion) {
     lines.push(`- ${b.name} (${b.language}), status ${b.status}, confidence ${b.confidence}`, ...b.signals.map(signalLine));
   }
   if (report.backends.length === 0) lines.push("- (no backend inferred)");
-  const versions = report.technologies.filter((tech) => tech.version).map((tech) => `${tech.name} ${tech.version}`);
+  const versions = report.technologies.filter((tech) => PLAIN_VERSION.test(tech.version)).map((tech) => `${tech.name} ${tech.version}`);
   if (versions.length > 0) lines.push("", `Versions seen: ${versions.join(", ")}`);
   lines.push("", `SafePeek ${extensionVersion}`);
   return lines.join("\n");
