@@ -59,7 +59,7 @@ URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-sto
 
 The page's same-origin frames, nested ones included (up to 10), are read like the page itself for form fields, forms, iframes, stylesheets, images and external script URLs (not their bodies), which count as the site's own. Meta tags, script bodies, cookies, HTML and text still come from the top document only. A frame on another origin cannot be read and is judged by its URL (e.g. a provider's card frame).
 
-What the page itself has already loaded, read from the browser's resource-timing record (`performance.getEntriesByType("resource")`, no new request): the scheme, host and path (never the query string or fragment) of its fetch / XHR / beacon calls (`requests`, up to 300), and every host it loaded anything from (`contactedHosts`, up to 300). They are read before SafePeek's own re-requests, so those are not included.
+What the page itself has already loaded, read from the browser's resource-timing record (`performance.getEntriesByType("resource")`, no new request): the scheme, host and path of its fetch / XHR / beacon calls (`requests`, up to 300), and every host it loaded anything from (`contactedHosts`, up to 300). Query strings, fragments and `;` path parameters are never kept, and a run of 16+ word characters containing a digit is masked as `{token}`. SafePeek's own re-requests are not included, from this scan (read before them) or from an earlier scan of the same document (remembered in the isolated world). Only the top window's record is read, and it is best effort: the browser's buffer may already have dropped early entries.
 
 ## 5. Checks
 

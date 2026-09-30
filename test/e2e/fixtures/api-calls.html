@@ -6,8 +6,13 @@
   </head>
   <body>
     <p>SPA</p>
+    <script src="js/kumu.js"></script>
     <script>
-      fetch("/sanctum/csrf-cookie?token=SECRET", { credentials: "include" }).then(() => {
+      Promise.all([
+        fetch("/sanctum/csrf-cookie?token=SECRET", { credentials: "include" }),
+        fetch("/api/session;jsessionid=SECRETSESSION#SECRETFRAGMENT"),
+        fetch("/password/reset/a8f3SECRET9c21d4e7b6/confirm"),
+      ]).then(() => {
         document.body.dataset.loaded = "1";
       });
     </script>

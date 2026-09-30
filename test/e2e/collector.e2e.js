@@ -95,17 +95,17 @@ async function scan(name) {
  * @param {"load" | "domcontentloaded"} [waitUntil]  "domcontentloaded" for pages whose load event never fires
  * @returns {Promise<import("../../extension/src/types.js").PageData>}
  */
-async function collect(name, waitUntil = "load") {
+async function collect(name, waitUntil = "load", scans = 1) {
   const page = await browser.newPage();
   // Third-party hosts in the fixtures are never contacted: tests must not depend on the network.
   await page.route(/^https:\/\//, (route) => route.abort());
   await page.goto(`${base}/${name}`, { waitUntil });
   await page.addScriptTag({ path: collectorPath });
   const hosts = db.providers.flatMap((p) => p.hosts);
-  const collected = await page.evaluate(
-    ([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h),
-    [buildDomQueries(db.technologies), hosts],
-  );
+  const scan = () =>
+    page.evaluate(([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h), [buildDomQueries(db.technologies), hosts]);
+  let collected = await scan();
+  for (let n = 1; n < scans; n++) collected = await scan();
   const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire), ...backendGlobalPaths(db.backends)])];
   const globals = await page.evaluate(probeGlobals, paths);
   await page.close();
@@ -223,7 +223,24 @@ describe("collector in Chromium", () => {
     const page = await collect("api-calls.html");
     const call = page.requests.find((u) => u.endsWith("/sanctum/csrf-cookie"));
     assert.ok(call, page.requests.join(", "));
-    assert.ok(!page.requests.some((u) => u.includes("SECRET")));
+    assert.ok(!page.requests.some((u) => u.includes("SECRET")), page.requests.join(", "));
+    assert.ok(
+      page.requests.some((u) => u.endsWith("/api/session")),
+      "path parameters are dropped, the path is kept",
+    );
+    assert.ok(
+      page.requests.some((u) => u.endsWith("/password/reset/{token}/confirm")),
+      "a token in the path is masked",
+    );
     assert.ok(page.contactedHosts.includes("shop.test"));
+  });
+
+  it("does not count its own earlier re-requests as the page's on a second scan", async () => {
+    const page = await collect("api-calls.html", "load", 2);
+    assert.ok(
+      page.requests.some((u) => u.endsWith("/sanctum/csrf-cookie")),
+      page.requests.join(", "),
+    );
+    assert.ok(!page.requests.some((u) => u.endsWith("/api-calls.html") || u.endsWith("/js/kumu.js")), page.requests.join(", "));
   });
 });

@@ -18,6 +18,33 @@
   const MAX_REQUESTS = 300;
   const REQUEST_INITIATORS = ["fetch", "xmlhttprequest", "beacon"];
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
+  const OWN_FETCHES_KEY = "SafePeekOwnFetches";
+  const TOKEN_RUN = /\w{16,}/g;
+
+  // The isolated world outlives one injection, so a later scan still knows what an earlier one re-requested.
+  const ownFetches = ownFetchSet();
+
+  /** @returns {Set<string>} */
+  function ownFetchSet() {
+    const previous = Reflect.get(globalThis, OWN_FETCHES_KEY);
+    const set = previous instanceof Set ? previous : new Set();
+    Reflect.set(globalThis, OWN_FETCHES_KEY, set);
+    return set;
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}  the URL as resource timing names it (absolute, no fragment), or "" if it does not parse
+   */
+  function timingName(raw) {
+    try {
+      const url = new URL(raw, location.href);
+      url.hash = "";
+      return url.href;
+    } catch {
+      return "";
+    }
+  }
 
   /**
    * @param {string} url
@@ -27,6 +54,7 @@
   async function fetchWithTimeout(url, init) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    ownFetches.add(timingName(url));
     try {
       return await fetch(url, { ...init, signal: controller.signal });
     } catch {
@@ -45,6 +73,7 @@
   async function fetchScriptText(url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    ownFetches.add(timingName(url));
     try {
       const response = await fetch(url, { cache: "force-cache", credentials: "same-origin", signal: controller.signal });
       if (!response.ok || !response.body) return { text: "", complete: false };
@@ -121,23 +150,27 @@
   }
 
   /**
-   * What the page has loaded so far, from the browser's own resource-timing record: no new request is made.
+   * What the page has loaded so far, from the browser's own resource-timing record: no new request is made. SafePeek's
+   * own re-requests from earlier scans of this document are left out.
    * @returns {PerformanceResourceTiming[]}
    */
   function resourceEntries() {
-    return performance.getEntriesByType("resource").filter((e) => e instanceof PerformanceResourceTiming);
+    return performance
+      .getEntriesByType("resource")
+      .filter((e) => e instanceof PerformanceResourceTiming)
+      .filter((e) => !(e.initiatorType === "fetch" && ownFetches.has(timingName(e.name))));
   }
 
   /**
-   * The URLs the page itself has fetched (fetch, XHR, beacons). Only scheme, host and path are kept; query strings and
-   * fragments often hold tokens.
+   * The URLs the page itself has fetched (fetch, XHR, beacons). Only scheme, host and path are kept, since query
+   * strings, fragments and path parameters often hold tokens; token-like runs in the path are masked too.
    * @param {PerformanceResourceTiming[]} entries
    * @returns {string[]}
    */
   function readRequests(entries) {
     const urls = entries
       .filter((e) => REQUEST_INITIATORS.includes(e.initiatorType))
-      .map((e) => withoutQuery(e.name))
+      .map((e) => redactedUrl(e.name))
       .filter((u) => u !== "");
     return [...new Set(urls)].slice(0, MAX_REQUESTS);
   }
@@ -166,15 +199,27 @@
 
   /**
    * @param {string} raw
-   * @returns {string}  scheme, host and path only
+   * @returns {string}  scheme, host and path only, with path parameters dropped and token-like runs masked
    */
-  function withoutQuery(raw) {
+  function redactedUrl(raw) {
     try {
       const url = new URL(raw);
-      return url.protocol === "https:" || url.protocol === "http:" ? `${url.origin}${url.pathname}` : "";
+      return url.protocol === "https:" || url.protocol === "http:" ? `${url.origin}${maskTokens(url.pathname)}` : "";
     } catch {
       return "";
     }
+  }
+
+  /**
+   * A run of 16+ word characters with a digit in it is an id or a token, not a route name.
+   * @param {string} pathname
+   * @returns {string}
+   */
+  function maskTokens(pathname) {
+    return pathname
+      .split("/")
+      .map((segment) => segment.split(";")[0].replace(TOKEN_RUN, (run) => (/\d/.test(run) ? "{token}" : run)))
+      .join("/");
   }
 
   /** @returns {{ meta: Record<string, string[]>, metaCsp: string[] }} */

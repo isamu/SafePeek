@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'info' = identifies the framework or language only.",
+  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname; 'api' = URLs the page itself fetched (fetch / XHR / beacon), scheme, host and path only, with token-like path runs masked as {token}. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'info' = identifies the framework or language only.",
   "reviewed": "2026-09-30",
   "backends": [
     {
@@ -471,10 +471,17 @@
         },
         {
           "type": "api",
-          "pattern": "/livewire(?:-[0-9a-f]+)?/update$",
+          "pattern": "/livewire(?:-(?:[0-9a-f]+|\\{token\\}))?/update$",
           "weight": 60,
-          "note": "Livewire update endpoint",
-          "noteJa": "Livewire の更新エンドポイント"
+          "note": "Livewire 3+ update endpoint",
+          "noteJa": "Livewire 3 以降の更新エンドポイント"
+        },
+        {
+          "type": "api",
+          "pattern": "/livewire/message/[^/]+$",
+          "weight": 60,
+          "note": "Livewire 2 component message endpoint",
+          "noteJa": "Livewire 2 のコンポーネント通信エンドポイント"
         }
       ]
     },
