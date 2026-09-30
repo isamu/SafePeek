@@ -14,7 +14,7 @@ describe("template leftovers on a shop page", () => {
   });
 
   it("reads the common variants", () => {
-    for (const text of ["販売業者 ○○ショップ", "運営会社 有限会社××", "TEL 00-000-0000", "Your Store Name", "Default Store View"]) {
+    for (const text of ["販売業者 ○○ショップ", "運営会社 有限会社××", "TEL 00-000-0000"]) {
       assert.equal(checkTemplateLeftovers(shop(text)).length, 1, text);
     }
   });
@@ -56,7 +56,13 @@ describe("template leftovers on a shop page", () => {
     assert.deepEqual(checkTemplateLeftovers(shop("サイズガイド\nLorem ipsum dolor sit amet, consectetur adipiscing elit.")), []);
   });
 
+  it("does not take English template wording for a leftover, since real shops use it too", () => {
+    for (const text of ["Please enter your store name when you register.", "Default Store View", "Lorem ipsum dolor sit amet"]) {
+      assert.deepEqual(checkTemplateLeftovers(shop(text)), [], text);
+    }
+  });
+
   it("stays out of pages that are not Japanese shops", () => {
-    assert.deepEqual(checkTemplateLeftovers(makePage({ text: "Your Store Name. Default Store View.", html: "<html></html>" })), []);
+    assert.deepEqual(checkTemplateLeftovers(makePage({ text: "Company: 株式会社〇〇 TEL 000-0000-0000", html: "<html></html>" })), []);
   });
 });

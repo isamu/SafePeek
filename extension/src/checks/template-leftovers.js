@@ -13,9 +13,8 @@ const IDENTITY_PLACEHOLDERS = [
   { label: "000-0000-0000", pattern: /(?<![\d-])0{2,4}-0{3,4}-0{4}(?![\d-])/ },
   { label: "〒000-0000", pattern: /〒\s?000-?0000/ },
 ];
-// A template's own store name, which no shop keeps on purpose. Lorem ipsum is not used: real shops leave it in
-// size guides and hidden blocks.
-const TEMPLATE_FILLER = [{ label: "Your Store Name", pattern: /your (?:store|shop) name|default store view/i }];
+// Template filler is not used: real shops keep lorem ipsum in size guides, write "your store name" in prose, and leave
+// Magento's "Default Store View" label as it is.
 
 /**
  * Only the kind of placeholder is shown; the text around it is the page's. Input placeholders are not read: they are
@@ -26,9 +25,6 @@ const TEMPLATE_FILLER = [{ label: "Your Store Name", pattern: /your (?:store|sho
 export function checkTemplateLeftovers(page) {
   if (!isJapaneseShop(page.text)) return [];
   const identityLines = page.text.split("\n").filter((line) => IDENTITY_LABEL.test(line) && !EXAMPLE_WORDS.test(line));
-  const found = [
-    ...IDENTITY_PLACEHOLDERS.filter(({ pattern }) => identityLines.some((line) => pattern.test(line))),
-    ...TEMPLATE_FILLER.filter(({ pattern }) => pattern.test(page.text)),
-  ].map(({ label }) => label);
+  const found = IDENTITY_PLACEHOLDERS.filter(({ pattern }) => identityLines.some((line) => pattern.test(line))).map(({ label }) => label);
   return found.length > 0 ? [finding("shop_template_leftovers", "low", "page", { count: found.length }, found)] : [];
 }
