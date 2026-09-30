@@ -38,7 +38,7 @@ export function makePage(overrides = {}) {
     links: [],
     images: [],
     forms: [],
-    cardFields: [],
+    inputs: [],
     cookies: {},
     html: "<html><body></body></html>",
     text: "",
@@ -59,10 +59,11 @@ export function script(src, content = "") {
 
 /**
  * @param {string} name
- * @returns {import("../extension/src/types.js").CardField}
+ * @param {Partial<import("../extension/src/types.js").InputField>} [overrides]
+ * @returns {import("../extension/src/types.js").InputField}
  */
-export function cardField(name) {
-  return { tag: "input", type: "text", name, id: name, autocomplete: "" };
+export function inputField(name, overrides = {}) {
+  return { tag: "input", type: "text", name, id: name, autocomplete: "", hints: "", ...overrides };
 }
 
 export const noHash = async () => "";

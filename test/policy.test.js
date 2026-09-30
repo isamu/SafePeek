@@ -37,9 +37,15 @@ describe("security policy", () => {
   });
 
   it("lets extension pages load and connect to nothing but the extension itself", () => {
-    const csp = manifest.content_security_policy.extension_pages;
-    assert.match(csp, /script-src 'self'/);
-    assert.match(csp, /connect-src 'self'/);
+    const directives = Object.fromEntries(
+      manifest.content_security_policy.extension_pages
+        .split(";")
+        .map((/** @type {string} */ part) => part.trim().split(/\s+/))
+        .filter((/** @type {string[]} */ tokens) => tokens[0] !== "")
+        .map((/** @type {string[]} */ [name, ...sources]) => [name, sources]),
+    );
+    assert.deepEqual(directives, { "script-src": ["'self'"], "object-src": ["'none'"], "connect-src": ["'self'"] });
+    assert.equal(manifest.content_security_policy.sandbox, undefined, "sandbox pages must not be declared");
   });
 
   it("contains no remote code, eval or HTML injection", () => {

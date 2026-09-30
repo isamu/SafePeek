@@ -1,5 +1,6 @@
 // How this page handles card numbers.
 
+import { isCardField } from "./cardfield.js";
 import { finding } from "./finding.js";
 import { hostOf } from "./page.js";
 
@@ -41,8 +42,9 @@ export function checkPayment(page, providers) {
   const scriptProviders = providersIn(scriptSrcs, providers);
   const tokenizer = providers.find((p) => (p.tokenScripts ?? []).some((re) => scriptSrcs.some((src) => new RegExp(re, "i").test(src))));
 
+  const cardFields = page.inputs.filter(isCardField);
   const findings = [];
-  if (page.cardFields.length > 0) findings.push(cardFieldFinding(page, tokenizer));
+  if (cardFields.length > 0) findings.push(cardFieldFinding(cardFields, tokenizer));
   if (iframeProviders.length > 0) {
     findings.push(
       finding(
@@ -63,18 +65,18 @@ export function checkPayment(page, providers) {
 }
 
 /**
- * @param {import("../types.js").PageData} page
+ * @param {import("../types.js").InputField[]} cardFields
  * @param {Provider | undefined} tokenizer
  * @returns {import("../types.js").Finding}
  */
-function cardFieldFinding(page, tokenizer) {
-  const evidence = page.cardFields.slice(0, 5).map(describeField);
+function cardFieldFinding(cardFields, tokenizer) {
+  const evidence = cardFields.slice(0, 5).map(describeField);
   if (tokenizer) return finding("card_tokenized_on_page", "medium", "payment", { provider: tokenizer.name }, evidence);
   return finding("card_on_page", "high", "payment", {}, evidence);
 }
 
 /**
- * @param {import("../types.js").CardField} field
+ * @param {import("../types.js").InputField} field
  * @returns {string}
  */
 function describeField(field) {

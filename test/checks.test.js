@@ -4,7 +4,7 @@ import { checkCookies, checkHeaders, checkTransport } from "../extension/src/che
 import { checkPayment } from "../extension/src/checks/payment.js";
 import { checkEol, cycleFor } from "../extension/src/checks/eol.js";
 import { checkPage } from "../extension/src/checks/page.js";
-import { cardField, loadDb, makePage, script } from "./helpers.js";
+import { inputField, loadDb, makePage, script } from "./helpers.js";
 
 const db = loadDb();
 const ids = (/** @type {import("../extension/src/types.js").Finding[]} */ findings) => findings.map((f) => f.id);
@@ -33,6 +33,18 @@ describe("transport and headers", () => {
     assert.deepEqual(ids(checkHeaders(page)), ["csp_unsafe_inline"]);
   });
 
+  it("reads each of several CSP headers, which fetch() joins with a comma, as its own policy", () => {
+    const csp = "frame-ancestors 'none', script-src 'self' 'unsafe-inline'";
+    const page = makePage({ headers: { ...makePage().headers, "content-security-policy": csp } });
+    assert.deepEqual(ids(checkHeaders(page)), ["csp_unsafe_inline"]);
+  });
+
+  it("ignores frame-ancestors in a meta policy, as browsers do", () => {
+    const headers = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
+    const page = makePage({ headers, metaCsp: ["frame-ancestors 'none'"] });
+    assert.deepEqual(ids(checkHeaders(page)), ["no_clickjacking"]);
+  });
+
   it("accepts unsafe-inline when a nonce makes browsers ignore it", () => {
     const page = makePage({ headers: { ...makePage().headers, "content-security-policy": "script-src 'nonce-abc' 'unsafe-inline'; frame-ancestors 'self'" } });
     assert.deepEqual(ids(checkHeaders(page)), []);
@@ -49,13 +61,34 @@ describe("transport and headers", () => {
 
 describe("payment", () => {
   it("flags card fields on the merchant's own page", () => {
-    const findings = checkPayment(makePage({ cardFields: [cardField("card_number")] }), db.providers);
+    const findings = checkPayment(makePage({ inputs: [inputField("card_number")] }), db.providers);
     assert.equal(findings[0].id, "card_on_page");
     assert.equal(findings[0].severity, "high");
   });
 
+  it("does not take loyalty-card numbers or one-time codes for card fields", () => {
+    const notCards = [
+      inputField("point_card_no", { hints: "ポイントカード番号" }),
+      inputField("member_card", { hints: "会員カード番号" }),
+      inputField("otp", { hints: "Security code (sent by SMS)" }),
+      inputField("cscart_search"),
+    ];
+    assert.deepEqual(ids(checkPayment(makePage({ inputs: notCards }), db.providers)), ["no_card_form"]);
+  });
+
+  it("recognises card fields by autocomplete, name or label", () => {
+    for (const field of [
+      inputField("number", { autocomplete: "cc-number" }),
+      inputField("x", { hints: "クレジットカード番号" }),
+      inputField("card_csc"),
+      inputField("cardNumber"),
+    ]) {
+      assert.equal(checkPayment(makePage({ inputs: [field] }), db.providers)[0].id, "card_on_page", field.name);
+    }
+  });
+
   it("recognises in-page tokenization (GMO-PG token.js)", () => {
-    const page = makePage({ cardFields: [cardField("cardno")], scripts: [script("https://static.mul-pay.jp/ext/js/token.js")] });
+    const page = makePage({ inputs: [inputField("cardno")], scripts: [script("https://static.mul-pay.jp/ext/js/token.js")] });
     const [first] = checkPayment(page, db.providers);
     assert.equal(first.id, "card_tokenized_on_page");
     assert.equal(first.params.provider, "GMO Payment Gateway");

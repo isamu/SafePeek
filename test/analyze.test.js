@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { analyze } from "../extension/src/analyze.js";
 import { sha1 } from "../extension/src/engine/hash.js";
-import { cardField, loadDb, makePage, script } from "./helpers.js";
+import { inputField, loadDb, makePage, script } from "./helpers.js";
 
 const db = loadDb();
 const env = { today: new Date("2026-09-30T00:00:00Z"), sha1 };
@@ -12,7 +12,7 @@ describe("analyze", () => {
     const page = makePage({
       headers: { server: "Apache/2.2.15 (CentOS)", "x-powered-by": "PHP/5.4.16" },
       scripts: [script("https://shop.example/js/jquery-1.8.1.min.js")],
-      cardFields: [cardField("card_no"), cardField("security_code")],
+      inputs: [inputField("card_no"), inputField("security_code")],
       cookies: { PHPSESSID: "abc" },
     });
     const report = await analyze(page, db, env);

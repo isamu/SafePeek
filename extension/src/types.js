@@ -23,12 +23,13 @@
  */
 
 /**
- * @typedef {object} CardField
+ * @typedef {object} InputField  attributes of a visible form field; its value is never read
  * @property {string} tag
  * @property {string} type
  * @property {string} name
  * @property {string} id
  * @property {string} autocomplete
+ * @property {string} hints  placeholder, aria-label and data-encrypted-name, joined
  */
 
 /**
@@ -52,7 +53,7 @@
  * @property {string[]} links  hrefs of anchors that point to a known payment host
  * @property {string[]} images
  * @property {FormInfo[]} forms
- * @property {CardField[]} cardFields
+ * @property {InputField[]} inputs
  * @property {Record<string, string>} cookies  cookies readable from JavaScript
  * @property {string} html
  * @property {string} text

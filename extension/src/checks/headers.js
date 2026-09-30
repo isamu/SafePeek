@@ -27,21 +27,31 @@ export function checkHeaders(page) {
   if (!h) return [finding("headers_unavailable", "info", "headers")];
   const findings = [];
   if (page.protocol === "https:" && !h["strict-transport-security"]) findings.push(finding("no_hsts", "low", "headers"));
-  findings.push(...checkCsp(h["content-security-policy"], page.metaCsp));
+  const headerPolicies = cspPolicies(h["content-security-policy"]);
+  findings.push(...checkCsp([...headerPolicies, ...page.metaCsp.filter((p) => p.trim() !== "")]));
   if (!/nosniff/i.test(h["x-content-type-options"] ?? "")) findings.push(finding("no_nosniff", "low", "headers"));
-  const csp = [h["content-security-policy"] ?? "", ...page.metaCsp].join(";");
-  if (!h["x-frame-options"] && !/frame-ancestors/i.test(csp)) findings.push(finding("no_clickjacking", "low", "headers"));
+  // Browsers ignore frame-ancestors in a <meta> policy, so only the header counts.
+  const framed = headerPolicies.some((p) => directive(p, "frame-ancestors") !== null);
+  if (!h["x-frame-options"] && !framed) findings.push(finding("no_clickjacking", "low", "headers"));
   findings.push(...checkDisclosure(h));
   return findings;
 }
 
 /**
+ * fetch() joins repeated Content-Security-Policy headers with ", ", and a comma never occurs inside a policy,
+ * so each comma-separated part is a policy of its own.
  * @param {string | undefined} header
- * @param {string[]} metaCsp
+ * @returns {string[]}
+ */
+function cspPolicies(header) {
+  return (header ?? "").split(",").filter((p) => p.trim() !== "");
+}
+
+/**
+ * @param {string[]} policies
  * @returns {Finding[]}
  */
-function checkCsp(header, metaCsp) {
-  const policies = [header, ...metaCsp].filter(/** @returns {p is string} */ (/** @type {string | undefined} */ p) => typeof p === "string" && p.trim() !== "");
+function checkCsp(policies) {
   if (policies.length === 0) return [finding("no_csp", "low", "headers")];
   const findings = [];
   for (const policy of policies) {

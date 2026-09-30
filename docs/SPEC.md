@@ -18,7 +18,7 @@ Non-goals: active scanning or probing of sites, crawling, reputation lookups, an
 | S4 | Page-derived strings are rendered as text only (no `innerHTML`, `insertAdjacentHTML`). | source scan + ESLint `no-restricted-*` |
 | S5 | The only network requests are re-requests of the inspected page and its scripts, made from the page's own context (same cookies/CORS as the page, cache-first for scripts). No hard-coded remote fetch. | source scan; code review |
 | S6 | No build step. The files in `extension/` are what the browser loads. | repository layout; review |
-| S7 | Distribution is GitHub releases only (zip + SHA-256). No store listing, so no silent auto-update. | `release.yml` |
+| S7 | Distribution is GitHub releases only (zip + SHA-256), built only from tags on commits already on `main`. No store listing, so no silent auto-update. | `release.yml` |
 | S8 | Signature data changes arrive as reviewed pull requests with upstream commits recorded in `data/sources.json`. | `update-data.yml` |
 
 ## 3. Flow
@@ -33,7 +33,7 @@ Only `collector.js`, `probe.js` and `popup/scan.js` touch browser APIs. Everythi
 
 ## 4. Collected page data (`PageData`, see `src/types.js`)
 
-URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, 2 MB each, 5 s timeout, `cache: force-cache`); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); card-like inputs; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
+URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, 2 MB each, 5 s timeout, `cache: force-cache`); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); attributes of up to 200 form fields (name, id, autocomplete, placeholder, aria-label — never their values), classified as card fields by `src/checks/cardfield.js`, which excludes loyalty/membership/gift cards and one-time codes; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
 
 ## 5. Checks
 
@@ -60,7 +60,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | headers | `no_csp` | low | no CSP header or meta |
 | headers | `csp_unsafe_inline` | low | script-src/default-src has `'unsafe-inline'` without nonce/hash/strict-dynamic |
 | headers | `no_nosniff` | low | no `X-Content-Type-Options: nosniff` |
-| headers | `no_clickjacking` | low | no `X-Frame-Options` and no `frame-ancestors` |
+| headers | `no_clickjacking` | low | no `X-Frame-Options` and no `frame-ancestors` in a CSP header (browsers ignore it in `<meta>`) |
 | headers | `session_cookie_not_httponly` | medium | a well-known session cookie name readable from JS |
 | page | `mixed_active` | medium | HTTPS page referencing http: scripts/stylesheets/iframes |
 | page | `mixed_passive` | low | HTTPS page referencing http: images |

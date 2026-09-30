@@ -12,8 +12,8 @@
   const MAX_SCRIPT = 2_000_000;
   const MAX_SCRIPTS = 40;
   const FETCH_TIMEOUT_MS = 5000;
-  const CARD_HINT = /card.?num|cc.?num|creditcard|card.?no\b|cardno|cvc|cvv|csc|security.?code|カード番号|セキュリティコード/i;
-  const CARD_AUTOCOMPLETE = /^cc-(number|csc|exp|exp-month|exp-year)$/i;
+  const MAX_INPUTS = 200;
+  const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
 
   /**
    * @param {string} url
@@ -79,22 +79,19 @@
     return { meta, metaCsp };
   }
 
-  /** @returns {import("../types.js").CardField[]} */
-  function readCardFields() {
-    const fields = [...document.querySelectorAll("input, select")].filter((el) => {
-      if (el instanceof HTMLInputElement && ["hidden", "submit", "button", "checkbox", "radio"].includes(el.type)) return false;
-      const autocomplete = el.getAttribute("autocomplete") ?? "";
-      if (CARD_AUTOCOMPLETE.test(autocomplete.trim())) return true;
-      const hints = ["name", "id", "placeholder", "aria-label", "data-encrypted-name"].map((a) => el.getAttribute(a) ?? "").join(" ");
-      return CARD_HINT.test(hints);
-    });
-    return fields.slice(0, 20).map((el) => ({
-      tag: el.tagName.toLowerCase(),
-      type: el.getAttribute("type") ?? "",
-      name: el.getAttribute("name") ?? "",
-      id: el.id,
-      autocomplete: el.getAttribute("autocomplete") ?? "",
-    }));
+  /** @returns {import("../types.js").InputField[]} */
+  function readInputs() {
+    return [...document.querySelectorAll("input, select")]
+      .filter((el) => !(el instanceof HTMLInputElement && SKIPPED_INPUT_TYPES.includes(el.type)))
+      .slice(0, MAX_INPUTS)
+      .map((el) => ({
+        tag: el.tagName.toLowerCase(),
+        type: el.getAttribute("type") ?? "",
+        name: el.getAttribute("name") ?? "",
+        id: el.id,
+        autocomplete: el.getAttribute("autocomplete") ?? "",
+        hints: ["placeholder", "aria-label", "data-encrypted-name"].map((a) => el.getAttribute(a) ?? "").join(" "),
+      }));
   }
 
   /** @returns {import("../types.js").FormInfo[]} */
@@ -185,7 +182,7 @@
       images: urls("img[src]", "src"),
       links: readPaymentLinks(paymentHosts),
       forms: readForms(),
-      cardFields: readCardFields(),
+      inputs: readInputs(),
       cookies: readCookies(),
       html: document.documentElement.outerHTML.slice(0, MAX_HTML),
       text: (document.body?.innerText ?? "").slice(0, MAX_TEXT),
