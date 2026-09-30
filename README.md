@@ -19,6 +19,7 @@ SafePeek is a browser extension you open on any page to see:
    - traces of Simplified Chinese on a Japanese shop page;
    - a notice whose seller name or phone is left as a template placeholder (株式会社〇〇, 000-0000-0000);
    - a shop page that names another organisation's site as its own address (a copied shop);
+   - a checkout kit that security researchers have reported for skimming cards (by its script, server or code);
    - weaker signs that are reported only together: a TLD common among fake shops, free email as the only contact, bank transfer as the only payment, many steep discounts, social icons that lead nowhere.
 
    A hosted cart service is shown as information, not as a good sign, since anyone can open a shop on one.
