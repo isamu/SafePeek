@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <title>A page that calls its API</title>
   </head>
-  <body>
+  <body data-loaded="0">
     <p>SPA</p>
     <script src="js/kumu.js"></script>
     <script>
@@ -12,6 +12,11 @@
         fetch("/sanctum/csrf-cookie?token=SECRET", { credentials: "include" }),
         fetch("/api/session;jsessionid=SECRETSESSION#SECRETFRAGMENT"),
         fetch("/password/reset/a8f3SECRET9c21d4e7b6/confirm"),
+        fetch("/verify/550e8400-e29b-41d4-a716-446655440000"),
+        fetch("/magic/abcdefSECRET-ghijk12345/login"),
+        fetch("/session/eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJTRUNSRVQifQ.c2lnbmF0dXJl"),
+        fetch("/share/SECRET%2Fabc"),
+        fetch("/api/v1/items/12345/detail.php"),
       ]).then(() => {
         document.body.dataset.loaded = "1";
       });

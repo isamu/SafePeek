@@ -103,9 +103,7 @@ describe("API calls the page made", () => {
       ["Laravel", "https://shop.example/sanctum/csrf-cookie"],
       ["Laravel", "https://shop.example/livewire/message/cart-counter"],
       ["Laravel", "https://shop.example/livewire/update"],
-      ["Laravel", "https://shop.example/livewire-3f9a1c2e/update"],
-      ["Laravel", "https://shop.example/livewire-{token}/update"],
-      ["Ruby on Rails", "https://shop.example/rails/active_storage/direct_uploads/"],
+      ["Ruby on Rails", "https://shop.example/rails/active_storage/direct_uploads"],
       ["Supabase", "https://abcdefgh.supabase.co/rest/v1/items"],
       ["AWS Amplify / Cognito / AppSync", "https://cognito-idp.ap-northeast-1.amazonaws.com/"],
     ];

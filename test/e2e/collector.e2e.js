@@ -100,6 +100,8 @@ async function collect(name, waitUntil = "load", scans = 1) {
   // Third-party hosts in the fixtures are never contacted: tests must not depend on the network.
   await page.route(/^https:\/\//, (route) => route.abort());
   await page.goto(`${base}/${name}`, { waitUntil });
+  // A fixture that makes its own requests marks data-loaded="0" until they have all finished.
+  await page.waitForFunction(() => document.body?.dataset.loaded !== "0");
   await page.addScriptTag({ path: collectorPath });
   const hosts = db.providers.flatMap((p) => p.hosts);
   const scan = () =>
@@ -232,6 +234,13 @@ describe("collector in Chromium", () => {
       page.requests.some((u) => u.endsWith("/password/reset/{token}/confirm")),
       "a token in the path is masked",
     );
+    for (const masked of ["/verify/{token}", "/magic/{token}/login", "/session/{token}", "/share/{token}", "/api/v1/items/{token}/detail.php"]) {
+      assert.ok(
+        page.requests.some((u) => u.endsWith(masked)),
+        masked,
+      );
+    }
+    assert.ok(!page.requests.some((u) => /550e8400|eyJ|12345|%2F/.test(u)), page.requests.join(", "));
     assert.ok(page.contactedHosts.includes("shop.test"));
   });
 

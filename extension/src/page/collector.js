@@ -19,7 +19,9 @@
   const REQUEST_INITIATORS = ["fetch", "xmlhttprequest", "beacon"];
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
   const OWN_FETCHES_KEY = "SafePeekOwnFetches";
-  const TOKEN_RUN = /\w{16,}/g;
+  const ROUTE_WORD = /^[A-Za-z_][A-Za-z_.-]{0,39}$/;
+  const API_VERSION = /^v\d{1,2}$/;
+  const FILE_EXTENSION = /\.[A-Za-z]{1,6}$/;
 
   // The isolated world outlives one injection, so a later scan still knows what an earlier one re-requested.
   const ownFetches = ownFetchSet();
@@ -37,12 +39,21 @@
    * @returns {string}  the URL as resource timing names it (absolute, no fragment), or "" if it does not parse
    */
   function timingName(raw) {
+    const url = parseUrl(raw);
+    if (!url) return "";
+    url.hash = "";
+    return url.href;
+  }
+
+  /**
+   * @param {string} raw  absolute, or relative to the page
+   * @returns {URL | null}
+   */
+  function parseUrl(raw) {
     try {
-      const url = new URL(raw, location.href);
-      url.hash = "";
-      return url.href;
+      return new URL(raw, location.href);
     } catch {
-      return "";
+      return null;
     }
   }
 
@@ -163,7 +174,7 @@
 
   /**
    * The URLs the page itself has fetched (fetch, XHR, beacons). Only scheme, host and path are kept, since query
-   * strings, fragments and path parameters often hold tokens; token-like runs in the path are masked too.
+   * strings, fragments and path parameters often hold tokens; path segments not shaped like route names are masked too.
    * @param {PerformanceResourceTiming[]} entries
    * @returns {string[]}
    */
@@ -190,35 +201,32 @@
    * @returns {string}
    */
   function hostOfUrl(raw) {
-    try {
-      return new URL(raw).hostname;
-    } catch {
-      return "";
-    }
+    return parseUrl(raw)?.hostname ?? "";
   }
 
   /**
    * @param {string} raw
-   * @returns {string}  scheme, host and path only, with path parameters dropped and token-like runs masked
+   * @returns {string}  scheme, host and path only, with path parameters dropped and non-route segments masked
    */
   function redactedUrl(raw) {
-    try {
-      const url = new URL(raw);
-      return url.protocol === "https:" || url.protocol === "http:" ? `${url.origin}${maskTokens(url.pathname)}` : "";
-    } catch {
-      return "";
-    }
+    const url = parseUrl(raw);
+    return url?.protocol === "https:" || url?.protocol === "http:" ? `${url.origin}${maskTokens(url.pathname)}` : "";
   }
 
   /**
-   * A run of 16+ word characters with a digit in it is an id or a token, not a route name.
+   * Keeps route-name and API-version segments; ids, UUIDs and tokens become {token}, keeping `.php` / `.do` visible.
    * @param {string} pathname
    * @returns {string}
    */
   function maskTokens(pathname) {
     return pathname
       .split("/")
-      .map((segment) => segment.split(";")[0].replace(TOKEN_RUN, (run) => (/\d/.test(run) ? "{token}" : run)))
+      .map((withParams) => {
+        const segment = withParams.split(";")[0];
+        const extension = FILE_EXTENSION.exec(segment)?.[0] ?? "";
+        const base = segment.slice(0, segment.length - extension.length);
+        return base === "" || ROUTE_WORD.test(base) || API_VERSION.test(base) ? segment : `{token}${extension}`;
+      })
       .join("/");
   }
 
