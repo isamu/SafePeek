@@ -17,6 +17,7 @@ export function loadDb() {
     wordpress: JSON.parse(data("wordpress.json")),
     checkout: JSON.parse(data("checkout-platforms.json")).platforms,
     auth: JSON.parse(data("auth-services.json")).services,
+    destinations: JSON.parse(data("data-destinations.json")),
   };
 }
 
