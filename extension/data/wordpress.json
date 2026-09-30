@@ -1,0 +1,15 @@
+{
+  "_comment": "Hand-maintained WordPress support facts. Only the latest series is officially supported; older branches receive security backports only as a courtesy, and branches below 'backportsFrom' receive none. Update 'latestSeries' when a new major release ships.",
+  "reviewed": "2026-09-30",
+  "latestSeries": "7.1",
+  "latestRelease": "7.1.2",
+  "backportsFrom": "4.7",
+  "backportsEndedFor": { "below": "4.7", "date": "2025-07-01" },
+  "sources": [
+    "https://wordpress.org/documentation/article/supported-versions/",
+    "https://make.wordpress.org/security/2025/06/18/security-updates-will-cease-for-wordpress-versions-4-1-through-4-6/",
+    "https://wordpress.org/download/releases/"
+  ],
+  "pluginLookup": "https://www.wordfence.com/threat-intel/vulnerabilities/wordpress-plugins/",
+  "themeLookup": "https://www.wordfence.com/threat-intel/vulnerabilities/wordpress-themes/"
+}
