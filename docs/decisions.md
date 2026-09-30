@@ -48,3 +48,56 @@ Hosts are listed with *other* and *ads* first.
   - Bot checks and sign-in services whose documented trace is a URL are matched by that URL's host alone. For example, a script from `www.google.com` known only by host is taken as reCAPTCHA.
   - A sign-in service known only by a path (Keycloak's `/protocol/openid-connect/`) cannot be recognised without the path.
   - This errs towards leaving well-known infrastructure out on login pages. Card pages count bot checks and sign-in scripts anyway.
+
+## Evidence: a trace, not a mention
+
+- **A page that talks about a technology is not running it.** Text in the page or in a script body only corroborates. Real traces are a URL the page loads, a header, a cookie, a global, a stack frame, a generated field name or namespace. SafePeek's own repository page once read as Seasar2 because it describes Seasar rules.
+- **Platform categories** (CMS, ecommerce, language, database) never come from script content alone. A tag manager mentioning `/wp-content` made Laravel and Shopify sites read as WordPress.
+- **An implied product inherits how directly its source was seen.** Hosting categories need direct evidence: S3 serving images does not mean the site runs on AWS.
+- **When the same rule draws a third review finding, it is inverted into what is permitted.** Patching one more case each round kept leaking. This is how card frames, checkout links, cart "single traces", the related-systems rule and API evidence ended up as allowlists.
+
+## Payment
+
+- **Card frames and checkout links are per-provider allowlists** (`cardFrames`, `checkoutLinks`). A provider's other frames (buttons, fraud checks) and a plain link to its site show that it is used, not where the card is typed. A Rakuten Pay link on a securities site's top page was once read as a checkout.
+- **A form is a card form only with a card number plus a security code or expiry.** A member-card login ("card number" + password) is not a card form.
+- **A tokenizer is recognised only on its provider's host.** A URL elsewhere that merely contains the pattern is not a tokenizer.
+
+## Who runs the shop
+
+- **A cart service is recognised from its own traces too:** hosts, globals, cookies. So a shop on its own domain is still recognised. Every trace was observed on live storefronts.
+- **Two families of trace are needed.** Scripts, DOM, HTML, URLs and hosts are one family, because an embedded widget or image leaves them together; globals, cookies, headers and meta tags are each their own. One trace is enough only for an explicit, runtime `singleTraces` entry. Confidence is not used, because it sums weak traces.
+- **Products whose only traces are platform-wide are left out** (Wix eCommerce, Square Online): they cannot tell a shop from any other page on the platform.
+
+## Backend, hosting and related systems
+
+- **Hosting is not the backend.** Vercel, Netlify, Cloudflare Pages, S3, Firebase Hosting and Amplify Hosting prove where the page is served from. The APIs holding products and orders often run elsewhere; a Next.js front end on Vercel in front of a Java order system is common. So they are reported as "served from".
+  - Code runtimes stay "managed": Workers, App Engine, Cloud Run, Heroku, and the Firebase / Amplify SDKs and APIs.
+  - A CloudFront header alone only corroborates.
+- **Related systems are other hosts of the same organisation.** That means the same registrable domain (Public Suffix List, with shared hosts' customers kept apart), or one domain's whole name being a word of the other's.
+  - Denylists of suffixes and common words were tried first and kept leaking.
+  - Only the site's own HTML, forms, API calls and scripts are read; a vendor script's body names the vendor's hosts.
+  - The result never feeds the page's own backend or an end-of-life verdict.
+
+## The page's own requests
+
+- **Read, never made.** SafePeek reads the browser's record of what the page fetched. Its own re-requests are left out, including those from an earlier scan of the same page.
+- **What is kept of a URL:** query strings, fragments and `;` parameters are dropped, and path segments not shaped like route names become `{token}`.
+  - A word-shaped secret cannot be told from a route name, so the control is what is shown: evidence is the host plus the part a rule matched.
+  - The path part of an `api` rule may hold only fixed text.
+
+## Login services and where data goes
+
+- **Login services are recognised from their login endpoints, not the vendor's whole domain.** The vendor's docs, CDN and widgets are not login.
+- **Only listed webappanalyzer products count.** "Facebook Login" matches any page that loads the Facebook SDK for share buttons.
+- **Session replay and monitoring use the hosts each vendor documents for data intake** (its CSP allowlist).
+  - A whole domain is used only where the vendor documents all of its subdomains and keeps its website elsewhere.
+  - Hosts shared with unrelated uses are never listed.
+  - A form target is not a destination until submitted.
+- **"Uses", not "sends".** Analytics, advertising, marketing and monitoring found only by product say the site uses them: a product being present does not prove data leaves the site, since analytics can be self-hosted.
+  - The RUM category is not a destination (web-vitals is a local library).
+  - Advertising and marketing come before analytics when a product is both.
+
+## Compromised CDNs
+
+- **Only script CDNs named in a report of malicious code are listed.** The attackers' own redirect and payload domains are left out; no site loads them on purpose.
+- **The wording is "tries to load".** Some of these domains no longer serve anything, and SafePeek cannot see whether a cross-origin script ran.
