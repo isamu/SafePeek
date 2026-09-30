@@ -20,7 +20,7 @@ Every finding shows its evidence (the header, script URL or form field it came f
 
 SafePeek looks at other sites' security, so it has to be trustworthy itself:
 
-- **Nothing is sent anywhere.** All analysis runs in your browser. The extension pages are locked down with `connect-src 'self'`.
+- **SafePeek sends nothing on its own.** All analysis runs in your browser. The extension pages are locked down with `connect-src 'self'`. The only way anything about a result leaves the browser is a report link you click yourself (see below).
 - **Two permissions only:** `activeTab` and `scripting`. SafePeek can read a page only when you click its icon, and only that tab. See [docs/permissions.md](docs/permissions.md).
 - **No remote code, no eval, no build step.** The files in `extension/` are exactly what the browser runs.
 - **The extension is distributed only from GitHub releases** (zip + SHA-256), never through a store, so there is no silent auto-update channel. The analysis engine alone is also an npm package (see below).
@@ -34,7 +34,7 @@ SafePeek is not in the Chrome Web Store. You get it from GitHub and load it your
 
 1. **Get the files** — either download `safepeek-vX.Y.Z.zip` and `.sha256` from [Releases](https://github.com/isamu/SafePeek/releases), check it (`shasum -a 256 safepeek-vX.Y.Z.zip`, or `Get-FileHash` on Windows) and unzip it somewhere permanent, or `git clone https://github.com/isamu/SafePeek.git` and use its `extension` folder.
 2. **Load it** — open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked** (top left) and pick the folder that contains `manifest.json`.
-3. **Use it** — pin SafePeek from the puzzle-piece menu, open the page you want to check and click the icon. To judge payment handling, open it on the page where you type the card number. If a backend guess is wrong or you found a new trace, press **Copy the inference** and paste it into the issue form linked below it; SafePeek never sends anything by itself.
+3. **Use it** — pin SafePeek from the puzzle-piece menu, open the page you want to check and click the icon. To judge payment handling, open it on the page where you type the card number. If a backend guess is wrong or you found a new trace, press **Copy the inference** and paste it into the issue form linked below it; SafePeek never sends anything by itself. If any other result looks wrong, use **Report a false result** under it: GitHub's issue form opens with the result filled in — the site's origin and the finding, never page contents. Opening the link is a normal visit to GitHub, so GitHub receives those pre-filled values in the link; they become a public issue only if you submit the form.
 4. **Update it** — there is no auto-update, by design. For a zip, remove the old one and load the new folder; for a clone, `git pull` and press the reload arrow on SafePeek's card in `chrome://extensions`.
 
 Chrome may warn about developer-mode extensions at startup, and managed (work) browsers may forbid them. Firefox support is planned.

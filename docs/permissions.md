@@ -14,7 +14,7 @@ SafePeek declares two permissions. There are no host permissions, no content scr
 - Re-requests the page's own script files (up to 40, cache first) to read library version banners.
 - In the page's JavaScript world, reads property paths such as `jQuery.fn.jquery`. It never evaluates code strings.
 
-It never writes to the page, never submits forms, and never sends data to any other server. Everything it collects goes back to the popup and is discarded when the popup closes.
+The injected code never writes to the page, never submits forms, and never sends data to any other server. Everything it collects goes back to the popup and is discarded when the popup closes.
 
 ## Extension page CSP
 
@@ -23,3 +23,7 @@ script-src 'self'; object-src 'none'; connect-src 'self'
 ```
 
 The popup can load code only from the extension, and can fetch only the extension's own bundled data.
+
+## Links you click
+
+The popup has ordinary links to GitHub: the project page, the backend-inference issue form, and **Report a false result** under each result. Opening one is a normal visit to GitHub that you start. A report link carries pre-filled values in its URL — the site's origin, the finding's id and severity, SafePeek's own data such as names, dates and plain version numbers, and SafePeek's version — so GitHub receives those when you open it; they become a public issue only if you submit the form. SafePeek sends nothing on its own.
