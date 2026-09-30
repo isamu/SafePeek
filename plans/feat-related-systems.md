@@ -1,6 +1,6 @@
 # feat: show the other systems of the same organisation a page hands off to
 
-Some pages are only a front end. A Next.js page served from Vercel, for example, hands orders to a Java system on another host (`ec.<brand>.jp/…/inputOrderCmd.do`). SafePeek inferred only the page's own backend, so that system was invisible.
+Some pages are only a front end. A Next.js page served from Vercel, for example, hands orders to a Java system on another host (`ec.<brand>.jp/…/order.do`). SafePeek inferred only the page's own backend, so that system was invisible.
 
 ## Approach
 - `engine/related-systems.js` (pure) collects absolute URLs from the HTML attributes, form targets, API calls and script bodies.
