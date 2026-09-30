@@ -156,6 +156,16 @@ const JA = {
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
   no_clickjacking: { title: () => "クリックジャッキング対策がありません", detail: () => "X-Frame-Options も CSP の frame-ancestors もありません。" },
+  card_page_third_party: {
+    title: (p) => `カード番号を入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
+    detail: () =>
+      "カード番号はこのページ自身の入力欄に入力します。そのため、ここで動く別ドメインのスクリプトからも読み取れます。カード情報を盗む攻撃は、タグマネージャーや解析タグのような一般的なスクリプトの改ざんを入口にすることもあるため、ここでは有名なツールも数えています。根拠には種類（不明・広告・解析など）を付けています。自社の配信用ドメインの場合もあります。決済会社の入力画面（iframe）なら、ほかのスクリプトからは読めません。",
+  },
+  login_page_third_party: {
+    title: (p) => `パスワードを入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
+    detail: () =>
+      "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析やタグマネージャーだけなら「情報」、広告や正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
+  },
   script_compromised_host: {
     title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
     detail: () =>
@@ -313,6 +323,16 @@ const EN = {
   csp_unsafe_inline: { title: () => "CSP allows inline scripts", detail: () => "'unsafe-inline' largely disables CSP's protection against injected scripts." },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
   no_clickjacking: { title: () => "No clickjacking protection", detail: () => "Neither X-Frame-Options nor CSP frame-ancestors is set." },
+  card_page_third_party: {
+    title: (p) => `Scripts from other domains run where you type your card number (${p.count} hosts)`,
+    detail: () =>
+      "The card number goes into this page's own fields, so scripts from other domains running here can read it too. Card skimming has come in through ordinary tag managers and analytics tags, so well-known tools count here as well; each host is labelled (other, ads, analytics …). Some may be the site's own asset domains. A payment provider's card frame would keep them all out.",
+  },
+  login_page_third_party: {
+    title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
+    detail: () =>
+      "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics and tag managers alone make this information; ads or unknown hosts make it low. Some may be the site's own asset domains.",
+  },
   script_compromised_host: {
     title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,
     detail: () =>

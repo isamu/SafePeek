@@ -19,6 +19,7 @@ export function loadDb() {
     checkout: JSON.parse(data("checkout-platforms.json")).platforms,
     compromised: JSON.parse(data("compromised-script-hosts.json")).hosts,
     auth: JSON.parse(data("auth-services.json")).services,
+    botChecks: JSON.parse(data("bot-checks.json")).services,
     destinations: JSON.parse(data("data-destinations.json")),
     suffixes: indexPublicSuffixes(JSON.parse(data("public-suffixes.json"))),
   };

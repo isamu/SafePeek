@@ -75,3 +75,13 @@ export function hostMatches(pattern, host) {
   const tail = have.slice(-want.length);
   return want.every((label, i) => label === "*" || label === tail[i]);
 }
+
+/**
+ * @param {string} pattern  "domain-pattern/path-prefix", the domain pattern as in hostMatches
+ * @param {URL} url
+ * @returns {boolean}
+ */
+export function urlMatches(pattern, url) {
+  const slash = pattern.indexOf("/");
+  return hostMatches(pattern.slice(0, slash), url.hostname) && url.pathname.startsWith(pattern.slice(slash));
+}

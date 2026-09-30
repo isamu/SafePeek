@@ -5,6 +5,7 @@ import { checkEol, checkLibraries } from "./checks/eol.js";
 import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
+import { checkSensitivePage } from "./checks/sensitive-page.js";
 import { checkCompromisedHosts } from "./checks/compromised-hosts.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
@@ -36,6 +37,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./checks/compromised-hosts.js").CompromisedHost[]} compromised
  * @property {import("./engine/public-suffix.js").SuffixIndex} suffixes
  * @property {import("./checks/auth.js").AuthService[]} auth
+ * @property {{ name: string, sources: string[], urls: string[] }[]} botChecks
  * @property {import("./checks/destinations.js").Destinations} destinations
  */
 
@@ -78,6 +80,7 @@ export async function analyze(page, db, env) {
     ...checkHeaders(page),
     ...checkCookies(page),
     ...checkPage(page),
+    ...checkSensitivePage(page, { providers: db.providers, suffixes: db.suffixes, technologies, botChecks: db.botChecks, auth: db.auth }),
     ...checkCompromisedHosts(page, db.compromised),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };
