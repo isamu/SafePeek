@@ -1,6 +1,6 @@
 # fix: a hosting platform serves the page; it is not necessarily the backend
 
-A Misumi category page (jp.misumi-ec.com/vona2/…) returns `Server: Vercel` and `x-vercel-id: hnd1::…`, with Akamai in front (`server-timing: ak_p`). It is a Next.js page served by Vercel. SafePeek said "Backend runs on a managed service: Vercel", but the APIs holding products and orders run elsewhere.
+A category page of a large parts-EC site returns `Server: Vercel` and `x-vercel-id: hnd1::…`, with Akamai in front (`server-timing: ak_p`). It is a Next.js page served by Vercel. SafePeek said "Backend runs on a managed service: Vercel", but the APIs holding products and orders run elsewhere.
 
 ## Approach
 - A new backend status `hosting` for static and edge hosting: S3 / CloudFront, Vercel, Netlify, Cloudflare Pages, Firebase Hosting, Amplify Hosting. These traces prove only where the page itself comes from. Mixed rules are split by what each trace proves: Firebase and Amplify SDKs and API calls, and Cloudflare Workers (code), stay `managed`.
