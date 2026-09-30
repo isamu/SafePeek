@@ -162,6 +162,13 @@ Fake shops are often machine-translated from Chinese, and the police name simpli
 - **Chinese font names are left out.** CSS frameworks list them as fallbacks, so ordinary Japanese sites carry them.
 - **Machine translation without these marks is not judged.** It cannot be told from awkward human Japanese without a language model.
 
+## Template leftovers
+
+Fake shops come from shared kits, and a kit's placeholders are often left in (`docs/fake-shop-research.md`, item 13).
+
+- **Only placeholders no real shop publishes count:** a name made of 〇 or ×, a phone number or postal code of zeros, template filler. A real number that happens to contain zeros does not match.
+- **Low, and only on a Japanese shop page.** A site still being built shows the same, so the message says so.
+
 ## Where a password is sent
 
 - **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
