@@ -38,13 +38,18 @@ const ITEMS = [
   { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
   // 「商品代金以外の必要料金」 and 「代金引換」 are about other charges and payment, not the price.
-  { label: "販売価格", pattern: /価格|代金(?!以外|引換|引き換)/, onRequest: true },
+  // A service states its price as a fee (利用料金, 月額, 受講料, 会費 …).
+  { label: "販売価格", pattern: /価格|対価|代金(?!以外|引換|引き換)|利用料|月額|年額|受講料|会費/, onRequest: true },
   // Shipping applies to goods sent to the buyer, so a notice for a service or a right is not asked for it.
   { label: "送料", pattern: /送料|配送料|必要な?(?:料金|費用)|負担[^。\n]{0,12}(?:料金|費用)|手数料/, onRequest: true, onlyWhen: SHIPPED_GOODS },
   // Payment timing may be left out only on conditions the page cannot show, so only the method is checked.
   { label: "支払方法", pattern: /支払|決済/, onRequest: true },
   // The law's wording covers services and rights too: 役務の提供時期, 権利の移転時期.
-  { label: "引渡し時期", pattern: /引渡|引き渡|受渡|受け渡|発送|配送|お届け|提供時期|役務の提供|サービス(?:の)?提供|利用開始|移転時期/, onRequest: true },
+  {
+    label: "引渡し時期",
+    pattern: /引渡|引き渡|受渡|受け渡|発送|配送|お届け|提供時期|役務の提供|サービス(?:の)?提供|利用開始|移転時期|開始時期|サービス開始|提供開始|始期/,
+    onRequest: true,
+  },
   { label: "返品", pattern: /返品|返金|キャンセル|交換|解約/, onRequest: false },
 ];
 

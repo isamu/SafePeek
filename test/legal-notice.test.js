@@ -139,6 +139,20 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(found.evidence, ["所在地"]);
   });
 
+  it("reads a service's fee as its price, and its start as its delivery timing", () => {
+    const withoutPriceOrTiming = COMPLETE.split("\n").filter((line) => !/販売価格|引渡し/.test(line));
+    for (const [price, timing] of [
+      ["利用料金 月額1,000円", "サービス開始時期 お申込み後すぐ"],
+      ["サービス利用料金 各プランに記載", "視聴可能始期 決済完了後"],
+      ["受講料 30,000円", "提供開始 入金確認後"],
+    ]) {
+      const text = [...withoutPriceOrTiming, price, timing].join("\n");
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", text)), [], price);
+    }
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutPriceOrTiming.join("\n")));
+    assert.deepEqual(found.evidence, ["販売価格", "引渡し時期"]);
+  });
+
   it("does not ask a notice for a service for shipping", () => {
     const service = [
       "販売者の名称 株式会社サンプル",
