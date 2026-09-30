@@ -25,7 +25,7 @@
         },
         {
           "type": "html",
-          "pattern": "\\bat org\\.apache\\.struts\\.(?:action|util|config)\\.[\\w.$]+\\(",
+          "pattern": "\\bat org\\.apache\\.struts\\.(?:action|util|config)\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
           "weight": 15,
           "note": "Struts 1 frame in a stack trace shown in the page (text a page about Struts can show too; counts only with another trace)",
           "noteJa": "ページに表示されたスタックトレースに Struts 1 のクラス（解説ページにも出うる文章なので、他の痕跡と合わさったときだけ効く）"
@@ -48,7 +48,7 @@
         },
         {
           "type": "html",
-          "pattern": "\\bat org\\.seasar\\.[\\w.$]+\\(",
+          "pattern": "\\bat org\\.seasar\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
           "weight": 15,
           "note": "Seasar frame in a stack trace shown in the page (text a page about Seasar can show too; counts only with another trace)",
           "noteJa": "ページに表示されたスタックトレースに Seasar のクラス（解説ページにも出うる文章なので、他の痕跡と合わさったときだけ効く）"
@@ -352,7 +352,7 @@
         },
         {
           "type": "html",
-          "pattern": "\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+\\(",
+          "pattern": "\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
           "weight": 80,
           "note": "Java stack trace shown in the page",
           "noteJa": "ページに Java のスタックトレースが表示されている"

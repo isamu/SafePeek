@@ -135,6 +135,8 @@ describe("mentions are not traces", () => {
     const trace = "<pre>javax.servlet.ServletException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre>";
     assert.equal(byName(inferBackends(makePage({ html: trace }), db.backends))["Apache Struts 1"], undefined);
     const withActions = byName(inferBackends(makePage({ html: `${trace}<a href="/reserve/list.do">x</a>` }), db.backends));
+    const constructorFrame = '<pre>\tat org.apache.struts.action.ActionServlet.<init>(ActionServlet.java:120)</pre><a href="/a.do">x</a>';
+    assert.equal(byName(inferBackends(makePage({ html: constructorFrame }), db.backends))["Apache Struts 1"]?.confidence, 35, "<init> frames are frames too");
     assert.equal(withActions["Apache Struts 1"]?.confidence, 35);
   });
 });
