@@ -27,7 +27,7 @@ const KANA = /[ぁ-ゖァ-ヺ]/g;
 const MIN_KANA = 200;
 const SHOP_WORDS = /カート|買い物かご|ショッピング|購入|税込|送料/;
 // The lang attribute itself, not one ending in -lang such as data-lang.
-const CHINESE_LANG = /(?<![\w-])lang=["']?zh/i;
+const CHINESE_LANG = /(?<![\w-])lang\s{0,4}=\s{0,4}["']?zh/i;
 // 天 counts days in Chinese; Japanese writes 日 (「365天受付」 on a Japanese page). Japanese words starting with 天 (天体,
 // 天然 …) follow numbers too, so only what Chinese writes after a day count, or the end of a phrase, counts.
 const AFTER_DAYS = ["受付", "营业", "以内", "内", "后", "後", "左右", "无理由", "退", "包"];

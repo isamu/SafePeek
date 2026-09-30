@@ -96,6 +96,10 @@ describe("simplified Chinese on a Japanese shop", () => {
     assert.deepEqual(checkSimplifiedChinese(shop(article)), [], "a Japanese page about Chinese, with no shop words");
   });
 
+  it("reads a lang attribute written with spaces around =", () => {
+    assert.equal(checkSimplifiedChinese(shop(JAPANESE_SHOP, '<html lang = "zh-CN"><body></body></html>')).length, 1);
+  });
+
   it("reads the lang attribute itself, not data-lang", () => {
     assert.deepEqual(checkSimplifiedChinese(shop(JAPANESE_SHOP, '<html lang="ja" data-lang="zh-CN"><body></body></html>')), []);
   });
