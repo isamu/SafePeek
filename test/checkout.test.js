@@ -32,7 +32,8 @@ describe("who runs the checkout", () => {
   });
 
   it("says nothing for products outside the list, or only implied", () => {
-    for (const name of ["Amazon Webstore", "Shopware", "1C-Bitrix", "Cart Functionality"]) assert.deepEqual(checkCheckout([tech(name)], db.checkout), [], name);
+    for (const name of ["Amazon Webstore", "Shopware", "1C-Bitrix", "Cart Functionality", "Squarespace Commerce"])
+      assert.deepEqual(checkCheckout([tech(name)], db.checkout), [], name);
     assert.deepEqual(checkCheckout([tech("WooCommerce", ["implied by WordPress"], "WordPress")], db.checkout), []);
   });
 
@@ -46,6 +47,14 @@ describe("who runs the checkout", () => {
     assert.deepEqual(summary(checkCheckout([tech("Base", ["script https://thebase.in/js/shop.js", "js BASE_API.shop_id"])], db.checkout)), [
       "checkout_saas:Base",
     ]);
+  });
+
+  it("says nothing for a plain Squarespace site, whose server header every Squarespace site sends", async () => {
+    const report = await analyze(makePage({ headers: { ...makePage().headers, server: "Squarespace" } }), db, {
+      today: new Date("2026-09-30T00:00:00Z"),
+      sha1,
+    });
+    assert.ok(!report.findings.some((f) => f.id === "checkout_saas"));
   });
 
   it("carries the evidence it rests on", () => {

@@ -9,7 +9,6 @@
     { "name": "Future Shop", "kind": "hosted", "source": "https://www.future-shop.jp/" },
     { "name": "BigCommerce", "kind": "hosted", "source": "https://www.bigcommerce.com/" },
     { "name": "Wix eCommerce", "kind": "hosted", "source": "https://www.wix.com/ecommerce/website" },
-    { "name": "Squarespace Commerce", "kind": "hosted", "source": "https://www.squarespace.com/ecommerce-website" },
     { "name": "Salesforce Commerce Cloud", "kind": "hosted", "source": "https://www.salesforce.com/commerce/" },
     { "name": "EC-CUBE", "kind": "self", "source": "https://www.ec-cube.net/" },
     { "name": "Magento", "kind": "self", "source": "https://business.adobe.com/products/magento/open-source.html" },
