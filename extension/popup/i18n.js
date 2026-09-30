@@ -196,6 +196,11 @@ const JA = {
     detail: () =>
       "日本語のページなのに、日本では使わない簡体字、中国語の言語指定、「◯天」（日数）のような表現があります。警察や国民生活センターは、中国語から機械翻訳された偽ショップの特徴として挙げています。これだけで偽物とは言えませんが、会社の実在や特定商取引法に基づく表記も確かめてください。",
   },
+  shop_names_other_site: {
+    title: (p) => `このショップのページは、別のサイトを本来の住所として示しています（${p.domains}）`,
+    detail: () =>
+      "ページに埋め込まれた正規URL（canonical や og:url）が、別の組織のサイトを指しています。本物のショップのページを丸ごとコピーした偽ショップによく見られる形です。同じ会社の別ドメインの場合もあります。表示されているドメインが本来のショップなら、そちらから購入してください。",
+  },
   shop_template_leftovers: {
     title: (p) => `ショップのテンプレートの仮の文字が残っています（${p.count}種類）`,
     detail: () =>
@@ -413,6 +418,11 @@ const EN = {
     title: () => "A Japanese shop page shows traces of Simplified Chinese",
     detail: () =>
       "The page is in Japanese but uses Simplified Chinese characters Japanese does not use, declares Chinese as its language, or counts days with 天. The police and the National Consumer Affairs Center list this as a sign of a fake shop machine-translated from Chinese. It is not proof on its own; check that the company exists and read its 特定商取引法 notice.",
+  },
+  shop_names_other_site: {
+    title: (p) => `This shop page names another site as its own address (${p.domains})`,
+    detail: () =>
+      "The canonical URL (canonical link or og:url) embedded in the page points to another organisation's site. Fake shops that copy a real shop's pages wholesale often keep it. It can also be the same company's other domain. If the named domain is the real shop, buy there.",
   },
   shop_template_leftovers: {
     title: (p) => `The shop still shows a template's placeholder text (${p.count} kinds)`,

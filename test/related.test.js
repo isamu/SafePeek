@@ -38,6 +38,8 @@ describe("related systems", () => {
     assert.ok(related("jp.acme-ec.com", "ec.acme.jp"), "'acme' is a word of 'acme-ec'");
     assert.ok(related("www.example.co.jp", "order.example.co.jp"));
     assert.ok(related("www.acme.jp", "www.acme.co.jp"), "the same name on two suffixes");
+    assert.ok(related("www.acme-shop.jp", "www.acme-shop.com"), "the same hyphenated name on two suffixes");
+    assert.ok(!related("www.abc.jp", "www.abc.com"), "a name shorter than the minimum is not enough on its own");
     assert.ok(!related("www.example.co.jp", "www.example.co.jp"), "the page's own host");
   });
 
