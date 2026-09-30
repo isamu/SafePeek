@@ -23,6 +23,6 @@ const report = await analyze(pageData, db, { today: new Date(), sha1 });
 console.log(report.level, report.backends, report.findings);
 ```
 
-`pageData` is collected inside a real page: inject `safepeek/collector` (a classic script that defines `SafePeekCollector.collect`) and run `probeGlobals` in the page's main world. The repository's `test/e2e/collector.e2e.js` does exactly this with Playwright.
+`pageData` is collected inside a real page. Inject the collector's classic scripts in the order `COLLECTOR_FILES` lists (`import { COLLECTOR_FILES } from "safepeek/collector-files"`; each is exported as `safepeek/<file>`, for example `import.meta.resolve(\`safepeek/${file}\`)`). Together they define `SafePeekCollector.collect`. Then run `probeGlobals` in the page's main world. The repository's `test/e2e/collector.e2e.js` does exactly this with Playwright.
 
 License: GPL-3.0-or-later (the bundled fingerprints come from webappanalyzer, GPL-3.0; the vulnerability data from Retire.js, Apache-2.0).

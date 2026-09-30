@@ -24,7 +24,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.js",
-    "./collector": "./src/page/collector.js",
+    "./collector-files": "./src/page/collector-files.js",
+    "./src/page/*": "./src/page/*",
     "./data/*": "./data/*"
   },
   "files": [

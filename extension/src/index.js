@@ -1,8 +1,8 @@
 // Public entry point of the `safepeek` npm package. Everything here is a pure function over
 // collected page data (PageData) and runs the same in a browser, a worker or Node.
 //
-// Collecting PageData needs a real page: inject src/page/collector.js and run probeGlobals in the
-// page's main world (see popup/scan.js, or test/e2e/collector.e2e.js for a Playwright example).
+// Collecting PageData needs a real page: inject the scripts COLLECTOR_FILES lists (src/page/collector-files.js), in
+// that order, and run probeGlobals in the page's main world (see popup/scan.js, or test/e2e/collector.e2e.js).
 
 export { analyze } from "./analyze.js";
 export { loadDatabases } from "./data.js";
