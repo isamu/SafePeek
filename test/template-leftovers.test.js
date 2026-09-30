@@ -59,6 +59,11 @@ describe("template leftovers in the 特定商取引法 notice", () => {
     });
     assert.deepEqual(checkTemplateLeftovers(stamp), [], "what a buyer wants printed");
     assert.deepEqual(checkTemplateLeftovers(notice("販売業者 株式会社〇〇", "特定商取引法に基づく表記の書き方")), [], "a guide to writing the notice");
+    assert.deepEqual(
+      checkTemplateLeftovers(notice("販売業者 株式会社〇〇", "特定商取引法に基づく表記 | 通販マニュアル")),
+      [],
+      "a manual whose title starts with the notice name",
+    );
     assert.deepEqual(checkTemplateLeftovers(notice("株式会社××との提携\n〇〇様からのレビュー")), [], "no identity label");
   });
 

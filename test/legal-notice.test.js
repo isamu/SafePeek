@@ -238,6 +238,9 @@ describe("特定商取引法 notice", () => {
       "<h1>特定商取引法の改正について</h1>",
       "<title>特定商取引法に基づく表記の書き方 | ブログ</title>",
       "<h1>通信販売に関する表示のルールと注意点</h1>",
+      "<title>特定商取引法に基づく表記 | 通販マニュアル</title>",
+      "<title>特定商取引法に基づく表記 - テンプレート</title>",
+      "<h1>特定商取引法に基づく表記（記載例）</h1>",
     ]) {
       assert.deepEqual(checkLegalNotice(page(heading)), [], heading);
     }
