@@ -21,7 +21,7 @@ Any script on a page can read what is typed into that page's own fields. Widely 
 | Page | Counted | Left out | Severity |
 | --- | --- | --- | --- |
 | A card number is typed into the page itself | every other domain's script, analytics and tag managers included | the payment provider's own tokenizer, on the provider's host | medium |
-| A password is typed into the page | analytics, tag managers, ads, unknown hosts | bot checks (reCAPTCHA, hCaptcha, Turnstile), sign-in services | info with analytics / tag managers only; low with ads or unknown hosts |
+| A password is typed into the page | analytics, tag managers, monitoring, session replay, ads, unknown hosts | bot checks (reCAPTCHA, hCaptcha, Turnstile), sign-in services | info with analytics, tag managers or monitoring only; low with session replay, ads or unknown hosts |
 
 **Why well-known tools count on card pages.** Card skimming (Magecart) has repeatedly come in through ordinary tag-manager containers and analytics tags. PCI DSS 4.0 (6.4.3) asks for an inventory of every script on a payment page, whoever made it. Exempting "trusted" tools would hide the most common route.
 
@@ -31,14 +31,17 @@ Any script on a page can read what is typed into that page's own fields. Widely 
 
 **"Other domains", not "third parties".** A site's own asset domain (`githubassets.com`, an image CDN) can have a name unrelated to the site's. Hosts that look like the same organisation's (the related-systems rule: same registrable domain, or one whole name being a word of the other) are left out. The rest are listed, labelled, for the visitor to judge.
 
-**How a host is labelled.** Labels come from what webappanalyzer detected from that script URL:
+**How a host is labelled.** Labels come from `bot-checks.json` and sign-in services first, then from `data-destinations.json` (session replay, monitoring), then from the categories of the products webappanalyzer detected from that host's scripts:
 - *analytics*: Analytics or Tag managers
 - *ads*: Advertising, Retargeting or Affiliate
 - *sign-in*: Authentication, or an `auth-services.json` host
-- *bot check*: `bot-checks.json`
 - *other*: anything else
 
-Hosts are listed with *other* and *ads* first.
+For a script known only by host, the categories come from the products whose script-URL patterns match the host alone.
+
+**Why session replay is low on a login page but monitoring is only information.** Session replay records what is typed; it usually masks password fields, but that depends on the site's settings. Monitoring and analytics do not record keystrokes.
+
+Hosts are listed with *other*, *session replay* and *ads* first.
 
 **Scripts known only by host.** A script can be inserted and then removed from the DOM. The loading record still shows it, but only by host (`scriptHosts`).
 - Such scripts are counted like any other.

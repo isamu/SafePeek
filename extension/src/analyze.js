@@ -82,7 +82,15 @@ export async function analyze(page, db, env) {
     ...checkCookies(page),
     ...checkPage(page),
     ...checkCredentialTarget(page, db.auth, db.suffixes),
-    ...checkSensitivePage(page, { providers: db.providers, suffixes: db.suffixes, technologies, botChecks: db.botChecks, auth: db.auth }),
+    ...checkSensitivePage(page, {
+      providers: db.providers,
+      suffixes: db.suffixes,
+      technologies,
+      botChecks: db.botChecks,
+      auth: db.auth,
+      destinations: db.destinations.services,
+      fingerprints: db.technologies,
+    }),
     ...checkCompromisedHosts(page, db.compromised),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };

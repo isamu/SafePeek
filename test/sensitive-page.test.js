@@ -32,6 +32,8 @@ const check = (
     technologies,
     botChecks: db.botChecks,
     auth: db.auth,
+    destinations: db.destinations.services,
+    fingerprints: db.technologies,
   });
 const summary = (/** @type {import("../extension/src/types.js").Finding[]} */ f) => f.map((x) => `${x.id}:${x.severity}:${x.params.count}`);
 
@@ -125,6 +127,24 @@ describe("labels and the loading record", () => {
   });
 });
 
+describe("session replay, monitoring and scripts known only by host", () => {
+  it("label monitoring like analytics and session replay as something to notice", () => {
+    assert.deepEqual(summary(check({ inputs: passwordInput, scripts: [script("https://browser.sentry-cdn.com/7.0.0/bundle.min.js")] }, [])), [
+      "login_page_third_party:info:1",
+    ]);
+    const replay = check({ inputs: passwordInput, scripts: [script("https://static.hotjar.com/c/hotjar-1.js")] }, []);
+    assert.deepEqual(summary(replay), ["login_page_third_party:low:1"]);
+    assert.deepEqual(replay[0].evidence, ["session replay: static.hotjar.com"]);
+  });
+
+  it("label a host-only script by the products whose URL patterns match its host", () => {
+    const found = check({ inputs: passwordInput, scriptHosts: ["pagead2.googlesyndication.com"] }, []);
+    assert.deepEqual(found[0].evidence, ["ads: pagead2.googlesyndication.com"]);
+    const unknown = check({ inputs: passwordInput, scriptHosts: ["cdn.unknown-widget.example"] }, []);
+    assert.deepEqual(unknown[0].evidence, ["other: cdn.unknown-widget.example"]);
+  });
+});
+
 describe("pages with both", () => {
   it("judge the card and the password separately: a tokenizer is expected only where the card is typed", () => {
     const found = check({ inputs: [...cardInputs, ...passwordInput], scripts: [script("https://js.stripe.com/v2/")] });
@@ -147,6 +167,8 @@ describe("what is the site's own", () => {
         technologies: [],
         botChecks: db.botChecks,
         auth: db.auth,
+        destinations: db.destinations.services,
+        fingerprints: db.technologies,
       },
     );
     assert.deepEqual(own, []);

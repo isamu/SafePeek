@@ -169,7 +169,7 @@ const JA = {
   login_page_third_party: {
     title: (p) => `パスワードを入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
     detail: () =>
-      "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析やタグマネージャーだけなら「情報」、広告や正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
+      "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析・タグマネージャー・エラー監視だけなら「情報」、画面操作の記録（セッションリプレイ）や広告、正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
   },
   script_compromised_host: {
     title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
@@ -341,7 +341,7 @@ const EN = {
   login_page_third_party: {
     title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
     detail: () =>
-      "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics and tag managers alone make this information; ads or unknown hosts make it low. Some may be the site's own asset domains.",
+      "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics, tag managers and monitoring alone make this information; session replay, ads or unknown hosts make it low. Some may be the site's own asset domains.",
   },
   script_compromised_host: {
     title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,
