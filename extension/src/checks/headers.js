@@ -15,7 +15,7 @@ const SESSION_COOKIE =
  */
 export function isLoopback(url) {
   try {
-    const host = new URL(url).hostname;
+    const host = new URL(url).hostname.replace(/\.$/, ""); // "localhost." is the same name
     return host === "localhost" || host.endsWith(".localhost") || host === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(host);
   } catch {
     return false;

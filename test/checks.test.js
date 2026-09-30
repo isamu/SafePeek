@@ -22,7 +22,15 @@ describe("transport and headers", () => {
 
   it("does not judge transport on the local machine, which browsers treat as secure", () => {
     const login = [{ action: "http://localhost:3000/login", method: "post", hasPassword: true }];
-    for (const url of ["http://localhost:3000/", "http://app.localhost/", "http://127.0.0.1:8080/", "http://127.1.2.3/", "http://[::1]:5173/"]) {
+    for (const url of [
+      "http://localhost:3000/",
+      "http://app.localhost/",
+      "http://localhost./",
+      "http://app.localhost./",
+      "http://127.0.0.1:8080/",
+      "http://127.1.2.3/",
+      "http://[::1]:5173/",
+    ]) {
       assert.deepEqual(ids(checkTransport(makePage({ url, protocol: "http:", forms: login }))), [], url);
     }
   });
@@ -30,7 +38,7 @@ describe("transport and headers", () => {
   it("still judges plain HTTP on hosts that only look local", () => {
     const lanAddress = ["192", "168", "0", "10"].join("."); // a private network still leaves the machine
     for (const host of ["localhost.example.com", "mylocalhost", "127.0.0.1.nip.io", lanAddress]) {
-      const url = `${"http"}://${host}/`;
+      const url = `http://${host}/`;
       assert.deepEqual(ids(checkTransport(makePage({ url, protocol: "http:" }))), ["not_https"], url);
     }
   });

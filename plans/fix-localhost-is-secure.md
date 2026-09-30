@@ -6,7 +6,8 @@ On `http://localhost:…` the popup reported *Not HTTPS* (high). Browsers treat 
 reasonably use HTTPS.
 
 ## Change
-`checks/headers.js`: `checkTransport` reports nothing for loopback hosts (`isLoopback`). A private network address
+`checks/headers.js`: `checkTransport` reports nothing for loopback hosts (`isLoopback`, which also accepts the
+absolute-DNS spelling `localhost.` / `*.localhost.`). A private network address
 (e.g. 192.168.x.x) or a host that only looks local (`localhost.example.com`, `127.0.0.1.nip.io`) is still judged.
 The e2e server is reached as `shop.test` (mapped to 127.0.0.1 in Chromium) so the fixtures are still judged like
 any plain-HTTP site.
