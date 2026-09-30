@@ -104,6 +104,10 @@ Hosts are listed with *other* and *ads* first.
 
 ## Where a password is sent
 
-- **A login form posting to another organisation's domain is medium.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
+- **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
 - **Left out:** the page's own host, hosts that look like the same organisation's (the related-systems rule), and listed sign-in services (by host, URL prefix or path). A site that hands login to Auth0, Okta or Keycloak is not warned about.
 - **The target domain is shown.** It is public, and it is exactly what the visitor needs to judge (S9).
+- **Only the form's default target is checked.** A submit button's `formaction` can send the form elsewhere, and so can a script. Neither is seen: the collector does not read `formaction`, and the values a script sends are never read.
+  - A determined phishing page can therefore avoid this finding.
+  - The check is for misconfigured forms and plain phishing kits, not a guarantee.
+  - Reading `formaction` would also need room in the collector, which is at its size limit.

@@ -30,6 +30,11 @@ describe("where a password form sends the password", () => {
     }
   });
 
+  it("checks the target whatever the method, and lists each host once", () => {
+    const found = check([{ action: "https://collect.other-site.example/a", method: "get", hasPassword: true }, form("https://collect.other-site.example/b")]);
+    assert.deepEqual(found[0].evidence, ["collect.other-site.example"]);
+  });
+
   it("ignores forms without a password field and unparsable targets", () => {
     assert.deepEqual(check([form("https://collect.other-site.example/search", false)]), []);
     assert.deepEqual(check([form("not a url")]), []);
