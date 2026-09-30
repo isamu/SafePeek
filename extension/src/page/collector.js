@@ -14,6 +14,7 @@
   const FETCH_TIMEOUT_MS = 5000;
   const MAX_INPUTS = 200;
   const MAX_FORMS = 50;
+  const MAX_FRAMES = 10;
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
 
   /**
@@ -120,19 +121,58 @@
   }
 
   /**
+   * The page and its same-origin frames. A frame on another origin (a payment provider's) cannot be read and is
+   * judged by its URL instead; a same-origin frame is part of the site's own page.
+   * @returns {Document[]}
+   */
+  function documents() {
+    const docs = [document];
+    for (const frame of document.querySelectorAll("iframe, frame")) {
+      if (docs.length > MAX_FRAMES) break;
+      if (!isFrame(frame)) continue;
+      try {
+        const doc = frame.contentDocument;
+        if (doc?.documentElement) docs.push(doc);
+      } catch {
+        // another origin
+      }
+    }
+    return docs;
+  }
+
+  /**
+   * @param {Element} el
+   * @returns {el is HTMLIFrameElement | HTMLFrameElement}
+   */
+  function isFrame(el) {
+    return el.tagName === "IFRAME" || el.tagName === "FRAME";
+  }
+
+  /**
+   * By tag name, so it also holds for elements of a frame, whose constructors differ from this window's.
+   * @param {Element} el
+   * @returns {el is HTMLInputElement | HTMLSelectElement}
+   */
+  function isField(el) {
+    return el.tagName === "INPUT" || el.tagName === "SELECT";
+  }
+
+  /**
    * By form ownership, so a password field attached with form="…" from outside the <form> counts too.
    * @param {HTMLFormElement} form
    * @returns {boolean}
    */
   function hasPasswordField(form) {
-    return [...form.elements].some((el) => el instanceof HTMLInputElement && el.type === "password");
+    return [...form.elements].some((el) => isField(el) && el.tagName === "INPUT" && el.type === "password");
   }
 
   /** @returns {import("../types.js").InputField[]} */
   function readInputs() {
-    const forms = [...document.forms];
-    return [...document.querySelectorAll("input, select")]
-      .filter((el) => !(el instanceof HTMLInputElement && SKIPPED_INPUT_TYPES.includes(el.type)))
+    const docs = documents();
+    const forms = docs.flatMap((doc) => [...doc.forms]);
+    return docs
+      .flatMap((doc) => [...doc.querySelectorAll("input, select")])
+      .filter((el) => isField(el) && !(el.tagName === "INPUT" && SKIPPED_INPUT_TYPES.includes(el.type)))
       .slice(0, MAX_INPUTS)
       .map((el) => ({
         tag: el.tagName.toLowerCase(),
@@ -147,21 +187,24 @@
 
   /**
    * @param {Element} el
-   * @param {HTMLFormElement[]} forms  every form of the document, not only the ones collected
+   * @param {HTMLFormElement[]} forms  every form of the page and its same-origin frames, not only the ones collected
    * @returns {{ form: number, inPasswordForm: boolean }}
    */
   function formOf(el, forms) {
-    const owner = el instanceof HTMLInputElement || el instanceof HTMLSelectElement ? el.form : null;
+    const owner = isField(el) ? el.form : null;
     return owner ? { form: forms.indexOf(owner), inPasswordForm: hasPasswordField(owner) } : { form: -1, inPasswordForm: false };
   }
 
   /** @returns {import("../types.js").FormInfo[]} */
   function readForms() {
-    return [...document.forms].slice(0, MAX_FORMS).map((form) => ({
-      action: form.action,
-      method: (form.getAttribute("method") ?? "get").toLowerCase(),
-      hasPassword: hasPasswordField(form),
-    }));
+    return documents()
+      .flatMap((doc) => [...doc.forms])
+      .slice(0, MAX_FORMS)
+      .map((form) => ({
+        action: form.action,
+        method: (form.getAttribute("method") ?? "get").toLowerCase(),
+        hasPassword: hasPasswordField(form),
+      }));
   }
 
   /** @returns {string} */
@@ -227,10 +270,24 @@
    * @returns {string[]}
    */
   function urls(selector, attr) {
-    return [...document.querySelectorAll(selector)]
-      .map((el) => (el instanceof HTMLElement ? /** @type {any} */ (el)[attr] : ""))
-      .filter((u) => typeof u === "string" && u !== "")
+    return documents()
+      .flatMap((doc) => [...doc.querySelectorAll(selector)])
+      .map((el) => absolute(el.getAttribute(attr) ?? "", el.baseURI))
+      .filter((u) => u !== "")
       .slice(0, 200);
+  }
+
+  /**
+   * @param {string} raw
+   * @param {string} base
+   * @returns {string}
+   */
+  function absolute(raw, base) {
+    try {
+      return raw.trim() === "" ? "" : new URL(raw, base).href;
+    } catch {
+      return "";
+    }
   }
 
   /**

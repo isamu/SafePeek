@@ -200,4 +200,14 @@ describe("collector in Chromium", () => {
       );
     }
   });
+
+  it("reads card fields inside a same-origin frame as the site's own page", async () => {
+    const report = await scan("framed-card.html");
+    assert.equal(report.findings.find((f) => f.area === "payment")?.id, "card_on_page");
+  });
+
+  it("finds a provider's card frame nested in a same-origin frame", async () => {
+    const report = await scan("framed-stripe.html");
+    assert.ok(report.findings.some((f) => f.id === "card_hosted_iframe"));
+  });
 });
