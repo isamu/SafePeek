@@ -3,6 +3,7 @@
 
 import { finding } from "./finding.js";
 import { isJapaneseShop, offersToBuy } from "./japanese-shop.js";
+import { hrefOf, openingTags } from "../engine/html-tags.js";
 
 // TLDs JC3 names as commonly used by bad shops (https://www.jc3.or.jp/threats/topics/article-374.html).
 const ABUSED_TLDS = new Set(["xyz", "top", "bid"]);
@@ -33,6 +34,24 @@ const MIN_STEEP_DISCOUNT = 70;
 const FULL_WIDTH_DIGIT = /[０-９]/g;
 const FULL_WIDTH_ZERO = "０".charCodeAt(0);
 const MIN_STEEP_DISCOUNTS = 3;
+// Social networks whose icons a shop shows. Icons that all point at a network's home page, not a profile, are what
+// BEYOND PHISH found on fraudulent shops (https://yancomm.net/papers/2023%20-%20SP%20-%20Beyond%20Phish.pdf).
+const SOCIAL_HOSTS = new Set([
+  "facebook.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+  "youtube.com",
+  "tiktok.com",
+  "line.me",
+  // LINE official accounts are linked through these as well.
+  "lin.ee",
+  "page.line.me",
+]);
+const MAX_ANCHORS = 2000;
+// Share and intent buttons say nothing about the shop's own accounts: they neither count as a profile nor as a
+// home-page link. Small real shops often show only these.
+const SHARE_PATH = /^\/(?:intent|share|sharer|sharer\.php|share\.php|dialog\/share|r\/msg\/text)(?:\/|$)/i;
 const MIN_SIGNS = 2;
 const MEDIUM_SIGNS = 3;
 
@@ -43,7 +62,9 @@ const MEDIUM_SIGNS = 3;
 export function checkWeakShopSigns(page) {
   if (!isJapaneseShop(page.text) || !offersToBuy(page.text)) return [];
   const host = new URL(page.url).hostname;
-  const signs = [abusedTld(host), freeMailOnly(page.text), bankTransferOnly(page.text), steepDiscounts(page.text)].filter((sign) => sign !== "");
+  const signs = [abusedTld(host), freeMailOnly(page.text), bankTransferOnly(page.text), steepDiscounts(page.text), socialLinksGoNowhere(page)].filter(
+    (sign) => sign !== "",
+  );
   if (signs.length < MIN_SIGNS) return [];
   return [finding("shop_weak_signs", signs.length >= MEDIUM_SIGNS ? "medium" : "low", "page", { count: signs.length }, signs)];
 }
@@ -93,4 +114,34 @@ function steepDiscounts(text) {
  */
 function halfWidthDigits(text) {
   return text.replace(FULL_WIDTH_DIGIT, (digit) => String(digit.charCodeAt(0) - FULL_WIDTH_ZERO));
+}
+
+/**
+ * The page links to social networks, and every such link is the network's home page rather than a profile. A shop
+ * with no social links at all is common and not counted.
+ * @param {import("../types.js").PageData} page
+ * @returns {string}
+ */
+function socialLinksGoNowhere(page) {
+  const social = openingTags(page.html, "a", MAX_ANCHORS)
+    .map((tag) => socialLink(hrefOf(tag), page.url))
+    .filter((link) => link !== null);
+  return social.length > 0 && social.every((link) => link.path === "") ? "social links go to home pages only" : "";
+}
+
+/**
+ * @param {string} href
+ * @param {string} base
+ * @returns {{ path: string } | null}  the path on a social network, without slashes; null when not a social link, or
+ *   only a share button
+ */
+function socialLink(href, base) {
+  try {
+    const url = new URL(href, base);
+    const host = url.hostname.replace(/^(?:www|m)\./, "");
+    if (!SOCIAL_HOSTS.has(host) || SHARE_PATH.test(url.pathname)) return null;
+    return { path: url.pathname.replaceAll("/", "") };
+  } catch {
+    return null;
+  }
 }

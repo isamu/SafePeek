@@ -5,10 +5,10 @@ import { finding } from "./finding.js";
 import { isJapaneseShop, offersToBuy } from "./japanese-shop.js";
 import { isRelatedHost } from "../engine/related-systems.js";
 import { registrable } from "../engine/public-suffix.js";
+import { hrefOf, openingTags } from "../engine/html-tags.js";
 
 const MAX_LINK_TAGS = 50;
 const CANONICAL_REL = /\brel\s*=\s*["']?canonical\b/i;
-const HREF = /\bhref\s*=\s*["']?([^"'\s>]+)/i;
 
 /**
  * Only the other site's registrable domain is shown: a full host could be someone's internal or staging name (SPEC S9).
@@ -35,23 +35,10 @@ export function checkCopiedShop(page, suffixes) {
  * @returns {string[]}  the canonical link targets and og:url values
  */
 function declaredAddresses(page) {
-  const canonical = linkTags(page.html)
+  const canonical = openingTags(page.html, "link", MAX_LINK_TAGS)
     .filter((tag) => CANONICAL_REL.test(tag))
-    .map((tag) => HREF.exec(tag)?.[1] ?? "");
+    .map(hrefOf);
   return [...canonical, ...(page.meta["og:url"] ?? [])];
-}
-
-/**
- * @param {string} html
- * @returns {string[]}  the opening <link …> tags, as written
- */
-function linkTags(html) {
-  const lower = html.toLowerCase();
-  const tags = [];
-  for (let at = lower.indexOf("<link"); at >= 0 && tags.length < MAX_LINK_TAGS; at = lower.indexOf("<link", at + 1)) {
-    tags.push(html.slice(at, html.indexOf(">", at) + 1));
-  }
-  return tags;
 }
 
 /**

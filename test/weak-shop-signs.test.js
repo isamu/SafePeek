@@ -8,8 +8,9 @@ const FREE_MAIL = "お問い合わせ：shop.support@gmail.com";
 const BANK_ONLY = "お支払い方法：銀行振込（前払い）のみ承ります。";
 const DISCOUNTS = "全品80%OFF！ 本日限り90%OFF 最大75％オフ";
 
-/** @param {string} extra @param {string} [url] */
-const shop = (extra, url = "https://shop.example/") => makePage({ url, text: `${JAPANESE_SHOP}\n${extra}`, html: "<html></html>" });
+/** @param {string} extra @param {string} [url] @param {string} [body] */
+const shop = (extra, url = "https://shop.example/", body = "") =>
+  makePage({ url, text: `${JAPANESE_SHOP}\n${extra}`, html: `<html><body>${body}</body></html>` });
 const signs = (/** @type {import("../extension/src/types.js").PageData} */ page) => checkWeakShopSigns(page).map((f) => [f.severity, f.evidence]);
 
 describe("weak fake-shop signs, only together", () => {
@@ -44,6 +45,33 @@ describe("weak fake-shop signs, only together", () => {
 
   it("reads full-width digits in discounts", () => {
     assert.deepEqual(signs(shop(`全品８０％OFF ９０％OFF ７５％オフ\n${FREE_MAIL}`))[0][1], ["free email only (gmail.com)", "3 discounts of 70% or more"]);
+  });
+
+  it("counts social links that all go to a network's home page, not a missing or a real profile", () => {
+    const homes = '<a href="https://www.facebook.com/">f</a><a href="https://twitter.com">t</a><a class="ig" href="https://instagram.com/">i</a>';
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, homes))[0][1], ["free email only (gmail.com)", "social links go to home pages only"]);
+    const oneProfile = `${homes}<a href="https://www.instagram.com/real_shop_jp/">i</a>`;
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, oneProfile)), [], "one real profile clears it");
+    for (const line of ["https://lin.ee/AbCdEf1", "https://page.line.me/abc1234", "https://line.me/R/ti/p/%40shop"]) {
+      assert.deepEqual(signs(shop(FREE_MAIL, undefined, `${homes}<a href="${line}">LINE</a>`)), [], `a LINE official account: ${line}`);
+    }
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, '<a href="/about">about</a>')), [], "no social links at all");
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, '<abbr href="https://facebook.com/">x</abbr>')), [], "not an <a> tag");
+  });
+
+  it("ignores share buttons: they neither clear home-page links nor count on their own", () => {
+    const shares = [
+      "https://x.com/intent/tweet?text=a",
+      "https://twitter.com/share",
+      "https://www.facebook.com/sharer/sharer.php?u=a",
+      "https://www.facebook.com/share.php?u=a",
+      "https://line.me/R/msg/text/?a",
+    ]
+      .map((href) => `<a href="${href}">s</a>`)
+      .join("");
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, shares)), [], "share buttons only");
+    const withHome = `${shares}<a href="https://www.instagram.com/">i</a>`;
+    assert.deepEqual(signs(shop(FREE_MAIL, undefined, withHome))[0][1], ["free email only (gmail.com)", "social links go to home pages only"]);
   });
 
   it("does not count a few or small discounts", () => {
