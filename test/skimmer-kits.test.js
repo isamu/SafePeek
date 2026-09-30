@@ -27,8 +27,13 @@ describe("known skimmer kits", () => {
   });
 
   it("does not match on one indicator, such as a detector script that lists the kit's names", () => {
-    const detector = { src: "https://security.example/detect.js", integrity: "", content: 'const iocs = ["PaymentVanilla"];', fetched: true };
-    assert.deepEqual(ids(makePage({ scripts: [detector] })), [], "one name in a detector");
+    const detector = {
+      src: "https://security.example/detect.js",
+      integrity: "",
+      content: 'const iocs = ["PaymentVanilla", "UserInputMonitor", "pp_payment-iframe_payment-iframe"];',
+      fetched: true,
+    };
+    assert.deepEqual(ids(makePage({ scripts: [detector] })), [], "every code name, but only one kind of trace");
     assert.deepEqual(ids(makePage({ contactedHosts: [KIT_SERVER] })), [], "a host alone");
     assert.deepEqual(ids(makePage({ scripts: [script("https://x.shop/payment-vanilla.iife.js")] })), [], "a file alone");
   });

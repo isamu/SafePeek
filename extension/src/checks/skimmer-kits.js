@@ -2,9 +2,10 @@
 
 import { finding } from "./finding.js";
 
-// One indicator alone can be a legitimate script that lists it (a vendor's skimmer detector), or a generic name;
-// the kit itself leaves several at once (its file, its globals, its server).
-const MIN_INDICATORS = 2;
+// One kind of trace alone can be a legitimate script that lists the kit's names (a vendor's skimmer detector lists
+// all of them), or a generic name; the kit itself leaves two kinds at once: its file with its globals, or its code
+// with its server.
+const MIN_KINDS = 2;
 
 /**
  * @typedef {object} Kit
@@ -24,25 +25,25 @@ const MIN_INDICATORS = 2;
  * @returns {import("../types.js").Finding[]}
  */
 export function checkSkimmerKits(page, kits) {
-  const hit = kits.filter((kit) => kitTraces(page, kit).length >= MIN_INDICATORS);
+  const hit = kits.filter((kit) => kitTraces(page, kit).filter((kind) => kind.length > 0).length >= MIN_KINDS);
   if (hit.length === 0) return [];
-  const evidence = hit.map((kit) => `${kit.name} (${kit.reported}): ${kitTraces(page, kit).join(", ")} — ${kit.sources[0]}`);
+  const evidence = hit.map((kit) => `${kit.name} (${kit.reported}): ${kitTraces(page, kit).flat().join(", ")} — ${kit.sources[0]}`);
   return [finding("shop_known_skimmer_kit", "high", "page", { kits: hit.map((kit) => kit.name).join(", ") }, evidence)];
 }
 
 /**
  * @param {import("../types.js").PageData} page
  * @param {Kit} kit
- * @returns {string[]}  the kit's indicators the page carries
+ * @returns {string[][]}  the kit's indicators the page carries, one list per kind: file names, hosts, code
  */
 function kitTraces(page, kit) {
   const files = page.scripts.map((s) => fileName(s.src ?? ""));
   const hosts = new Set([...page.contactedHosts, ...(page.scriptHosts ?? [])]);
   const code = page.scripts.map((s) => s.content);
   return [
-    ...kit.scripts.filter((name) => files.includes(name)),
-    ...kit.hosts.filter((host) => hosts.has(host)),
-    ...kit.code.filter((identifier) => code.some((body) => body.includes(identifier))),
+    kit.scripts.filter((name) => files.includes(name)),
+    kit.hosts.filter((host) => hosts.has(host)),
+    kit.code.filter((identifier) => code.some((body) => body.includes(identifier))),
   ];
 }
 

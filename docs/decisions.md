@@ -195,7 +195,7 @@ JC3 and 国民生活センター list signs that real shops also show: an unfami
 
 Fake-shop networks reuse one checkout kit across hundreds of storefronts, which makes them fingerprintable (`docs/fake-shop-research.md`, item 10).
 
-- **Two different traces, not one.** A vendor's skimmer detector lists the kit's names in its own code, and a name such as UserInputMonitor is used elsewhere; the kit itself leaves its file, its globals and its server together.
+- **Two kinds of trace, not one.** A vendor's skimmer detector lists all the kit's names in its own code, and a name such as UserInputMonitor is used elsewhere; the kit itself leaves two kinds at once (its file with its globals, or its code with its server).
 - **Traces only**: a loaded script's file name, a contacted host, or an identifier inside executed script code. The HTML and page text are not read, because an article about the kit quotes the same names.
 - **Only indicators a published report names**, each entry with its source and date. Kits rotate, so entries may age; an old one costs little, since it can only match that kit's own files.
 - **High**: a match means the checkout itself may be the skimmer.

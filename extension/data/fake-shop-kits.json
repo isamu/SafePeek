@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand-maintained: fake-shop and skimmer kits security researchers have published indicators for. A page matches a kit only by two or more different traces, since one name can also appear in a legitimate detector that lists it: a script loaded from a file with the kit's name, a host the page contacted, or an identifier inside the code of a script the page runs. The same names in an article's text (a page about the kit) do not count. Every entry needs a report that names its indicators.",
+  "_comment": "Hand-maintained: fake-shop and skimmer kits security researchers have published indicators for. A page matches a kit only by two different kinds of trace, since a legitimate detector can list every name of one kind: a script loaded from a file with the kit's name, a host the page contacted, or an identifier inside the code of a script the page runs. The same names in an article's text (a page about the kit) do not count. Every entry needs a report that names its indicators.",
   "kits": [
     {
       "name": "GorgonAgora (PaymentVanilla skimmer)",
