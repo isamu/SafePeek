@@ -42,6 +42,17 @@ describe("simplified Chinese on a Japanese shop", () => {
     );
   });
 
+  it("does not count characters that are common, as on a Japanese shop's page for Chinese-speaking customers", () => {
+    const chineseBody = "欢迎光临！我们提供优质商品，免税购买，请联系客服。运费说明：订单满额免费。".repeat(8);
+    const page = shop(`${JAPANESE_SHOP}${chineseBody}`);
+    assert.deepEqual(checkSimplifiedChinese(page), []);
+    assert.deepEqual(
+      checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${chineseBody}365天受付`)).map((f) => f.evidence),
+      [["365天"]],
+      "other signs still count",
+    );
+  });
+
   it("does not count the characters a page about learning Chinese quotes, nor 个", () => {
     const textbook = `${JAPANESE_SHOP}中国語テキスト：例文「这是我们的新书，请订购。」`;
     assert.deepEqual(checkSimplifiedChinese(shop(textbook)), []);
@@ -51,6 +62,7 @@ describe("simplified Chinese on a Japanese shop", () => {
       "other signs still count",
     );
     assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}「个东货」`)), [], "个 is not counted, so this is two");
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}「价东货」`)), [], "nor 价");
   });
 
   it("stays out of pages that are not Japanese shops", () => {

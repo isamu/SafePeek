@@ -3,9 +3,12 @@
 
 import { finding } from "./finding.js";
 
-// Simplified forms that Japanese normally writes differently (这 for 這, 购 for 購 …). 个 is left out: Japanese knows it
-// as an old form related to 個 and 箇.
-const SIMPLIFIED_ONLY = new Set("这们东华货购优价质飞说为发过买卖页务头关员设际顾选择请联运费订单实");
+// Simplified forms that Japanese normally writes differently (这 for 這, 购 for 購 …). 个 and 价 are left out: Japanese
+// knows them as old or variant forms (of 個・箇 and 価).
+const SIMPLIFIED_ONLY = new Set("这们东华货购优质飞说为发过买卖页务头关员设际顾选择请联运费订单实");
+// A fake shop's Japanese carries a few stray simplified characters; a Japanese shop's page for Chinese-speaking
+// customers is written in Chinese, so they are common there. Above this share of the kana, they are not a sign.
+const MAX_SIMPLIFIED_PER_KANA = 0.1;
 // A page about learning Chinese quotes simplified text on purpose, so its characters are not a sign; the language and
 // the days still are.
 const CHINESE_STUDY = /中国語|簡体字|ピンイン|拼音|HSK|中検/;
@@ -22,20 +25,24 @@ const CHINESE_DAYS = /(?<!\d)\d{1,4}天/;
  * @returns {import("../types.js").Finding[]}
  */
 export function checkSimplifiedChinese(page) {
-  if ((page.text.match(KANA) ?? []).length < MIN_KANA || !SHOP_WORDS.test(page.text)) return [];
-  const signs = chineseSigns(page);
+  const kana = (page.text.match(KANA) ?? []).length;
+  if (kana < MIN_KANA || !SHOP_WORDS.test(page.text)) return [];
+  const signs = chineseSigns(page, kana);
   if (signs.length === 0) return [];
   return [finding("shop_simplified_chinese", signs.length > 1 ? "medium" : "low", "page", { count: signs.length }, signs)];
 }
 
 /**
  * @param {import("../types.js").PageData} page
+ * @param {number} kana  how many kana the text has
  * @returns {string[]}  one evidence line per kind of sign
  */
-function chineseSigns(page) {
-  const simplified = [...new Set([...page.text].filter((char) => SIMPLIFIED_ONLY.has(char)))];
+function chineseSigns(page, kana) {
+  const occurrences = [...page.text].filter((char) => SIMPLIFIED_ONLY.has(char));
+  const simplified = [...new Set(occurrences)];
+  const stray = occurrences.length <= kana * MAX_SIMPLIFIED_PER_KANA && !CHINESE_STUDY.test(page.text);
   const signs = [];
-  if (simplified.length >= MIN_SIMPLIFIED && !CHINESE_STUDY.test(page.text)) signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
+  if (simplified.length >= MIN_SIMPLIFIED && stray) signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
   if (CHINESE_LANG.test(htmlTag(page.html))) signs.push('<html lang="zh…">');
   const days = CHINESE_DAYS.exec(page.text);
   if (days) signs.push(days[0]);
