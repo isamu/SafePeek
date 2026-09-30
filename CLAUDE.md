@@ -2,6 +2,22 @@
 
 Working notes for AI agents in this repo. What the tool is lives in **README.md**; the rules and the full list of checks live in **docs/SPEC.md**. Read SPEC first — especially section 2, the security invariants.
 
+## Purpose
+
+Let an ordinary visitor judge, from the browser alone, whether a site they are about to trust (above all with a card number) looks carefully run. SafePeek reads what the page already exposes and turns it into findings with evidence; it never probes the server or sends anything by itself. What people most want to know is **where the card number goes**: straight to a payment provider, or into the site's own servers.
+
+## Major features
+
+- **Tech stack** from webappanalyzer fingerprints, with versions when visible.
+- **Outdated and vulnerable software**: JS libraries against the Retire.js DB, end-of-life server and front-end products.
+- **Card payment handling**: provider frame, in-page tokenization, the site's own form, or a hand-off link / form to a provider's checkout; card fields in same-origin frames are read too.
+- **Backend inference** from weighted traces (URL conventions, parameters, headers, cookies, globals, script names, comments, error output), with confidence per guess and strength per trace; EOL and legacy backends flagged.
+- **BaaS / managed platforms** (Firebase, Supabase, AWS, Vercel …).
+- **WordPress**: core support status, plugins and themes, XML-RPC.
+- **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts.
+- **False-result report link**: opens a GitHub issue form pre-filled with the origin and the finding only; the user submits it.
+- **npm package** `safepeek`: the same engine for crawlers and CI (not published).
+
 ## Stack
 
 Plain JavaScript (ES modules), MV3 Chrome extension, **no build step and no runtime dependencies**. Types are JSDoc, checked by `tsc --checkJs`. Package manager is **yarn**; dev dependencies are tooling only and never ship.
@@ -23,6 +39,18 @@ Never judge these through a pipe — `yarn lint | tail` exits with `tail`'s stat
 Browser APIs live in three files only: `extension/src/page/collector.js`, `extension/src/page/probe.js`, `extension/popup/scan.js`. Everything in `extension/src/engine` and `extension/src/checks` is a pure function over `PageData` and is unit-tested without a browser. Keep it that way: a new check takes `PageData` and returns findings.
 
 A new finding id needs a message in both languages in `extension/popup/i18n.js` (a test enforces this) and a row in the SPEC table.
+
+## Accuracy rules learned from real sites
+
+Checks are tuned against real pages; each of these came from a false result.
+
+- **Mention is not use.** Text in the page or in a script body only corroborates; a URL, header, cookie, global or stack frame is a trace.
+- **Platform categories (CMS, ecommerce …) never come from script content alone**, and hosting categories need direct evidence, not an implication.
+- **An implied hit inherits the directness of what implied it.**
+- **Card frames and checkout links are per-provider allowlists** (`cardFrames`, `checkoutLinks` in `payment-providers.json`); a link to a provider's host is not by itself a checkout.
+- **A card form needs a card number plus a security code or expiry**, so a member-card login is not a card form.
+- **When the same rule draws a third finding, invert it into what is permitted** instead of patching another case.
+- Verify a check on real sites before trusting it; a fixture proves only what it was written to show.
 
 ## Things that must not happen
 
