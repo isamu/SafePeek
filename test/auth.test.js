@@ -29,10 +29,14 @@ describe("hostMatches", () => {
     assert.ok(!hostMatches("cognito-idp.*.amazonaws.com", "s3.ap-northeast-1.amazonaws.com"));
     assert.ok(hostMatches("*.supabase.co", "abcdefgh.supabase.co"));
     assert.ok(!hostMatches("*.supabase.co", "supabase.co"));
+    assert.ok(!hostMatches("*.supabase.co", "a.b.supabase.co"), "'*' is one label, not a suffix");
+    assert.ok(!hostMatches("cognito-idp.*.amazonaws.com", "x.cognito-idp.us-east-1.amazonaws.com"));
+    assert.ok(hostMatches("login.microsoftonline.com", "LOGIN.microsoftonline.com."), "case and a trailing dot");
   });
 
-  it("without '*', is exactly 'the domain or a subdomain of it'", () => {
+  it("without '*', is exactly 'the domain or a subdomain of it', after lowercasing and dropping a trailing dot", () => {
     const labels = ["a", "shop", "com", "jp", "co", "auth0", "x-y", "notauth0", ""];
+    const normal = (/** @type {string} */ h) => h.toLowerCase().replace(/\.$/, "");
     let seed = 7;
     const pick = () => {
       seed = (seed * 1103515245 + 12345) % 2147483648;
@@ -40,9 +44,10 @@ describe("hostMatches", () => {
     };
     const domain = () => Array.from({ length: 1 + (seed % 3) }, pick).join(".");
     for (let i = 0; i < 20000; i++) {
-      const d = domain();
-      const h = i % 2 ? domain() : `${domain()}.${d}`;
-      assert.equal(hostMatches(d, h), h === d || h.endsWith(`.${d}`), `${d} vs ${h}`);
+      const d = domain().split(".").filter(Boolean).join(".") || "com";
+      const raw = i % 2 ? domain() : `${domain()}.${d}`;
+      const h = i % 5 === 0 ? `${raw.toUpperCase()}.` : raw;
+      assert.equal(hostMatches(d, h), normal(h) === d || normal(h).endsWith(`.${d}`), `${d} vs ${h}`);
     }
   });
 });
@@ -50,13 +55,13 @@ describe("hostMatches", () => {
 describe("login and identity services", () => {
   it("are recognised from the hosts, URLs and paths the page contacts", () => {
     const cases = {
-      Auth0: makePage({ contactedHosts: ["mytenant.us.auth0.com"] }),
+      Auth0: makePage({ requests: ["https://mytenant.us.auth0.com/authorize"] }),
       "Amazon Cognito": makePage({ requests: ["https://cognito-idp.ap-northeast-1.amazonaws.com/"] }),
       "Firebase Authentication": makePage({ requests: ["https://identitytoolkit.googleapis.com/v1/accounts:lookup"] }),
       "Supabase Auth": makePage({ requests: ["https://abcdefgh.supabase.co/auth/v1/user"] }),
       Keycloak: makePage({ requests: ["https://id.example.jp/realms/shop/protocol/openid-connect/token"] }),
       "Google Sign-In": makePage({ scripts: [script("https://accounts.google.com/gsi/client")] }),
-      Okta: makePage({ forms: [{ action: "https://example.okta.com/login/login.htm", method: "post", hasPassword: true }] }),
+      Okta: makePage({ forms: [{ action: "https://example.okta.com/oauth2/v1/authorize", method: "get", hasPassword: false }] }),
     };
     for (const [name, page] of Object.entries(cases)) assert.deepEqual(names(checkAuth([], db.auth, page)), [name], name);
   });
@@ -78,6 +83,28 @@ describe("login and identity services", () => {
     for (const page of pages) assert.deepEqual(checkAuth([], db.auth, page), []);
   });
 
+  it("do not fire on a vendor's docs, support, CDN or widgets", () => {
+    const vendorPages = [
+      "https://auth0.com/docs/api/authentication",
+      "https://cdn.auth0.com/website/assets/logo.svg",
+      "https://developer.okta.com/docs/",
+      "https://www.okta.com/",
+      "https://widgets.kinde.com/x.js",
+      "https://app.kinde.com/widgets/newsletter",
+      "https://www.ory.sh/docs/",
+      "https://console.ory.sh/",
+    ];
+    for (const url of vendorPages) {
+      const page = makePage({ contactedHosts: [new URL(url).hostname], requests: [url], scripts: [script(url)] });
+      assert.deepEqual(checkAuth([], db.auth, page), [], url);
+    }
+  });
+
+  it("name a technology only by the kind of its trace", () => {
+    const [f] = checkAuth([tech("Auth0", ["script https://tenant123.auth0.com/js/auth0/9.0/auth0.min.js"])], db.auth, makePage());
+    assert.deepEqual(f.evidence, ["Auth0: Auth0 (script)"]);
+  });
+
   it("name the pattern that matched, never the URL", () => {
     const page = makePage({ requests: ["https://id.example.jp/realms/secret-realm/protocol/openid-connect/token"] });
     const [f] = checkAuth([], db.auth, page);
@@ -85,7 +112,7 @@ describe("login and identity services", () => {
   });
 
   it("are reported as one info finding from real page data", async () => {
-    const report = await analyze(makePage({ contactedHosts: ["mytenant.auth0.com"], requests: ["https://identitytoolkit.googleapis.com/v1/x"] }), db, {
+    const report = await analyze(makePage({ requests: ["https://mytenant.auth0.com/co/authenticate", "https://identitytoolkit.googleapis.com/v1/x"] }), db, {
       today: new Date("2026-09-30T00:00:00Z"),
       sha1,
     });
@@ -98,7 +125,7 @@ describe("login and identity services", () => {
 describe("auth-services.json", () => {
   for (const s of db.auth) {
     it(s.name, () => {
-      assert.match(s.source, /^https:\/\//, "source link");
+      assert.ok(s.sources.length > 0 && s.sources.every((/** @type {string} */ u) => u.startsWith("https://")), "source links");
       assert.ok((s.technologies ?? []).length + (s.hosts ?? []).length + (s.urls ?? []).length + (s.paths ?? []).length > 0, "has a trace");
       for (const n of s.technologies ?? []) assert.ok(db.technologies[n]?.cats.includes(69), `${n} is a webappanalyzer authentication product`);
       for (const h of s.hosts ?? []) assert.match(h, /^(?:\*\.)?[a-z0-9-]+(?:\.(?:\*|[a-z0-9-]+))+$/, `host ${h}`);

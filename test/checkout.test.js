@@ -66,6 +66,15 @@ describe("who runs the checkout", () => {
     assert.deepEqual(checkCheckout([], db.checkout, onlyHost), [], "a host alone");
   });
 
+  it("reads cart hosts from loaded resources only, not from API calls or form targets", () => {
+    const page = makePage({
+      requests: ["https://palua.itembox.cloud/api/cart"],
+      forms: [{ action: "https://palua.itembox.cloud/p/cart", method: "post", hasPassword: false }],
+      cookies: { __fs_u_t: "x" },
+    });
+    assert.deepEqual(checkCheckout([], db.checkout, page), []);
+  });
+
   it("adds SafePeek's own traces to the fingerprint's", () => {
     const futureshop = makePage({ contactedHosts: ["palua.itembox.cloud"], globals: { _FS: {} } });
     assert.deepEqual(summary(checkCheckout([], db.checkout, futureshop)), ["checkout_saas:Future Shop"]);

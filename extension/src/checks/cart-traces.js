@@ -1,6 +1,6 @@
 // SafePeek's own traces of a cart platform: hosts the page loaded from, globals it defines, cookies it holds.
 
-import { hostMatches, pageHosts } from "./page-urls.js";
+import { hostMatches, resourceHosts } from "./page-urls.js";
 
 /**
  * @typedef {object} CartTraces
@@ -18,7 +18,7 @@ import { hostMatches, pageHosts } from "./page-urls.js";
  */
 export function cartTraceLabels(traces, page) {
   if (!traces) return [];
-  const hosts = pageHosts(page);
+  const hosts = resourceHosts(page);
   const cookieNames = Object.keys(page.cookies);
   return [
     ...(traces.hosts ?? []).filter((d) => hosts.some((h) => hostMatches(d, h))).map((d) => `host ${d}`),

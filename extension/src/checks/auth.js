@@ -10,7 +10,7 @@ const EVIDENCE_PER_SERVICE = 2;
 /**
  * @typedef {object} AuthService
  * @property {string} name
- * @property {string} source
+ * @property {string[]} sources  pages that document its traces
  * @property {string[]} [technologies]  webappanalyzer names
  * @property {string[]} [hosts]  domain patterns (see hostMatches)
  * @property {string[]} [urls]  "domain-pattern/path-prefix"
@@ -38,7 +38,8 @@ export function checkAuth(technologies, services, page) {
 }
 
 /**
- * Evidence labels name the pattern that matched, never the URL, which can carry tenant or user identifiers.
+ * Evidence labels name the pattern that matched, and a technology only by the kind of its trace, never the URL,
+ * which can carry tenant or user identifiers.
  * @param {AuthService} service
  * @param {import("../types.js").Technology[]} direct
  * @param {import("../types.js").PageData} page
@@ -49,7 +50,7 @@ function seenService(service, direct, page) {
   const urls = pageUrls(page);
   const techs = direct.filter((t) => (service.technologies ?? []).includes(t.name));
   const evidence = [
-    ...techs.map((t) => `${t.name} (${t.evidence[0] ?? ""})`),
+    ...techs.map((t) => `${t.name} (${(t.evidence[0] ?? "").split(" ")[0]})`),
     ...(service.hosts ?? []).filter((p) => hosts.some((h) => hostMatches(p, h))).map((p) => `host ${p}`),
     ...(service.urls ?? []).filter((p) => urls.some((u) => urlMatches(p, u))).map((p) => `url ${p}`),
     ...(service.paths ?? []).filter((p) => urls.some((u) => u.pathname.includes(p))).map((p) => `path ${p}`),
