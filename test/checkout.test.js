@@ -22,9 +22,10 @@ const summary = (/** @type {import("../extension/src/types.js").Finding[]} */ f)
 describe("who runs the checkout", () => {
   it("tells a hosted cart service from shop software the site runs itself", () => {
     assert.deepEqual(summary(checkCheckout([tech("Shopify")], db.checkout)), ["checkout_saas:Shopify"]);
-    assert.deepEqual(summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/html/template/default/js/eccube.js"])], db.checkout)), [
-      "checkout_self_hosted:EC-CUBE",
-    ]);
+    assert.deepEqual(
+      summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/html/template/default/js/eccube.js", "html eccube"])], db.checkout)),
+      ["checkout_self_hosted:EC-CUBE"],
+    );
     assert.deepEqual(summary(checkCheckout([tech("MakeShop"), tech("WooCommerce")], db.checkout)), [
       "checkout_saas:MakeShop",
       "checkout_self_hosted:WooCommerce",
@@ -52,7 +53,17 @@ describe("who runs the checkout", () => {
 
   it("takes one trace only for products whose every trace comes from the shop itself", () => {
     assert.deepEqual(summary(checkCheckout([tech("stores.jp", ["js STORES_JP"])], db.checkout)), ["checkout_saas:stores.jp"]);
-    assert.deepEqual(summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/js/eccube.js"])], db.checkout)), ["checkout_self_hosted:EC-CUBE"]);
+    assert.deepEqual(summary(checkCheckout([tech("Zen Cart", ["meta generator"])], db.checkout)), ["checkout_self_hosted:Zen Cart"]);
+  });
+
+  it("does not take one trace an embedded asset or copied markup could leave", () => {
+    const embeddable = [
+      tech("MakeShop", ["dom img[src*='gigaplus.makeshop.jp']"]),
+      tech("Future Shop", ["script https://blog.example/js/future-shop-widget.js"]),
+      tech("osCommerce", ["dom td.infoBoxHeading"]),
+      tech("EC-CUBE", ["script https://shop.example/js/eccube.js"]),
+    ];
+    for (const t of embeddable) assert.deepEqual(checkCheckout([t], db.checkout), [], t.evidence[0]);
   });
 
   it("does not take a trace the fingerprint marks as generic", async () => {
@@ -98,7 +109,14 @@ describe("checkout-platforms.json", () => {
       assert.ok(db.technologies[p.name].cats.includes(6), "is an ecommerce product");
       assert.ok(p.kind === "hosted" || p.kind === "self", "kind");
       assert.match(p.source, /^https:\/\//, "source link");
-      if ("singleTraceReason" in p) assert.ok(typeof p.singleTraceReason === "string" && p.singleTraceReason.length > 20, "says why one trace is enough");
+      if ("singleTraceReason" in p) {
+        assert.ok(typeof p.singleTraceReason === "string" && p.singleTraceReason.length > 20, "says why one trace is enough");
+        const fp = db.technologies[p.name];
+        assert.ok(
+          ["js", "cookies", "headers", "meta"].some((k) => k in fp),
+          "has a runtime trace that one trace could be",
+        );
+      }
     });
   }
 });

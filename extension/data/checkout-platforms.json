@@ -4,19 +4,19 @@
     {"name": "Shopify", "kind": "hosted", "source": "https://www.shopify.com/"},
     {"name": "Base", "kind": "hosted", "source": "https://thebase.com/"},
     {"name": "stores.jp", "kind": "hosted", "source": "https://stores.jp/", "singleTraceReason": "its only trace is the STORES_JP global, set by the storefront"},
-    {"name": "MakeShop", "kind": "hosted", "source": "https://www.makeshop.jp/", "singleTraceReason": "MakeShop_* globals and gigaplus.makeshop.jp assets are served only to MakeShop shops"},
+    {"name": "MakeShop", "kind": "hosted", "source": "https://www.makeshop.jp/", "singleTraceReason": "the MakeShop_* globals are set only by MakeShop storefront pages"},
     {"name": "ColorMeShop", "kind": "hosted", "source": "https://shop-pro.jp/", "singleTraceReason": "its only trace is the Colorme global, set by the storefront"},
-    {"name": "Future Shop", "kind": "hosted", "source": "https://www.future-shop.jp/", "singleTraceReason": "its only trace is future-shop.*.js, loaded by futureshop storefronts"},
+    {"name": "Future Shop", "kind": "hosted", "source": "https://www.future-shop.jp/"},
     {"name": "BigCommerce", "kind": "hosted", "source": "https://www.bigcommerce.com/"},
-    {"name": "Wix eCommerce", "kind": "hosted", "source": "https://www.wix.com/ecommerce/website", "singleTraceReason": "its direct trace is the wixstores app in the page's Wix viewer model"},
+    {"name": "Wix eCommerce", "kind": "hosted", "source": "https://www.wix.com/ecommerce/website"},
     {"name": "Salesforce Commerce Cloud", "kind": "hosted", "source": "https://www.salesforce.com/commerce/", "singleTraceReason": "Demandware headers, cookies and static paths come from the storefront itself"},
-    {"name": "EC-CUBE", "kind": "self", "source": "https://www.ec-cube.net/", "singleTraceReason": "its only trace is EC-CUBE's own eccube.js / win_op.js"},
+    {"name": "EC-CUBE", "kind": "self", "source": "https://www.ec-cube.net/"},
     {"name": "Magento", "kind": "self", "source": "https://business.adobe.com/products/magento/open-source.html", "singleTraceReason": "Magento cookies, Mage globals and static paths come from the running install"},
     {"name": "WooCommerce", "kind": "self", "source": "https://woocommerce.com/", "singleTraceReason": "requires WordPress and matches WooCommerce's own runtime assets and cookies"},
     {"name": "PrestaShop", "kind": "self", "source": "https://prestashop.com/", "singleTraceReason": "PrestaShop headers, cookies and module paths come from the running install"},
     {"name": "OpenCart", "kind": "self", "source": "https://www.opencart.com/", "singleTraceReason": "the OCSESSID cookie and OpenCart theme paths come from the running install"},
     {"name": "Welcart", "kind": "self", "source": "https://www.welcart.com/", "singleTraceReason": "requires WordPress and matches Welcart's own usces assets and cookies"},
     {"name": "Zen Cart", "kind": "self", "source": "https://www.zen-cart.com/", "singleTraceReason": "its only trace is Zen Cart's generator meta tag"},
-    {"name": "osCommerce", "kind": "self", "source": "https://www.oscommerce.com/", "singleTraceReason": "the osCsid session and osCommerce markup come from the running install"}
+    {"name": "osCommerce", "kind": "self", "source": "https://www.oscommerce.com/", "singleTraceReason": "the osCsid session cookie is set only by a running osCommerce install"}
   ]
 }

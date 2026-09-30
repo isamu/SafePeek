@@ -3,6 +3,8 @@
 import { finding } from "./finding.js";
 
 const FULL_CONFIDENCE = 100;
+// Traces only the running shop sets. A DOM selector, script URL or HTML fragment can come from an embedded asset.
+const RUNTIME_KINDS = new Set(["js", "cookie", "header", "meta"]);
 
 /**
  * @typedef {object} CheckoutPlatform
@@ -15,23 +17,24 @@ const FULL_CONFIDENCE = 100;
 /**
  * The kinds of trace behind a detection: "js", "script", "meta", "dom", "header", "cookie" …, from its evidence labels.
  * @param {import("../types.js").Technology} tech
- * @returns {number}
+ * @returns {Set<string>}
  */
 function evidenceKinds(tech) {
-  return new Set(tech.evidence.map((label) => label.split(" ")[0])).size;
+  return new Set(tech.evidence.map((label) => label.split(" ")[0]));
 }
 
 /**
- * Two kinds of trace, or one for a product whose every full-confidence trace comes from the shop itself. A trace the
- * fingerprint marks as lower confidence (Magento's `frontend` cookie, PrestaShop's `priceDisplayMethod`) is generic.
+ * Two kinds of trace, or one for a product that opts in with singleTraceReason, when that one is a runtime trace (see
+ * RUNTIME_KINDS) at full confidence. A trace the fingerprint marks lower, like Magento's `frontend` cookie, is generic.
  * @param {import("../types.js").Technology} tech
  * @param {CheckoutPlatform} platform
  * @returns {boolean}
  */
 function isEnoughEvidence(tech, platform) {
   const kinds = evidenceKinds(tech);
-  if (kinds >= 2) return true;
-  return platform.singleTraceReason !== undefined && tech.confidence >= FULL_CONFIDENCE;
+  if (kinds.size >= 2) return true;
+  const [only] = kinds;
+  return platform.singleTraceReason !== undefined && RUNTIME_KINDS.has(only) && tech.confidence >= FULL_CONFIDENCE;
 }
 
 /**
