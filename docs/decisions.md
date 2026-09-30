@@ -181,6 +181,15 @@ A scraped copy of a real shop keeps the original's canonical link or `og:url` (`
 - **Only a registrable domain is shown**, never the full host, which could be an internal or staging name (S9). A target without one (an IP address, a single-label name) is ignored.
 - **Only on a Japanese shop page that offers to buy**, since that is where a copy takes orders.
 
+## Weak signs, only together
+
+JC3 and 国民生活センター list signs that real shops also show: an unfamiliar TLD, free email as the contact, bank transfer as the only payment, extreme discounts (`docs/fake-shop-research.md`, items 6, 7, 11, 12).
+
+- **None is reported alone.** A small shop may use Gmail or take only bank transfers; an outlet may run deep sales.
+- **Two together are low, three or more medium.**
+- **Only the TLDs JC3 names** (.xyz, .top, .bid). `.shop` is left out: many legitimate Japanese shops use it.
+- **Bank transfer only is read from every payment section**, the text after each 支払方法 or 決済方法. A card or other method named in any of them clears it, so a FAQ line saying transfer only does not outweigh the actual list. A notice that claims cards but offers only transfer at checkout cannot be seen from one page.
+
 ## Where a password is sent
 
 - **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.

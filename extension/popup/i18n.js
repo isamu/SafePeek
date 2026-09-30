@@ -196,6 +196,11 @@ const JA = {
     detail: () =>
       "日本語のページなのに、日本では使わない簡体字、中国語の言語指定、「◯天」（日数）のような表現があります。警察や国民生活センターは、中国語から機械翻訳された偽ショップの特徴として挙げています。これだけで偽物とは言えませんが、会社の実在や特定商取引法に基づく表記も確かめてください。",
   },
+  shop_weak_signs: {
+    title: (p) => `偽ショップにありがちな特徴が重なっています（${p.count}つ）`,
+    detail: () =>
+      "日本サイバー犯罪対策センター（JC3）や国民生活センターが挙げる特徴のうち、次のものが同時に見つかりました：偽サイトに多いトップレベルドメイン（.xyz / .top / .bid）、連絡先がフリーメールだけ、支払方法が銀行振込だけ、70%以上の大幅割引が多数。どれも本物のショップにもあるため1つだけでは表示しません。会社の実在や特定商取引法に基づく表記を確かめ、前払いの銀行振込は避けてください。",
+  },
   shop_names_other_site: {
     title: (p) => `このショップのページは、別のサイトを本来の住所として示しています（${p.domains}）`,
     detail: () =>
@@ -418,6 +423,11 @@ const EN = {
     title: () => "A Japanese shop page shows traces of Simplified Chinese",
     detail: () =>
       "The page is in Japanese but uses Simplified Chinese characters Japanese does not use, declares Chinese as its language, or counts days with 天. The police and the National Consumer Affairs Center list this as a sign of a fake shop machine-translated from Chinese. It is not proof on its own; check that the company exists and read its 特定商取引法 notice.",
+  },
+  shop_weak_signs: {
+    title: (p) => `Several signs common to fake shops appear together (${p.count})`,
+    detail: () =>
+      "Of the signs JC3 and the National Consumer Affairs Center list, these appear together: a TLD common among fake shops (.xyz / .top / .bid), free email as the only contact, bank transfer as the only payment, many discounts of 70% or more. Real shops show each of them too, so one alone is not reported. Check that the company exists and read its 特定商取引法 notice, and avoid paying in advance by bank transfer.",
   },
   shop_names_other_site: {
     title: (p) => `This shop page names another site as its own address (${p.domains})`,
