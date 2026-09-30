@@ -3,6 +3,7 @@
 
 import { el } from "./dom.js";
 import { confidenceLabel, signalNote, strengthLabel, t } from "./i18n.js";
+import { backendReportText } from "./report-text.js";
 
 /** @type {Record<"eol" | "legacy" | "managed", "status_eol" | "status_legacy" | "status_managed">} */
 const STATUS_LABEL = { eol: "status_eol", legacy: "status_legacy", managed: "status_managed" };
@@ -77,7 +78,7 @@ function renderActions(report) {
   const actions = el("div", "backend-actions");
   const copy = el("button", "copy", t("copy_report"));
   copy.addEventListener("click", () => {
-    void navigator.clipboard.writeText(backendReportText(report)).then(() => {
+    void navigator.clipboard.writeText(backendReportText(report, chrome.runtime.getManifest().version)).then(() => {
       copy.textContent = t("copied");
     });
   });
@@ -87,22 +88,4 @@ function renderActions(report) {
   link.rel = "noopener noreferrer";
   actions.append(copy, link);
   return actions;
-}
-
-/**
- * Markdown the user can paste into the issue form. Built only from what the popup already shows.
- * @param {import("../src/analyze.js").Report} report
- * @returns {string}
- */
-function backendReportText(report) {
-  const lines = [`Page: ${report.url}`, ""];
-  for (const b of report.backends) {
-    lines.push(`- ${b.name} (${b.language}), status ${b.status}, confidence ${b.confidence}`);
-    for (const s of b.signals) lines.push(`  - [${s.weight}] ${s.note}: \`${s.match.replace(/`/g, "'")}\``);
-  }
-  if (report.backends.length === 0) lines.push("- (no backend inferred)");
-  const server = report.technologies.filter((tech) => tech.version).map((tech) => `${tech.name} ${tech.version}`);
-  if (server.length > 0) lines.push("", `Versions seen: ${server.join(", ")}`);
-  lines.push("", `SafePeek ${chrome.runtime.getManifest().version}`);
-  return lines.join("\n");
 }

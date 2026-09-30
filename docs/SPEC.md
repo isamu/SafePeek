@@ -16,7 +16,7 @@ Non-goals: active scanning or probing of sites, crawling, reputation lookups, an
 | Is the backend an abandoned framework? | **backend inference** from indirect traces: URL conventions (`.do`, `.action`, `.php`), hidden field and parameter names, headers, script names and code/comments, JS globals, cookies, error output, hostname | each guess with a **confidence** (high/medium/low) and every trace with its **strength**; end-of-life (e.g. Struts 1, Seasar2, symfony 1) and old-generation (Struts 2, CakePHP 1/2, Classic ASP, Web Forms, ColdFusion, Perl CGI) flagged |
 | Does it run on a BaaS / managed platform? | domains, SDKs, endpoints in code, platform headers (Firebase, Supabase, AWS Amplify/Cognito/AppSync/API Gateway/S3/CloudFront, Vercel, Netlify, Cloudflare Pages, App Engine/Cloud Run, Heroku) | reported as information; contradictory implied server stacks (PHP, MySQL …) are dropped |
 | Is its software past end of life? | versions from headers, fingerprints and library scans against `eol.json` (PHP, Apache 2.2, IIS, OpenSSL, Python, Drupal, Joomla, Magento 1, AngularJS, Angular, Vue 2, jQuery 1/2, Bootstrap 3/4) | `eol` / `eol_soon` findings with the date and source |
-| Is WordPress up to date? | core version from the generator tag or `/wp-includes/` asset versions; plugins and themes from `/wp-content/` asset URLs | core below 4.7 (no security updates since July 2025) high; older than the latest series medium; plugin/theme list with vulnerability lookup links; XML-RPC exposure |
+| Is WordPress up to date? | core version from the generator tag or the `?ver=` of core assets under `/wp-includes/` (not bundled libraries such as jQuery); plugins and themes from `/wp-content/` asset URLs | core below 4.7 (no security updates since July 2025) high; older than the latest series medium; plugin/theme list with vulnerability lookup links; XML-RPC exposure |
 | Which JS libraries have known CVEs? | Retire.js over script URLs, file banners, hashes and globals | vulnerable library findings with CVEs |
 | How is my card number handled? | card-like fields, provider iframes, redirects, tokenization scripts | provider frame / redirect (good), in-page tokenization (medium), raw form on the site (high) |
 | Are the basics in place? | response headers, cookies, forms, loaded resources | HTTPS, HSTS, CSP, nosniff, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts and SRI |
@@ -39,7 +39,7 @@ Everything is inference from what the page exposes. "No problems found" is never
 | S4 | Page-derived strings are rendered as text only (no `innerHTML`, `insertAdjacentHTML`). | source scan + ESLint `no-restricted-*` |
 | S5 | The only network requests are re-requests of the inspected page and its scripts, made from the page's own context (same cookies/CORS as the page, cache-first for scripts). No hard-coded remote fetch. | source scan; code review |
 | S6 | No build step. The files in `extension/` are what the browser loads. | repository layout; review |
-| S7 | Distribution is GitHub releases only (zip + SHA-256), built only from tags on commits already on `main`. No store listing, so no silent auto-update. | `release.yml` |
+| S7 | The extension is distributed through GitHub releases only (zip + SHA-256), built only from tags on commits already on `main`. No store listing, so no silent auto-update. The analysis engine alone (no popup, no manifest) is also published to npm from the same tag, with provenance. | `release.yml` |
 | S8 | Signature data changes arrive as reviewed pull requests with upstream commits recorded in `data/sources.json`. | `update-data.yml` |
 
 ## 3. Flow
@@ -106,7 +106,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 - **EOL**: hand-maintained `data/eol.json`; a version maps to the first cycle whose `below` it is under. Retire.js versions for jQuery, AngularJS, Vue, Bootstrap also feed this check.
 
 - **Backends**: hand-maintained `data/backend-signatures.json` (see `docs/backend-signatures.md`). Trace types: link, param, html, source, script, cookie, header, global, host. Confidence = sum of matched weights, capped at 100, reported from 30. When a strong `managed` backend is found, technologies that are only implied (no trace of their own) in the web framework, web server, language and database categories are dropped.
-- **WordPress**: `data/wordpress.json` holds the latest series and the backport cut-off; core version from the generator meta tag, else the most common `?ver=` of `/wp-includes/` assets; plugins and themes from `/wp-content/` asset paths.
+- **WordPress**: `data/wordpress.json` holds the latest series and the backport cut-off; core version from the generator meta tag, else the most common `?ver=` of core assets under `/wp-includes/` (`css/`, `blocks/`, `js/dist/` except `vendor/`, `js/wp-*.js`, `comment-reply`; bundled libraries such as jQuery carry their own version and are ignored); plugins and themes from `/wp-content/` asset paths.
 
 ## 7. Data
 
@@ -122,7 +122,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 
 ## 8. UI
 
-Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button and a link to the issue form — nothing is sent by SafePeek itself), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
+Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button, which copies names and paths only — no query strings, path parameters such as `;jsessionid=`, or page excerpts — and a link to the issue form; nothing is sent by SafePeek itself), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
 
 ## 9. Quality gates
 
@@ -131,7 +131,6 @@ Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: s
 ## 10. Roadmap
 
 - Firefox package (AMO self-distribution signing).
-- Publish the npm package (needs an `NPM_TOKEN` secret; the release workflow does the rest).
 - Optional in-popup "update data" that downloads data JSON (never code) from this repository's releases, behind an optional host permission.
 - Popup screenshot tests from the fixtures.
 - Same-origin iframes (card fields inside a same-site frame).

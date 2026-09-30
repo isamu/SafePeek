@@ -3,7 +3,9 @@
 const ASSET_URL = /\b(?:href|src)\s*=\s*["']([^"']*\/wp-(?:content|includes)\/[^"']*)["']/gi;
 const PLUGIN = /\/wp-content\/plugins\/([a-z0-9._-]+)\//i;
 const THEME = /\/wp-content\/themes\/([a-z0-9._-]+)\//i;
-const CORE_ASSET = /\/wp-includes\//i;
+// Core files whose ?ver= is the WordPress version. Bundled libraries (js/jquery/, js/dist/vendor/, underscore …)
+// carry their own version there, so only these paths count.
+const CORE_VERSIONED_ASSET = /\/wp-includes\/(?:css\/|blocks\/|js\/dist\/(?!vendor\/)|js\/(?:wp-[\w-]+|comment-reply)(?:\.min)?\.js)/i;
 
 /**
  * @typedef {object} WpComponent
@@ -60,7 +62,7 @@ export function extractWordPress(page) {
     const theme = THEME.exec(url);
     if (plugin) remember(plugins, plugin[1], verParam(url));
     else if (theme) remember(themes, theme[1], verParam(url));
-    else if (CORE_ASSET.test(url) && verParam(url)) coreVersions.push(verParam(url));
+    else if (CORE_VERSIONED_ASSET.test(url) && verParam(url)) coreVersions.push(verParam(url));
   }
   const generator = (page.meta.generator ?? []).map((g) => /^WordPress\s+([\d.]+)/i.exec(g)).find((m) => m);
   const version = generator ? generator[1] : mostCommon(coreVersions);
@@ -102,5 +104,5 @@ function mostCommon(values) {
  */
 function versionSource(fromGenerator, version) {
   if (fromGenerator) return "meta generator";
-  return version ? "?ver= of /wp-includes/ assets" : "";
+  return version ? "?ver= of WordPress core assets" : "";
 }

@@ -56,7 +56,7 @@ export function inferBackends(page, rules) {
     const signals = [];
     for (const signal of rule.signals) {
       const match = matchSignal(signal, page, traces);
-      if (match !== null) signals.push({ note: signal.note, noteJa: signal.noteJa ?? signal.note, weight: signal.weight, match });
+      if (match !== null) signals.push({ type: signal.type, note: signal.note, noteJa: signal.noteJa ?? signal.note, weight: signal.weight, match });
     }
     const score = signals.reduce((sum, s) => sum + s.weight, 0);
     if (score < THRESHOLD) continue;

@@ -23,7 +23,7 @@ SafePeek looks at other sites' security, so it has to be trustworthy itself:
 - **Nothing is sent anywhere.** All analysis runs in your browser. The extension pages are locked down with `connect-src 'self'`.
 - **Two permissions only:** `activeTab` and `scripting`. SafePeek can read a page only when you click its icon, and only that tab. See [docs/permissions.md](docs/permissions.md).
 - **No remote code, no eval, no build step.** The files in `extension/` are exactly what the browser runs.
-- **Distributed only from GitHub releases** (zip + SHA-256), never through a store, so there is no silent auto-update channel.
+- **The extension is distributed only from GitHub releases** (zip + SHA-256), never through a store, so there is no silent auto-update channel. The analysis engine alone is also an npm package (see below).
 - These promises are enforced by tests in CI ([`test/policy.test.js`](test/policy.test.js)).
 
 The only network activity: SafePeek re-requests the page you are on (to read its response headers) and the scripts it already loaded (to read library versions, from the browser cache where possible). Those requests go to the same servers the page itself uses.

@@ -36,4 +36,4 @@ Each trace is shown in the popup with its strength (strong ≥ 70, medium ≥ 40
 1. Open an issue with the **Backend inference** form. The popup's "Copy the inference" button gives you SafePeek's current guess and traces to paste.
 2. A maintainer adds the rule (with `note` and `noteJa`) and a test page if useful. `test/backend.test.js` validates every rule: types, weights, compilable patterns, dates and sources.
 
-Weights should reflect how unique a trace is: a field name only one framework generates is 70–80; a URL convention several frameworks share is 30–50; a single generic trace must stay below 30 so it never triggers a report on its own.
+Weights should reflect how unique a trace is: a field name only one framework generates is 70–80; a URL convention several frameworks share is 30–50; a single generic trace must stay below 30 so it never triggers a report on its own. For an end-of-life rule, a URL shape or hostname alone always stays below 30 (a test enforces it): `*.do` is also Spring MVC, so only a framework-specific trace may make the claim.

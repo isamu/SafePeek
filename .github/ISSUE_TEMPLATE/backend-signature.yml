@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for helping SafePeek recognise abandoned backends. Please do **not** paste session ids, tokens or personal data.
-        In the popup, **Copy the inference** puts SafePeek's current guess and its traces on your clipboard; paste it below.
+        In the popup, **Copy the inference** puts SafePeek's current guess and its traces on your clipboard (names and paths only: no query strings, session ids or page excerpts); paste it below.
   - type: dropdown
     id: kind
     attributes:
@@ -56,7 +56,7 @@ body:
         Types: link (URL path), param (form field / query name), html, source (script code or comments), script (script URL), cookie, header ("name: regex"), global (JS variable), host (domain).
       placeholder: |
         param | ^org\.apache\.struts\.taglib\.html\.TOKEN$ | 80 | Struts 1 token field
-        link | \.do$ | 40 | *.do action URLs
+        link | \.do$ | 20 | *.do action URLs (also Spring MVC)
       render: text
     validations:
       required: true

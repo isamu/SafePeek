@@ -19,9 +19,9 @@
         {
           "type": "link",
           "pattern": "\\.do$",
-          "weight": 40,
-          "note": "*.do action URLs (Struts 1 convention)",
-          "noteJa": "*.do 形式のURL（Struts 1 の慣習）"
+          "weight": 20,
+          "note": "*.do action URLs (Struts 1 convention, also common in Spring MVC)",
+          "noteJa": "*.do 形式のURL（Struts 1 の慣習。Spring MVC でもよく使われる）"
         },
         {
           "type": "html",
@@ -62,7 +62,7 @@
         },
         {
           "type": "script",
-          "pattern": "teeda|kumu",
+          "pattern": "/(?:teeda|kumu)(?:\\.min)?\\.js(?:[?#]|$)",
           "weight": 60,
           "note": "Teeda or Kumu (Seasar) script file",
           "noteJa": "Teeda / Kumu（Seasar）のスクリプトファイル"
@@ -100,7 +100,7 @@
         {
           "type": "link",
           "pattern": "/(?:frontend|backend)(?:_dev)?\\.php(?:/|$)",
-          "weight": 40,
+          "weight": 20,
           "note": "symfony 1 front controller URL",
           "noteJa": "symfony 1 のフロントコントローラのURL"
         },

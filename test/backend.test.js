@@ -76,6 +76,21 @@ describe("inferBackends (real rules)", () => {
     assert.deepEqual(inferBackends(makePage(), db.backends), []);
   });
 
+  it("does not call a site end-of-life from a URL shape or a look-alike script name alone", () => {
+    for (const page of [
+      makePage({ html: '<a href="/search.do">x</a>' }),
+      makePage({ html: '<a href="/backend.php/login">x</a>' }),
+      makePage({ scripts: [script("https://cdn.example/js/kumuuk-slider.js"), script("https://shop.example/js/steedalert.js")] }),
+    ]) {
+      assert.deepEqual(checkBackends(inferBackends(page, db.backends), today), [], page.html + page.scripts.map((x) => x.src).join());
+    }
+  });
+
+  it("still recognises the Seasar script files themselves", () => {
+    const found = byName(inferBackends(makePage({ scripts: [script("https://share.example/js/kumu.js?v=2")] }), db.backends));
+    assert.equal(found["Seasar2 (SAStruts / Teeda)"]?.confidence, 60);
+  });
+
   it("does not report a single weak trace", () => {
     const found = inferBackends(makePage({ html: '<input name="_token">' }), db.backends);
     assert.deepEqual(found, []);
@@ -135,13 +150,14 @@ describe("checkBackends", () => {
   });
 
   it("carries the weighted signals to the finding", () => {
-    const signals = [{ note: "n", noteJa: "n", weight: 80, match: "m" }];
+    const signals = [{ type: /** @type {const} */ ("param"), note: "n", noteJa: "n", weight: 80, match: "m" }];
     assert.deepEqual(checkBackends([backend({ signals })], today)[0].signals, signals);
   });
 });
 
 describe("backend-signatures.json (contributed rules)", () => {
   const file = JSON.parse(readFileSync(new URL("../extension/data/backend-signatures.json", import.meta.url), "utf8"));
+  const REPORT_THRESHOLD = 30;
   const TYPES = ["link", "param", "html", "source", "script", "cookie", "header", "global", "host"];
 
   for (const rule of file.backends) {
@@ -161,6 +177,14 @@ describe("backend-signatures.json (contributed rules)", () => {
       }
     });
   }
+
+  it("never lets a URL shape or hostname alone reach an end-of-life report", () => {
+    for (const rule of file.backends.filter((/** @type {any} */ r) => r.status === "eol")) {
+      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "link" || x.type === "host")) {
+        assert.ok(s.weight < REPORT_THRESHOLD, `${rule.name}: ${s.pattern} weighs ${s.weight}`);
+      }
+    }
+  });
 
   it("has unique names", () => {
     const names = file.backends.map((/** @type {any} */ r) => r.name);

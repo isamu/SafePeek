@@ -25,13 +25,31 @@ describe("extractWordPress", () => {
     const wp = extractWordPress(makePage({ url: "https://blog.example/", html: WP_HTML }));
     assert.equal(wp.detected, true);
     assert.equal(wp.version, "4.9.8", "the most common ?ver= of /wp-includes/ wins over jQuery's own");
-    assert.equal(wp.versionSource, "?ver= of /wp-includes/ assets");
+    assert.equal(wp.versionSource, "?ver= of WordPress core assets");
     assert.deepEqual(wp.plugins, [
       { slug: "contact-form-7", version: "5.1.1" },
       { slug: "woocommerce", version: "3.4.5" },
     ]);
     assert.deepEqual(wp.themes, [{ slug: "twentyseventeen", version: "4.9.8" }]);
     assert.equal(wp.xmlrpc, true);
+  });
+
+  it("does not take a bundled library's ?ver= for the WordPress version", () => {
+    const html = [
+      '<script src="/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>',
+      '<script src="/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"></script>',
+      '<script src="/wp-includes/js/dist/vendor/react.min.js?ver=18.3.1"></script>',
+    ].join("");
+    const wp = extractWordPress(makePage({ html }));
+    assert.equal(wp.detected, true);
+    assert.equal(wp.version, "");
+    assert.deepEqual(checkWordPress(wp, db.wordpress, today), []);
+  });
+
+  it("reads the version from core styles, blocks and scripts", () => {
+    for (const path of ["css/dist/block-library/style.min.css", "js/dist/hooks.min.js", "js/wp-emoji-release.min.js", "js/comment-reply.min.js"]) {
+      assert.equal(extractWordPress(makePage({ html: `<link href="/wp-includes/${path}?ver=7.1.2">` })).version, "7.1.2", path);
+    }
   });
 
   it("prefers the generator meta tag", () => {

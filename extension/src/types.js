@@ -77,6 +77,7 @@
 
 /**
  * @typedef {object} BackendSignal
+ * @property {import("./engine/backend.js").Signal["type"]} type  where in the page the trace was found
  * @property {string} note
  * @property {string} noteJa
  * @property {number} weight  how strongly this trace points at the backend (1-100)
