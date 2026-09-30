@@ -6,6 +6,7 @@
 // Usage:
 //   node tools/update-data.mjs                      # clones both sources into a temp dir
 //   node tools/update-data.mjs --webappanalyzer DIR --retire DIR   # uses existing checkouts
+//   node tools/update-data.mjs --only public-suffixes             # refreshes the Public Suffix List alone
 
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -17,6 +18,7 @@ const OUT = new URL("../extension/data/", import.meta.url);
 const SOURCES = {
   webappanalyzer: "https://github.com/enthec/webappanalyzer.git",
   retire: "https://github.com/RetireJS/retire.js.git",
+  publicSuffixes: "https://github.com/publicsuffix/list.git",
 };
 
 // Only the fields the extension's matcher understands. Descriptions, icons and pricing are dropped
@@ -90,8 +92,38 @@ function buildTechnologies(dir) {
   return { technologies: trimmed, categories };
 }
 
+/**
+ * The Public Suffix List as three rule sets: plain suffixes, "*." wildcards and "!" exceptions, each split into the
+ * ICANN section and the PRIVATE one (shared hosting such as github.io or vercel.app, where each subdomain is a
+ * different customer). Rules are kept in their ASCII (punycode) form, as URL hostnames are.
+ */
+function buildPublicSuffixes(dir) {
+  const text = readFileSync(join(dir, "public_suffix_list.dat"), "utf8");
+  const sets = { icann: [], private: [] };
+  let section = "icann";
+  for (const raw of text.split("\n")) {
+    const line = raw.trim();
+    if (line.includes("===BEGIN PRIVATE DOMAINS===")) section = "private";
+    if (line === "" || line.startsWith("//")) continue;
+    const prefix = ["!", "*."].find((p) => line.startsWith(p)) ?? "";
+    sets[section].push(prefix + new URL(`http://${line.slice(prefix.length)}`).hostname);
+  }
+  return sets;
+}
+
+function updatePublicSuffixes(dir, sources) {
+  writeJson("public-suffixes.json", buildPublicSuffixes(dir));
+  sources.publicSuffixes = { url: SOURCES.publicSuffixes, license: "MPL-2.0", ...commitOf(dir) };
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.only === "public-suffixes") {
+    const sources = readJson(new URL("sources.json", OUT));
+    updatePublicSuffixes(checkout("publicSuffixes", args.publicSuffixes), sources);
+    writeFileSync(new URL("sources.json", OUT), JSON.stringify(sources, null, 2) + "\n");
+    return;
+  }
   const wapDir = checkout("webappanalyzer", args.webappanalyzer);
   const retireDir = checkout("retire", args.retire);
 
@@ -104,6 +136,7 @@ function main() {
     webappanalyzer: { url: SOURCES.webappanalyzer, license: "GPL-3.0", ...commitOf(wapDir) },
     retire: { url: SOURCES.retire, license: "Apache-2.0", ...commitOf(retireDir) },
   };
+  updatePublicSuffixes(checkout("publicSuffixes", args.publicSuffixes), sources);
   writeFileSync(new URL("sources.json", OUT), JSON.stringify(sources, null, 2) + "\n");
   console.log(`technologies: ${Object.keys(technologies).length}, categories: ${Object.keys(categories).length}`);
 }
