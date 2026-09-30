@@ -178,7 +178,7 @@ Fake shops come from shared kits, and a kit's placeholders are often left in (`d
 A scraped copy of a real shop keeps the original's canonical link or `og:url` (`docs/fake-shop-research.md`, item 8). No authority states this rule; the copying itself is documented.
 
 - **Another organisation only.** The related-systems rule decides, so a brand's other country domain (brand.jp ↔ brand.com) and its subdomains are its own.
-- **Only the registrable domain is shown**, never the full host, which could be an internal or staging name (S9).
+- **Only a registrable domain is shown**, never the full host, which could be an internal or staging name (S9). A target without one (an IP address, a single-label name) is ignored.
 - **Only on a Japanese shop page that offers to buy**, since that is where a copy takes orders.
 
 ## Where a password is sent

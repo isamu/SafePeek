@@ -29,6 +29,13 @@ describe("a shop page naming another site as its own", () => {
     assert.deepEqual(checkCopiedShop(brand, suffixes), [], "brand-store.jp and brand-store.com");
   });
 
+  it("never shows an internal-looking target: an IP address, a single-label name, or a bare suffix", () => {
+    const privateAddress = [192, 168, 0, 10].join(".");
+    for (const href of ["https://staging/items/1", `https://${privateAddress}/items/1`, "https://[fd00::1]/items/1", "https://co.jp/"]) {
+      assert.deepEqual(checkCopiedShop(shop(`<link rel="canonical" href="${href}">`), suffixes), [], href);
+    }
+  });
+
   it("ignores links that are not canonical, and pages that are not Japanese shops", () => {
     assert.deepEqual(checkCopiedShop(shop('<link rel="alternate" href="https://real-brand.co.jp/en">'), suffixes), []);
     const article = makePage({

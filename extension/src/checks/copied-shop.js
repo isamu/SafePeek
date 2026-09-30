@@ -22,7 +22,9 @@ export function checkCopiedShop(page, suffixes) {
   const others = declaredAddresses(page)
     .map((address) => hostOf(address, page.url))
     .filter((host) => host !== "" && host !== pageHost && !isRelatedHost(pageHost, host, suffixes))
-    .map((host) => registrable(host, suffixes)?.domain ?? host);
+    .map((host) => registrable(host, suffixes))
+    // An IP address or a single-label name has no registrable domain to show, and may be internal (S9).
+    .flatMap((r) => (r && r.suffix !== "" ? [r.domain] : []));
   const domains = [...new Set(others)];
   if (domains.length === 0) return [];
   return [finding("shop_names_other_site", "medium", "page", { domains: domains.join(", ") }, domains)];
