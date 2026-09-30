@@ -1,5 +1,7 @@
 // SafePeek's own traces of a cart platform: hosts the page loaded from, globals it defines, cookies it holds.
 
+import { hostMatches, pageHosts } from "./page-urls.js";
+
 /**
  * @typedef {object} CartTraces
  * @property {string[]} [hosts]  domains; a host matches itself and its subdomains
@@ -19,7 +21,7 @@ export function cartTraceLabels(traces, page) {
   const hosts = pageHosts(page);
   const cookieNames = Object.keys(page.cookies);
   return [
-    ...(traces.hosts ?? []).filter((d) => hosts.some((h) => h === d || h.endsWith(`.${d}`))).map((d) => `host ${d}`),
+    ...(traces.hosts ?? []).filter((d) => hosts.some((h) => hostMatches(d, h))).map((d) => `host ${d}`),
     ...(traces.globals ?? []).filter((path) => path in page.globals).map((path) => `js ${path}`),
     ...(traces.cookies ?? []).filter((name) => cookieNames.some((c) => cookieMatches(name, c))).map((name) => `cookie ${name}`),
   ];
@@ -32,28 +34,6 @@ export function cartTraceLabels(traces, page) {
  */
 function cookieMatches(pattern, name) {
   return pattern.endsWith("*") ? name.startsWith(pattern.slice(0, -1)) : name === pattern;
-}
-
-/**
- * Hosts the page loaded anything from, including resources the timing record may already have dropped.
- * @param {import("../types.js").PageData} page
- * @returns {string[]}
- */
-function pageHosts(page) {
-  const urls = [...page.scripts.map((s) => s.src ?? ""), ...page.stylesheets, ...page.images, ...page.iframes];
-  return [...(page.contactedHosts ?? []), ...urls.map(hostOf)].filter((h) => h !== "");
-}
-
-/**
- * @param {string} url
- * @returns {string}
- */
-function hostOf(url) {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return "";
-  }
 }
 
 /**

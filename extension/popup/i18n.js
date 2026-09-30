@@ -70,6 +70,11 @@ const JA = {
     detail: () =>
       "ショップ機能を提供しているのはカートサービスです。決済画面もそのサービスが用意するのが一般的ですが、カードを入力する画面の方式は決済画面でもう一度確かめてください。",
   },
+  auth_services: {
+    title: (p) => `ログインに外部の認証サービスを使っています（${p.services}）`,
+    detail: () =>
+      "パスワードなどのログイン情報は、このサービスが預かっている可能性があります。どのサービスに何が渡るかは、ログイン画面やプライバシーポリシーで確かめてください。",
+  },
   checkout_self_hosted: {
     title: (p) => `ショップは自社で設置するECソフトです（${p.platforms}）`,
     detail: () => "ECソフトと追加プラグインの更新は運営者の責任です。古いまま放置されると、決済画面の改ざんなどに使われることがあります。",
@@ -187,6 +192,11 @@ const EN = {
   checkout_saas: {
     title: (p) => `The shop is on a hosted cart service (${p.platforms})`,
     detail: () => "A cart service provides the shop, and usually its checkout as well; check how the card is entered on the checkout page itself.",
+  },
+  auth_services: {
+    title: (p) => `Login uses an external identity service (${p.services})`,
+    detail: () =>
+      "Your login details, such as a password, may be held by this service rather than the site. Check the login page and the privacy policy for what goes where.",
   },
   checkout_self_hosted: {
     title: (p) => `The shop is software the site runs itself (${p.platforms})`,

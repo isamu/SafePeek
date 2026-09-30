@@ -5,6 +5,7 @@ import { checkEol, checkLibraries } from "./checks/eol.js";
 import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
+import { checkAuth } from "./checks/auth.js";
 import { checkBackends } from "./checks/backend.js";
 import { inferBackends } from "./engine/backend.js";
 import { checkWordPress } from "./checks/wordpress.js";
@@ -28,6 +29,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./engine/backend.js").BackendRule[]} backends
  * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
  * @property {import("./checks/checkout.js").CheckoutPlatform[]} checkout
+ * @property {import("./checks/auth.js").AuthService[]} auth
  */
 
 /**
@@ -59,6 +61,7 @@ export async function analyze(page, db, env) {
     ...checkTransport(page),
     ...checkPayment(page, db.providers),
     ...checkCheckout(technologies, db.checkout, page),
+    ...checkAuth(technologies, db.auth, page),
     ...checkBackends(backends, env.today),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),
