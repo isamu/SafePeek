@@ -13,10 +13,10 @@
     {"name": "Google Sign-In", "sources": ["https://developers.google.com/identity/gsi/web/guides/client-library"], "technologies": ["Google Sign-in"], "urls": ["accounts.google.com/gsi/"]},
     {"name": "Sign in with Apple", "sources": ["https://developer.apple.com/documentation/signinwithapplejs"], "technologies": ["Apple Sign-in"]},
     {"name": "LINE Login", "sources": ["https://developers.line.biz/en/docs/line-login/"], "technologies": ["LINE Login"]},
-    {"name": "Stytch", "sources": ["https://stytch.com/docs"], "hosts": ["api.stytch.com"]},
+    {"name": "Stytch", "sources": ["https://stytch.com/docs/api-reference/consumer/api/overview.md"], "hosts": ["api.stytch.com"]},
     {"name": "WorkOS", "sources": ["https://github.com/workos/workos-node/blob/main/src/workos.ts"], "hosts": ["api.workos.com"]},
     {"name": "Kinde", "sources": ["https://github.com/kinde-oss/kinde-auth-pkce-js/blob/main/src/createKindeClient.ts"], "urls": ["kinde.com/oauth2/"]},
-    {"name": "Descope", "sources": ["https://docs.descope.com/"], "hosts": ["api.descope.com"]},
+    {"name": "Descope", "sources": ["https://docs.descope.com/examples/Descope_API.yaml"], "hosts": ["api.descope.com"]},
     {"name": "Ory", "sources": ["https://www.ory.sh/docs/guides/custom-domains"], "hosts": ["*.projects.oryapis.com"]}
   ]
 }
