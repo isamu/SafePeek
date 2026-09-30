@@ -57,6 +57,8 @@ Only `collector.js`, `probe.js` and `popup/scan.js` touch browser APIs. Everythi
 
 URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, each download stopped at 2 MB and at 5 s including the body, `cache: force-cache`; only a completely read body is hashed); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); attributes of up to 200 form fields (name, id, autocomplete, placeholder, aria-label — never their values), with their owner form and whether that form has a password field (by form ownership, so `form="…"` fields outside the `<form>` count), classified as card fields by `src/checks/cardfield.js`, which excludes loyalty/membership/gift cards and one-time codes, counts an expiry field only by `cc-exp*` autocomplete (a hint such as 有効期限 alone is not a card), and in a form with a password field (a login or sign-up) counts that form's fields only when it asks for both a card number and a security code or expiry; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
 
+The page's same-origin frames, nested ones included (up to 10), are read like the page itself for form fields, forms, iframes, stylesheets, images and external script URLs (not their bodies), which count as the site's own. Meta tags, script bodies, cookies, HTML and text still come from the top document only. A frame on another origin cannot be read and is judged by its URL (e.g. a provider's card frame).
+
 ## 5. Checks
 
 Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger` if any high, `caution` if any medium, else `ok`. The UI always states that `ok` is not a guarantee.
@@ -137,5 +139,4 @@ Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: s
 - Firefox package (AMO self-distribution signing).
 - Optional in-popup "update data" that downloads data JSON (never code) from this repository's releases, behind an optional host permission.
 - Popup screenshot tests from the fixtures.
-- Same-origin iframes (card fields inside a same-site frame).
 - More EOL products and Japanese payment providers, each with a source.

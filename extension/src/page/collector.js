@@ -14,6 +14,7 @@
   const FETCH_TIMEOUT_MS = 5000;
   const MAX_INPUTS = 200;
   const MAX_FORMS = 50;
+  const MAX_FRAMES = 10;
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
 
   /**
@@ -102,6 +103,21 @@
     return [...fetchedScripts, ...inline];
   }
 
+  /**
+   * External script URLs of the same-origin frames, so a tokenization script loaded inside a framed checkout is
+   * seen. Only the URL: their bodies are not fetched and inline code is not read.
+   * @param {Document[]} docs
+   * @returns {import("../types.js").ScriptInfo[]}
+   */
+  function frameScripts(docs) {
+    return docs
+      .slice(1)
+      .flatMap((doc) => [...doc.querySelectorAll("script[src]")])
+      .map((el) => ({ src: absolute(el.getAttribute("src") ?? "", el.baseURI), integrity: el.getAttribute("integrity") ?? "", content: "", fetched: false }))
+      .filter((script) => script.src !== "")
+      .slice(0, MAX_SCRIPTS);
+  }
+
   /** @returns {{ meta: Record<string, string[]>, metaCsp: string[] }} */
   function readMeta() {
     /** @type {Record<string, string[]>} */
@@ -120,19 +136,71 @@
   }
 
   /**
+   * The page and its same-origin frames, nested ones included, up to MAX_FRAMES. A frame on another origin (a
+   * payment provider's) cannot be read and is judged by its URL instead; a same-origin frame is part of the site's
+   * own page.
+   * @returns {Document[]}
+   */
+  function documents() {
+    const docs = [document];
+    for (let i = 0; i < docs.length && docs.length <= MAX_FRAMES; i++) {
+      for (const frame of docs[i].querySelectorAll("iframe, frame")) {
+        const doc = readableDocument(frame);
+        if (doc && docs.length <= MAX_FRAMES) docs.push(doc);
+      }
+    }
+    return docs;
+  }
+
+  /**
+   * @param {Element} frame
+   * @returns {Document | null}  its document when the frame is on the same origin
+   */
+  function readableDocument(frame) {
+    if (!isFrame(frame)) return null;
+    try {
+      const doc = frame.contentDocument;
+      return doc?.documentElement ? doc : null;
+    } catch {
+      return null; // another origin
+    }
+  }
+
+  /**
+   * @param {Element} el
+   * @returns {el is HTMLIFrameElement | HTMLFrameElement}
+   */
+  function isFrame(el) {
+    return el.tagName === "IFRAME" || el.tagName === "FRAME";
+  }
+
+  /**
+   * By tag name, so it also holds for elements of a frame, whose constructors differ from this window's.
+   * @param {Element} el
+   * @returns {el is HTMLInputElement | HTMLSelectElement}
+   */
+  function isField(el) {
+    return el.tagName === "INPUT" || el.tagName === "SELECT";
+  }
+
+  /**
    * By form ownership, so a password field attached with form="…" from outside the <form> counts too.
    * @param {HTMLFormElement} form
    * @returns {boolean}
    */
   function hasPasswordField(form) {
-    return [...form.elements].some((el) => el instanceof HTMLInputElement && el.type === "password");
+    return [...form.elements].some((el) => isField(el) && el.tagName === "INPUT" && el.type === "password");
   }
 
-  /** @returns {import("../types.js").InputField[]} */
-  function readInputs() {
-    const forms = [...document.forms];
-    return [...document.querySelectorAll("input, select")]
-      .filter((el) => !(el instanceof HTMLInputElement && SKIPPED_INPUT_TYPES.includes(el.type)))
+  /**
+   * @param {Document[]} docs
+   * @returns {import("../types.js").InputField[]}
+   */
+  function readInputs(docs) {
+    const forms = docs.flatMap((doc) => [...doc.forms]);
+    return docs
+      .flatMap((doc) => [...doc.querySelectorAll("input, select")])
+      .filter((el) => isField(el) && !(el.tagName === "INPUT" && SKIPPED_INPUT_TYPES.includes(el.type)))
       .slice(0, MAX_INPUTS)
       .map((el) => ({
         tag: el.tagName.toLowerCase(),
@@ -147,21 +215,27 @@
 
   /**
    * @param {Element} el
-   * @param {HTMLFormElement[]} forms  every form of the document, not only the ones collected
+   * @param {HTMLFormElement[]} forms  every form of the page and its same-origin frames, not only the ones collected
    * @returns {{ form: number, inPasswordForm: boolean }}
    */
   function formOf(el, forms) {
-    const owner = el instanceof HTMLInputElement || el instanceof HTMLSelectElement ? el.form : null;
+    const owner = isField(el) ? el.form : null;
     return owner ? { form: forms.indexOf(owner), inPasswordForm: hasPasswordField(owner) } : { form: -1, inPasswordForm: false };
   }
 
-  /** @returns {import("../types.js").FormInfo[]} */
-  function readForms() {
-    return [...document.forms].slice(0, MAX_FORMS).map((form) => ({
-      action: form.action,
-      method: (form.getAttribute("method") ?? "get").toLowerCase(),
-      hasPassword: hasPasswordField(form),
-    }));
+  /**
+   * @param {Document[]} docs
+   * @returns {import("../types.js").FormInfo[]}
+   */
+  function readForms(docs) {
+    return docs
+      .flatMap((doc) => [...doc.forms])
+      .slice(0, MAX_FORMS)
+      .map((form) => ({
+        action: form.action,
+        method: (form.getAttribute("method") ?? "get").toLowerCase(),
+        hasPassword: hasPasswordField(form),
+      }));
   }
 
   /** @returns {string} */
@@ -222,15 +296,30 @@
   }
 
   /**
+   * @param {Document[]} docs
    * @param {string} selector
    * @param {string} attr
    * @returns {string[]}
    */
-  function urls(selector, attr) {
-    return [...document.querySelectorAll(selector)]
-      .map((el) => (el instanceof HTMLElement ? /** @type {any} */ (el)[attr] : ""))
-      .filter((u) => typeof u === "string" && u !== "")
+  function urls(docs, selector, attr) {
+    return docs
+      .flatMap((doc) => [...doc.querySelectorAll(selector)])
+      .map((el) => absolute(el.getAttribute(attr) ?? "", el.baseURI))
+      .filter((u) => u !== "")
       .slice(0, 200);
+  }
+
+  /**
+   * @param {string} raw
+   * @param {string} base
+   * @returns {string}
+   */
+  function absolute(raw, base) {
+    try {
+      return raw.trim() === "" ? "" : new URL(raw, base).href;
+    } catch {
+      return "";
+    }
   }
 
   /**
@@ -239,6 +328,7 @@
    * @returns {Promise<Omit<import("../types.js").PageData, "globals">>}
    */
   async function collect(domQueries, paymentHosts) {
+    const docs = documents();
     const [headers, scripts] = await Promise.all([readHeaders(), readScripts()]);
     return {
       url: location.href,
@@ -246,13 +336,13 @@
       origin: location.origin,
       headers,
       ...readMeta(),
-      scripts,
-      stylesheets: urls("link[rel~=stylesheet][href]", "href"),
-      iframes: urls("iframe[src]", "src"),
-      images: urls("img[src]", "src"),
+      scripts: [...scripts, ...frameScripts(docs)],
+      stylesheets: urls(docs, "link[rel~=stylesheet][href]", "href"),
+      iframes: urls(docs, "iframe[src]", "src"),
+      images: urls(docs, "img[src]", "src"),
       links: readPaymentLinks(paymentHosts),
-      forms: readForms(),
-      inputs: readInputs(),
+      forms: readForms(docs),
+      inputs: readInputs(docs),
       cookies: readCookies(),
       html: document.documentElement.outerHTML.slice(0, MAX_HTML),
       text: (document.body?.innerText ?? "").slice(0, MAX_TEXT),
