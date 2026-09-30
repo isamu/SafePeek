@@ -15,7 +15,8 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 - **Who runs the shop**: a hosted cart service (Shopify, BASE, MakeShop, futureshop …, recognised even on the shop's own domain) or shop software the site runs itself (EC-CUBE, Magento, WooCommerce …).
 - **API calls the page already made** (resource timing, no new request) feed backend inference; only the host and the matched part are shown.
 - **Backend inference** from weighted traces (URL conventions, parameters, headers, cookies, globals, script names, comments, error output), with confidence per guess and strength per trace; EOL and legacy backends flagged.
-- **BaaS / managed platforms** (Firebase, Supabase, AWS, Vercel …).
+- **BaaS / managed platforms** (Firebase, Supabase, AWS …), and **hosting** that only serves the page (Vercel, Netlify, Cloudflare Pages …).
+- **Related systems**: other hosts of the same organisation the page hands off to, with what their URL shapes suggest.
 - **WordPress**: core support status, plugins and themes, XML-RPC.
 - **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts.
 - **False-result report link**: opens a GitHub issue form pre-filled with the origin and the finding only; the user submits it.

@@ -8,6 +8,8 @@ import { checkCheckout } from "./checks/checkout.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkBackends } from "./checks/backend.js";
 import { inferBackends } from "./engine/backend.js";
+import { inferRelatedSystems } from "./engine/related-systems.js";
+import { checkRelatedSystems } from "./checks/related.js";
 import { checkWordPress } from "./checks/wordpress.js";
 import { extractWordPress } from "./engine/wordpress.js";
 import { detectTechnologies } from "./engine/technologies.js";
@@ -63,6 +65,7 @@ export async function analyze(page, db, env) {
     ...checkCheckout(technologies, db.checkout, page),
     ...checkAuth(technologies, db.auth, page),
     ...checkBackends(backends, env.today),
+    ...checkRelatedSystems(inferRelatedSystems(page, db.backends)),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),
     ...checkEol(technologies, db.eol, env.today),
