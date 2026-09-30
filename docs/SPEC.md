@@ -28,6 +28,7 @@ Everything is inference from what the page exposes. "No problems found" is never
 - **Browser extension** (Chrome, from GitHub; see README).
 - **npm package `safepeek`**: the same engine as ES modules (`extension/package.json`, entry `src/index.js`), for use in crawlers, CI or other tools. Page data must be collected in a real page (the collector plus `probeGlobals`).
 - **Contributing traces**: users paste the popup's "Copy the inference" output into the *Backend inference* issue form; maintainers turn it into rules (`docs/backend-signatures.md`).
+- **Reporting a false result**: every finding, and the technology list, has a "Report a false result" link that opens the *False result* issue form pre-filled with the site's origin, the finding's id, severity and area, parameters taken from SafePeek's own data (names, dates, CVE ids) or plain numbers and versions, and the extension and data versions — never evidence lines, header values or other page-controlled text (`popup/false-report.js`). Nothing is sent until the user submits the form on GitHub.
 
 ## 2. Security invariants (enforced by `test/policy.test.js`)
 

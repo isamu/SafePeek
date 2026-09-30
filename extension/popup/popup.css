@@ -419,3 +419,10 @@ main {
   color: var(--muted);
   font-size: 11px;
 }
+
+.report-false {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}

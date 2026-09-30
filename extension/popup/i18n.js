@@ -262,6 +262,8 @@ const UI = {
     copy_report: "推定結果をコピー",
     copied: "コピーしました",
     report_link: "推定の誤りや新しい痕跡を報告",
+    report_false: "誤判定を報告",
+    report_false_tech: "検出の誤りを報告",
   },
   en: {
     scanning: "Scanning…",
@@ -300,6 +302,8 @@ const UI = {
     copy_report: "Copy the inference",
     copied: "Copied",
     report_link: "Report a wrong guess or a new trace",
+    report_false: "Report a false result",
+    report_false_tech: "Report a wrong detection",
   },
 };
 
