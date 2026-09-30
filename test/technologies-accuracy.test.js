@@ -63,6 +63,16 @@ describe("technology detection", () => {
     );
   });
 
+  it("keeps a platform seen only in script code when a directly seen technology implies it", () => {
+    const page = makePage({
+      meta: { generator: ["WordPress 6.9.9"] },
+      scripts: [script("https://news.example/app.js", 'fetch("/wp-admin/admin-ajax.php?action=x")')],
+    });
+    const php = detectTechnologies(page, db).find((t) => t.name === "PHP");
+    assert.ok(php, "PHP implied by WordPress");
+    assert.ok(php.evidence.includes("implied by WordPress"), php.evidence.join(", "));
+  });
+
   it("does not let a confidence:0 hit imply anything", () => {
     const tiny = {
       technologies: { Theme: { meta: { version: "^(.+)$\\;version:\\1\\;confidence:0" }, implies: "Shop", cats: [] }, Shop: { cats: [] } },
