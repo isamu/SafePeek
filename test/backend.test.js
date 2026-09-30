@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { inferBackends } from "../extension/src/engine/backend.js";
 import { extractParams, extractPaths } from "../extension/src/engine/page-traces.js";
 import { checkBackends } from "../extension/src/checks/backend.js";
+import { isFixedText } from "../extension/src/engine/fixed-text.js";
 import { loadDb, makePage, script } from "./helpers.js";
 
 const db = loadDb();
@@ -264,6 +265,37 @@ describe("checkBackends", () => {
     for (const text of internal) assert.ok(!JSON.stringify(found).includes(text), text);
   });
 
+  it("shows no text beside a trace in script code, markup or a script URL, and only fixed matched text", () => {
+    const secret = ["SECRET", "7f3a9c"].join("-");
+    const page = makePage({
+      html: `<html><head><meta content="${secret}" name="_csrf_header"><script src="https://cdn.example/supabase.js?sig=${secret}"></script></head>
+<body><!-- build ${secret} Powered by SAStruts --></body></html>`,
+      scripts: [
+        script(
+          `const url = "https://abc.supabase.co/rest/v1"; const key = "${secret}"; const api = "https://x1.execute-api.ap-northeast-1.amazonaws.com/prod?t=${secret}";`,
+        ),
+      ],
+    });
+    page.scripts.push({ src: `https://cdn.example/supabase.js?sig=${secret}`, integrity: "", content: "", fetched: false });
+    const found = inferBackends(page, db.backends);
+    const signals = found.flatMap((b) => b.signals);
+    assert.ok(signals.length > 0);
+    assert.ok(!JSON.stringify(found).includes(secret));
+    for (const s of signals.filter((x) => ["html", "source", "script"].includes(x.type))) {
+      assert.ok(s.match === "" || !/[^\w.:/-]/.test(s.match), `${s.note}: ${s.match}`);
+    }
+    assert.ok(
+      signals.some((s) => s.type === "script" && s.match.toLowerCase() === "supabase"),
+      "a fixed pattern still shows what it matched",
+    );
+  });
+
+  it("tells fixed patterns from ones that can match page text", () => {
+    for (const fixed of ["supabase", "\\.supabase\\.co\\b", ";jsessionid=", "WebResource\\.axd|ScriptResource\\.axd", "/sf/(?:sf_|prototype)"])
+      assert.ok(isFixedText(fixed), fixed);
+    for (const variable of ["<meta[^>]+name=", "a.b", "x+", "x*", "x?", "x{2}", "\\w", "\\d", "\\s", "[ab]"]) assert.ok(!isFixedText(variable), variable);
+  });
+
   it("carries the weighted signals to the finding", () => {
     const signals = [{ type: /** @type {const} */ ("param"), note: "n", noteJa: "n", weight: 80, match: "m" }];
     assert.deepEqual(checkBackends([backend({ signals })], today)[0].signals, signals);
@@ -277,8 +309,7 @@ describe("checkBackends", () => {
  */
 const capturesPathText = (pattern) => {
   const afterScheme = pattern.replace(/^\^https:\/\//, "");
-  const path = afterScheme.slice(Math.max(0, afterScheme.indexOf("/")));
-  return /\[|(?<!\\)\.|[*+{?]|\\[wWsSdD]/.test(path.replaceAll("(?:", "("));
+  return !isFixedText(afterScheme.slice(Math.max(0, afterScheme.indexOf("/"))));
 };
 
 describe("backend-signatures.json (contributed rules)", () => {
@@ -300,7 +331,6 @@ describe("backend-signatures.json (contributed rules)", () => {
         if (s.type === "header") assert.match(s.pattern, /^[\w-]+: /, "header pattern is 'name: regex'");
         if (s.type === "global") assert.match(s.pattern, /^[A-Za-z_$][\w$.]*$/, "global is a property path");
         else assert.doesNotThrow(() => new RegExp(s.type === "header" ? s.pattern.slice(s.pattern.indexOf(":") + 1).trim() : s.pattern), s.pattern);
-        if (s.type === "html" && /stack trace|error message/i.test(s.note)) assert.equal(s.hideMatch, true, `error output hides its text: ${s.note}`);
       }
     });
   }

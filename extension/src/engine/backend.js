@@ -3,6 +3,7 @@
 // cookies, globals, error output) into a confidence, and every signal that fired is kept, with its
 // weight, as evidence.
 
+import { isFixedText } from "./fixed-text.js";
 import { extractParams, extractPaths } from "./page-traces.js";
 
 const THRESHOLD = 30;
@@ -14,7 +15,6 @@ const THRESHOLD = 30;
  * @property {number} weight
  * @property {string} note
  * @property {string} [noteJa]
- * @property {boolean} [hideMatch]  error output: it counts, but its text can hold server paths, user names and internal addresses, so it is never shown (SPEC S9)
  */
 
 /**
@@ -57,8 +57,7 @@ export function inferBackends(page, rules) {
     const signals = [];
     for (const signal of rule.signals) {
       const match = matchSignal(signal, page, traces);
-      if (match === null) continue;
-      signals.push({ type: signal.type, note: signal.note, noteJa: signal.noteJa ?? signal.note, weight: signal.weight, match: signal.hideMatch ? "" : match });
+      if (match !== null) signals.push({ type: signal.type, note: signal.note, noteJa: signal.noteJa ?? signal.note, weight: signal.weight, match });
     }
     const score = signals.reduce((sum, s) => sum + s.weight, 0);
     if (score < THRESHOLD) continue;
@@ -98,14 +97,14 @@ function matchSignal(signal, page, traces) {
     case "cookie":
       return firstMatch(signal.pattern, Object.keys(page.cookies));
     case "script":
-      return firstMatch(
+      return fixedMatch(
         signal.pattern,
         page.scripts.map((s) => s.src ?? ""),
       );
     case "source":
-      return excerptMatch(signal.pattern, traces.sources);
+      return fixedMatch(signal.pattern, traces.sources);
     default:
-      return excerptMatch(signal.pattern, [page.html]);
+      return fixedMatch(signal.pattern, [page.html]);
   }
 }
 
@@ -135,20 +134,17 @@ function matchedRequestPart(pattern, requests) {
 }
 
 /**
+ * Script URLs, page HTML and script code can hold tokens, paths and addresses next to a trace, so only the matched
+ * text is shown, and only when the pattern is fixed text; otherwise the trace counts and just its note is shown.
  * @param {string} pattern
  * @param {string[]} texts
- * @returns {string | null}
+ * @returns {string | null}  what to show ("" for nothing), or null when nothing matched
  */
-function excerptMatch(pattern, texts) {
+function fixedMatch(pattern, texts) {
   const regex = new RegExp(pattern, "i");
   for (const text of texts) {
     const match = regex.exec(text);
-    if (match) {
-      return text
-        .slice(Math.max(0, match.index - 30), match.index + match[0].length + 30)
-        .replace(/\s+/g, " ")
-        .trim();
-    }
+    if (match) return isFixedText(pattern) ? match[0] : "";
   }
   return null;
 }

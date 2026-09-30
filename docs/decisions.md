@@ -85,7 +85,7 @@ Hosts are listed with *other*, *session replay* and *ads* first.
   - Only the site's own HTML, forms, API calls and scripts are read; a vendor script's body names the vendor's hosts.
   - The result never feeds the page's own backend or an end-of-life verdict.
 
-- **Error output counts but is never shown.** A PHP warning or a stack trace is strong evidence of the backend, and its text is also where server paths, database user names and internal addresses leak. So the note is shown ("PHP error message shown in the page") and the excerpt is not.
+- **Backend evidence shows fixed text only.** A PHP warning or a stack trace is strong evidence of the backend, and its text is where server paths, database user names and internal addresses leak; script code beside a project URL can hold a token, and a script URL can be signed. So `html`, `source` and `script` traces show only what a fixed-text pattern matched, and otherwise just their note ("PHP error message shown in the page"). This is decided from the pattern's shape, not a per-rule flag, so a new rule cannot forget it.
 
 ## The page's own requests
 
