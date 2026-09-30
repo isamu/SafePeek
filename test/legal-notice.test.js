@@ -48,8 +48,8 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual([found.severity, found.evidence], ["low", ["返品"]]);
   });
 
-  it("lets the on-request statement stand in for the items the law allows, but never for price or returns", () => {
-    const omittable = /販売業者|所在地|電話番号|責任者|支払|引渡し/;
+  it("lets the on-request statement stand in for the items the law allows, but never for returns", () => {
+    const omittable = /販売業者|所在地|電話番号|責任者|販売価格|支払|引渡し/;
     const kept = COMPLETE.split("\n").filter((line) => !omittable.test(line));
     for (const statement of [
       "※ご請求があれば遅滞なく開示いたします",
@@ -63,9 +63,9 @@ describe("特定商取引法 notice", () => {
     ]) {
       assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...kept, statement].join("\n"))), [], statement);
     }
-    const noTerms = kept.filter((line) => !/返品|販売価格/.test(line));
-    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...noTerms, "※ご請求があれば遅滞なく開示いたします"].join("\n")));
-    assert.deepEqual(found.evidence, ["販売価格", "送料", "返品"]);
+    const noReturns = kept.filter((line) => !/返品/.test(line));
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...noReturns, "※ご請求があれば遅滞なく開示いたします"].join("\n")));
+    assert.deepEqual(found.evidence, ["返品"]);
   });
 
   it("lets an on-request promise about one item excuse nothing else", () => {
@@ -110,6 +110,20 @@ describe("特定商取引法 notice", () => {
     }
   });
 
+  it("reads the ways a notice names the charges besides the price", () => {
+    const withoutShipping = COMPLETE.split("\n").map((line) => line.replace(/ 送料 全国一律500円/, ""));
+    for (const label of [
+      "商品代金以外に必要な料金 振込手数料",
+      "商品代金以外にご負担いただく費用 梱包料",
+      "購入者が負担すべき料金 返送料",
+      "商品代金以外の必要料金 なし",
+    ]) {
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutShipping, label].join("\n"))), [], label);
+    }
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutShipping.join("\n")));
+    assert.deepEqual(found.evidence, ["送料"]);
+  });
+
   it("reads common label variants", () => {
     const variants = [
       "事業者の名称 株式会社サンプル",
@@ -132,10 +146,22 @@ describe("特定商取引法 notice", () => {
     const footer = makePage({ html: '<html><body><footer><a href="/law">特定商取引法に基づく表記</a></footer></body></html>', text: "" });
     assert.deepEqual(checkLegalNotice(footer), []);
     const page = (/** @type {string} */ heading) => makePage({ html: `<html><head>${heading}</head><body></body></html>`, text: "" });
-    for (const heading of ["<title>特商法とは？わかりやすく解説</title>", "<h1>特定商取引法の改正について</h1>"]) {
+    for (const heading of [
+      "<title>特商法とは？わかりやすく解説</title>",
+      "<h1>特定商取引法の改正について</h1>",
+      "<title>特定商取引法に基づく表記の書き方 | ブログ</title>",
+      "<h1>通信販売に関する表示のルールと注意点</h1>",
+    ]) {
       assert.deepEqual(checkLegalNotice(page(heading)), [], heading);
     }
-    for (const heading of ["<title>特商法表記</title>", "<h1>特定商取引法による表示</h1>", "<h2>通信販売に関する表示</h2>"]) {
+    for (const heading of [
+      "<title>特商法表記</title>",
+      "<h1>特定商取引法による表示</h1>",
+      "<h2>通信販売に関する表示</h2>",
+      "<title>ショップ名 - 特定商取引法に基づく表記</title>",
+      "<title>特定商取引法に基づく表記（通信販売） ｜ ショップ名</title>",
+      "<h1>特定商取引法に基づく表記について</h1>",
+    ]) {
       assert.equal(checkLegalNotice(page(heading)).length, 1, heading);
     }
   });
