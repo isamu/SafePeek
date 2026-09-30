@@ -53,6 +53,13 @@ describe("simplified Chinese on a Japanese shop", () => {
     );
   });
 
+  it("treats a section in Traditional Chinese as a Chinese section too", () => {
+    const traditional = "歡迎光臨本店。購物指南：訂購後3天發貨，海外配送費用請參閱說明。會員註冊免費，支援信用卡付款。".repeat(20);
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${traditional}3天`)), []);
+    const kanjiHeavyJapanese = "国内正規品販売店。中古商品在庫一覧、送料無料対象商品多数、即日発送可能。".repeat(10);
+    assert.equal(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${kanjiHeavyJapanese}365天受付`)).length, 1, "a kanji-heavy Japanese page is still Japanese");
+  });
+
   it("does not count the characters a page about learning Chinese quotes, nor 个", () => {
     const textbook = `${JAPANESE_SHOP}中国語テキスト：例文「这是我们的新书，请订购。」`;
     assert.deepEqual(checkSimplifiedChinese(shop(textbook)), []);

@@ -9,6 +9,10 @@ const SIMPLIFIED_ONLY = new Set("这们东华货购优质飞说为发过买卖�
 // A fake shop's Japanese carries a few stray simplified characters; a Japanese shop's page for Chinese-speaking
 // customers is written in Chinese, so they are common there. Above this share of the kana, they are not a sign.
 const MAX_SIMPLIFIED_PER_KANA = 0.1;
+// Chinese text, simplified or traditional, has no kana, so Han characters far outnumbering kana mean a Chinese section;
+// Japanese prose, even kanji-heavy, stays well below this.
+const HAN = /[\u4e00-\u9fff]/g;
+const MAX_HAN_PER_KANA = 2;
 // A page about learning Chinese quotes simplified text on purpose, so its characters are not a sign; the language and
 // the days still are.
 const CHINESE_STUDY = /中国語|簡体字|ピンイン|拼音|HSK|中検/;
@@ -43,7 +47,8 @@ function chineseSigns(page, kana) {
   const occurrences = [...page.text].filter((char) => SIMPLIFIED_ONLY.has(char));
   const simplified = [...new Set(occurrences)];
   // A page with a section written in Chinese uses its characters and 天 for days as a matter of course.
-  const chineseSection = occurrences.length > kana * MAX_SIMPLIFIED_PER_KANA;
+  const han = (page.text.match(HAN) ?? []).length;
+  const chineseSection = occurrences.length > kana * MAX_SIMPLIFIED_PER_KANA || han > kana * MAX_HAN_PER_KANA;
   const signs = [];
   if (simplified.length >= MIN_SIMPLIFIED && !chineseSection && !CHINESE_STUDY.test(page.text)) {
     signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
