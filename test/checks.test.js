@@ -182,6 +182,24 @@ describe("payment", () => {
     assert.deepEqual(ids(checkPayment(makePage({ links: ["https://checkout.stripe.com/c/pay/cs_test"] }), db.providers)), ["payment_redirect"]);
   });
 
+  it("does not take a link to a provider's information pages for a payment path", () => {
+    const links = ["https://pay.rakuten.co.jp/detail/", "https://www.paypal.com/jp/webapps/mpp/home", "https://stripe.com/jp"];
+    assert.deepEqual(ids(checkPayment(makePage({ links }), db.providers)), ["no_card_form"]);
+  });
+
+  it("takes checkout links and forms posting to a provider for payment paths", () => {
+    for (const url of [
+      "https://buy.stripe.com/test_abc123",
+      "https://www.paypal.com/checkoutnow?token=EC-1",
+      "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick",
+    ]) {
+      assert.deepEqual(ids(checkPayment(makePage({ links: [url] }), db.providers)), ["payment_redirect"], url);
+    }
+    const form = { action: "https://checkout.rakuten.co.jp/settlement", method: "post", hasPassword: false };
+    const [f] = checkPayment(makePage({ forms: [form] }), db.providers);
+    assert.deepEqual([f.id, f.params.providers, f.evidence], ["payment_redirect", "Rakuten Pay", [form.action]]);
+  });
+
   it("says there is nothing to assess on pages without card entry", () => {
     assert.deepEqual(ids(checkPayment(makePage(), db.providers)), ["no_card_form"]);
     assert.deepEqual(ids(checkPayment(makePage({ scripts: [script("https://js.stripe.com/v3/")] }), db.providers)), ["payment_scripts_only"]);
