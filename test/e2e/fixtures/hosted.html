@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hosted fields checkout</title>
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  <body>
+    <form action="/order" method="post">
+      <div id="card-element"><iframe src="https://js.stripe.com/v3/elements-inner-card.html" title="Secure card payment input frame"></iframe></div>
+      <a href="https://checkout.stripe.com/c/pay/cs_test_123">Pay with Stripe Checkout</a>
+    </form>
+  </body>
+</html>
