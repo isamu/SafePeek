@@ -63,6 +63,22 @@ describe("technology detection", () => {
     );
   });
 
+  it("does not claim where a site is hosted from one service it uses", () => {
+    const csp = "default-src 'self'; img-src 'self' github-cloud.s3.amazonaws.com";
+    const found = names(makePage({ headers: { ...makePage().headers, "content-security-policy": csp } }));
+    assert.ok(found.includes("Amazon S3"), found.join(", "));
+    assert.ok(!found.includes("Amazon Web Services"), found.join(", "));
+  });
+
+  it("does not claim hosting from a provider's domain inside script code", () => {
+    const bundle = script("https://shop.example/app.js", 'const img = "https://bucket.s3.ap-northeast-1.amazonaws.com/a.png";');
+    assert.ok(!names(makePage({ scripts: [bundle] })).includes("Amazon Web Services"));
+  });
+
+  it("still reports the hosting provider when the page itself shows it", () => {
+    assert.ok(names(makePage({ headers: { ...makePage().headers, "x-amz-request-id": "ABC123" } })).includes("Amazon Web Services"));
+  });
+
   it("does not let a confidence:0 hit imply anything", () => {
     const tiny = {
       technologies: { Theme: { meta: { version: "^(.+)$\\;version:\\1\\;confidence:0" }, implies: "Shop", cats: [] }, Shop: { cats: [] } },
