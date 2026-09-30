@@ -1,6 +1,6 @@
 // How this page handles card numbers.
 
-import { cardFields } from "./cardfield.js";
+import { cardFieldKind, cardFields } from "./cardfield.js";
 import { finding } from "./finding.js";
 import { hostOf } from "./page.js";
 
@@ -93,12 +93,7 @@ export function checkPayment(page, providers) {
   const scriptProviders = providersIn([...scriptSrcs, ...page.iframes], providers);
   const tokenizer = scriptSrcs.map((src) => tokenizerFor(src, providers)).find((p) => p !== undefined);
 
-  const cardInputs = cardFields(page.inputs);
-  const findings = [];
-  if (cardInputs.length > 0) findings.push(cardFieldFinding(cardInputs, tokenizer));
-  if (iframeProviders.length > 0) {
-    findings.push(finding("card_hosted_iframe", "good", "payment", { providers: iframeProviders.join(", ") }, cardFrames.slice(0, 5)));
-  }
+  const findings = cardEntryFindings(cardFields(page.inputs), tokenizer, cardFrames, iframeProviders);
   if (redirectProviders.length > 0) {
     findings.push(finding("payment_redirect", "good", "payment", { providers: redirectProviders.join(", ") }, paymentPaths.slice(0, 5)));
   }
@@ -107,6 +102,24 @@ export function checkPayment(page, providers) {
   }
   if (findings.length === 0) findings.push(finding("no_card_form", "info", "payment"));
   return findings;
+}
+
+/**
+ * A skimmer hides the provider's card frame behind a copy of the form, so the page's own card number field next to
+ * a provider's card frame is reported as that, unless a provider tokenizer shows the field is a second, real option.
+ * @param {import("../types.js").InputField[]} cardInputs
+ * @param {Provider | undefined} tokenizer
+ * @param {string[]} cardFrames
+ * @param {string[]} iframeProviders
+ * @returns {import("../types.js").Finding[]}
+ */
+function cardEntryFindings(cardInputs, tokenizer, cardFrames, iframeProviders) {
+  const frameFinding = finding("card_hosted_iframe", "good", "payment", { providers: iframeProviders.join(", ") }, cardFrames.slice(0, 5));
+  if (cardInputs.length === 0) return iframeProviders.length > 0 ? [frameFinding] : [];
+  if (iframeProviders.length === 0) return [cardFieldFinding(cardInputs, tokenizer)];
+  if (tokenizer || !cardInputs.some((f) => cardFieldKind(f) === "number")) return [cardFieldFinding(cardInputs, tokenizer), frameFinding];
+  const evidence = [...cardInputs.slice(0, 5).map(describeField), ...cardFrames.slice(0, 5)];
+  return [finding("card_form_beside_provider_frame", "high", "payment", { providers: iframeProviders.join(", ") }, evidence)];
 }
 
 /**

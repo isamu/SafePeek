@@ -69,6 +69,9 @@ Hosts are listed with *other*, *session replay* and *ads* first.
 - **A form is a card form only with a card number plus a security code or expiry.** A member-card login ("card number" + password) is not a card form.
 - **A tokenizer is recognised only on its provider's host.** A URL elsewhere that merely contains the pattern is not a tokenizer.
 
+- **A card number field beside a provider's card frame is reported as a skimming shape.** A genuine checkout takes the card in one place. Skimmers have hidden the real frame behind a copy of the form (`docs/fake-shop-research.md`, item 1). A provider tokenizer on the page shows the field is a real second option, so it keeps the ordinary findings. A security code or expiry field alone does not count.
+- **Card fields on a hosted-cart storefront are not reported yet.** Some carts' own checkout pages may take the card in the page with a tokenizer; that needs checking on real sites first.
+
 ## Who runs the shop
 
 - **A cart service is information, not a good sign.** It handles the checkout, but anyone can open a shop on one, and research on fraudulent storefronts found them common there (`docs/fake-shop-research.md`). Reporting it as good read as vouching for the seller.

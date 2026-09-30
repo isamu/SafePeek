@@ -246,6 +246,31 @@ describe("payment", () => {
     assert.deepEqual(ids(checkPayment(makePage({ iframes: card }), db.providers)), ["card_hosted_iframe"]);
   });
 
+  it("reports the page's own card number field beside a provider's card frame as a skimming shape", () => {
+    const frame = "https://js.stripe.com/v3/elements-inner-card-1a2b.html";
+    const number = inputField("cardnumber", { autocomplete: "cc-number" });
+    const page = makePage({
+      inputs: [number, inputField("cvc", { autocomplete: "cc-csc" })],
+      iframes: [frame],
+      scripts: [script("https://js.stripe.com/v3/")],
+    });
+    const found = checkPayment(page, db.providers);
+    assert.deepEqual(ids(found), ["card_form_beside_provider_frame"]);
+    assert.equal(found[0].severity, "high");
+    assert.equal(found[0].params.providers, "Stripe");
+    assert.ok(found[0].evidence.includes(frame));
+  });
+
+  it("keeps the ordinary findings when a tokenizer backs the field, or the page asks only for a security code", () => {
+    const frame = "https://js.stripe.com/v3/elements-inner-card-1a2b.html";
+    const number = inputField("cardno");
+    const tokenized = makePage({ inputs: [number], iframes: [frame], scripts: [script("https://static.mul-pay.jp/ext/js/token.js")] });
+    assert.deepEqual(ids(checkPayment(tokenized, db.providers)), ["card_tokenized_on_page", "card_hosted_iframe"]);
+    const cvcOnly = makePage({ inputs: [inputField("cvc", { autocomplete: "cc-csc" })], iframes: [frame] });
+    assert.deepEqual(ids(checkPayment(cvcOnly, db.providers)), ["card_on_page", "card_hosted_iframe"]);
+    assert.deepEqual(ids(checkPayment(makePage({ inputs: [number] }), db.providers)), ["card_on_page"]);
+  });
+
   it("recognises in-page tokenization (GMO-PG token.js)", () => {
     const page = makePage({ inputs: [inputField("cardno")], scripts: [script("https://static.mul-pay.jp/ext/js/token.js")] });
     const [first] = checkPayment(page, db.providers);
