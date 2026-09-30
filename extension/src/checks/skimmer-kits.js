@@ -2,6 +2,10 @@
 
 import { finding } from "./finding.js";
 
+// One indicator alone can be a legitimate script that lists it (a vendor's skimmer detector), or a generic name;
+// the kit itself leaves several at once (its file, its globals, its server).
+const MIN_INDICATORS = 2;
+
 /**
  * @typedef {object} Kit
  * @property {string} name
@@ -20,7 +24,7 @@ import { finding } from "./finding.js";
  * @returns {import("../types.js").Finding[]}
  */
 export function checkSkimmerKits(page, kits) {
-  const hit = kits.filter((kit) => kitTraces(page, kit).length > 0);
+  const hit = kits.filter((kit) => kitTraces(page, kit).length >= MIN_INDICATORS);
   if (hit.length === 0) return [];
   const evidence = hit.map((kit) => `${kit.name} (${kit.reported}): ${kitTraces(page, kit).join(", ")} — ${kit.sources[0]}`);
   return [finding("shop_known_skimmer_kit", "high", "page", { kits: hit.map((kit) => kit.name).join(", ") }, evidence)];
