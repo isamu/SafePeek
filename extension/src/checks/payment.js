@@ -43,6 +43,16 @@ function isCardFrame(url, providers) {
 }
 
 /**
+ * A form that hands the customer to the provider to pay: it posts there and is not a login.
+ * @param {import("../types.js").FormInfo} form
+ * @param {Provider[]} providers
+ * @returns {boolean}
+ */
+function isCheckoutForm(form, providers) {
+  return form.method === "post" && !form.hasPassword && providerForHost(hostOf(form.action), providers) !== undefined;
+}
+
+/**
  * A link that starts a payment with the provider, not one to its information pages.
  * @param {string} url
  * @param {Provider[]} providers
@@ -64,7 +74,7 @@ export function checkPayment(page, providers) {
   const iframeProviders = providersIn(cardFrames, providers);
   const paymentPaths = [
     ...page.links.filter((url) => isCheckoutLink(url, providers)),
-    ...page.forms.map((f) => f.action).filter((url) => providerForHost(hostOf(url), providers)),
+    ...page.forms.filter((f) => isCheckoutForm(f, providers)).map((f) => f.action),
   ];
   const redirectProviders = providersIn(paymentPaths, providers);
   // A provider's other frames (buttons, wallets, fraud checks) show it is used, not where the card is typed.

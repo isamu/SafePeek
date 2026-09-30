@@ -222,6 +222,18 @@ describe("payment", () => {
     assert.deepEqual([f.id, f.params.providers, f.evidence], ["payment_redirect", "Rakuten Pay", [form.action]]);
   });
 
+  it("takes only POST forms without a password for payment paths", () => {
+    const provider = "https://www.paypal.com/cgi-bin/webscr";
+    for (const form of [
+      { action: provider, method: "get", hasPassword: false },
+      { action: "https://www.paypal.com/signin", method: "post", hasPassword: true },
+    ]) {
+      assert.deepEqual(ids(checkPayment(makePage({ forms: [form] }), db.providers)), ["no_card_form"], JSON.stringify(form));
+    }
+    const sbps = { action: "https://fep.sps-system.com/f01/FepBuyInfoReceive.do", method: "post", hasPassword: false };
+    assert.deepEqual(checkPayment(makePage({ forms: [sbps] }), db.providers)[0].params.providers, "SB Payment Service");
+  });
+
   it("says there is nothing to assess on pages without card entry", () => {
     assert.deepEqual(ids(checkPayment(makePage(), db.providers)), ["no_card_form"]);
     assert.deepEqual(ids(checkPayment(makePage({ scripts: [script("https://js.stripe.com/v3/")] }), db.providers)), ["payment_scripts_only"]);

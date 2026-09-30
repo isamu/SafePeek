@@ -9,8 +9,10 @@ securities site's front page and rakuten.co.jp got "Rakuten Pay" from links to R
 - `data/payment-providers.json`: optional `checkoutLinks` per provider — link URLs that start a payment:
   Stripe Checkout (`checkout.stripe.com/c/pay/`) and Payment Links (`buy.stripe.com/`); PayPal checkout
   (`paypal.com/checkoutnow`) and Payments Standard (`paypal.com/cgi-bin/webscr`).
-- `checks/payment.js`: payment paths are links matching `checkoutLinks`, plus forms posting to a provider host
-  (unchanged: a form that submits to the provider is a checkout). `payment_redirect` now carries those URLs as
+- `checks/payment.js`: payment paths are links matching `checkoutLinks`, plus forms that POST to a provider host
+  without a password field (a login or search form to the provider is not a checkout).
+- SB Payment Service gains its link-type payment-screen host `sps-system.com` (a customer-browser form POST).
+- Known gaps, to add once a source shows the URL shape: KOMOJU hosted-page session links, GMO-PG Link Type Plus URLs. `payment_redirect` now carries those URLs as
   evidence. Providers without `checkoutLinks` (e.g. Rakuten Pay) are recognised only through forms.
 
 ## Verification
