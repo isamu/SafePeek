@@ -134,6 +134,24 @@ describe("data-destinations.json", () => {
     for (const id of ids) assert.ok(MESSAGE_IDS.ja.includes(`dest_${id}`) && MESSAGE_IDS.en.includes(`dest_${id}`), id);
   });
 
+  it("claims every analytics or RUM product whose vendor site shares a service's domain", () => {
+    const domainOf = (/** @type {string} */ host) => host.split(".").slice(-2).join(".");
+    for (const s of db.destinations.services) {
+      const domains = new Set((s.hosts ?? []).map(domainOf));
+      for (const [name, fp] of Object.entries(db.technologies)) {
+        if (!fp.cats?.some((/** @type {number} */ c) => c === 10 || c === 78) || !fp.website) continue;
+        if (domains.has(domainOf(new URL(fp.website).hostname))) assert.ok((s.technologies ?? []).includes(name), `${s.name} should list ${name}`);
+      }
+    }
+  });
+
+  it("files TrackJS under monitoring once, from its product or its host", () => {
+    const page = makePage({ contactedHosts: ["cdn.trackjs.com"] });
+    assert.deepEqual(summary(checkDestinations([tech("TrackJs", ["script https://cdn.trackjs.com/agent/v3/latest/t.js"])], db.destinations, page)), [
+      "dest_monitoring:TrackJS",
+    ]);
+  });
+
   it("never lists a host shared with unrelated uses", () => {
     const hosts = db.destinations.services.flatMap((s) => s.hosts ?? []);
     for (const shared of ["bing.com", "c.bing.com", "googleapis.com", "cloudfront.net", "amazonaws.com", "smartbear.com", "newrelic.com"]) {
