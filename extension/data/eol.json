@@ -1,0 +1,107 @@
+{
+  "_comment": "Hand-maintained end-of-life table. A version is matched to the first cycle (ascending by 'below') it is lower than; that cycle's 'eol' date decides. Dates are the upstream end of security support. OS distributions sometimes backport fixes to old versions, so server-side results are worded as 'likely'. Keep 'reviewed' current when editing.",
+  "reviewed": "2026-09-30",
+  "products": {
+    "PHP": {
+      "kind": "server",
+      "source": "https://www.php.net/supported-versions.php",
+      "cycles": [
+        { "below": "8.0", "eol": "2022-11-28", "label": "7.x and older" },
+        { "below": "8.1", "eol": "2023-11-26", "label": "8.0" },
+        { "below": "8.2", "eol": "2025-12-31", "label": "8.1" },
+        { "below": "8.3", "eol": "2026-12-31", "label": "8.2" },
+        { "below": "8.4", "eol": "2027-12-31", "label": "8.3" },
+        { "below": "8.5", "eol": "2028-12-31", "label": "8.4" }
+      ]
+    },
+    "Apache HTTP Server": {
+      "kind": "server",
+      "source": "https://httpd.apache.org/",
+      "cycles": [{ "below": "2.4", "eol": "2017-07-11", "label": "2.2 and older" }]
+    },
+    "IIS": {
+      "kind": "server",
+      "source": "https://learn.microsoft.com/lifecycle/",
+      "cycles": [
+        { "below": "7.0", "eol": "2015-07-14", "label": "6.0 (Windows Server 2003)" },
+        { "below": "8.0", "eol": "2020-01-14", "label": "7.x (Windows Server 2008 / 2008 R2)" },
+        { "below": "10.0", "eol": "2023-10-10", "label": "8.x (Windows Server 2012 / 2012 R2)" }
+      ]
+    },
+    "OpenSSL": {
+      "kind": "server",
+      "source": "https://openssl-library.org/policies/releasestrat/",
+      "cycles": [
+        { "below": "1.1", "eol": "2019-12-31", "label": "1.0.x" },
+        { "below": "3.0", "eol": "2023-09-11", "label": "1.1.1" },
+        { "below": "3.1", "eol": "2026-09-07", "label": "3.0 LTS" },
+        { "below": "3.2", "eol": "2025-03-14", "label": "3.1" },
+        { "below": "3.3", "eol": "2025-11-23", "label": "3.2" },
+        { "below": "3.4", "eol": "2026-04-09", "label": "3.3" },
+        { "below": "3.5", "eol": "2026-10-22", "label": "3.4" }
+      ]
+    },
+    "Python": {
+      "kind": "server",
+      "source": "https://devguide.python.org/versions/",
+      "cycles": [
+        { "below": "3.0", "eol": "2020-01-01", "label": "2.x" },
+        { "below": "3.9", "eol": "2024-10-07", "label": "3.8 and older" },
+        { "below": "3.10", "eol": "2025-10-31", "label": "3.9" }
+      ]
+    },
+    "Drupal": {
+      "kind": "cms",
+      "source": "https://www.drupal.org/about/core/policies/core-release-cycles/schedule",
+      "cycles": [
+        { "below": "8", "eol": "2025-01-05", "label": "7" },
+        { "below": "9", "eol": "2021-11-02", "label": "8" },
+        { "below": "10", "eol": "2023-11-01", "label": "9" }
+      ]
+    },
+    "Joomla": {
+      "kind": "cms",
+      "source": "https://www.joomla.org/",
+      "cycles": [
+        { "below": "4", "eol": "2023-08-17", "label": "3.x and older" },
+        { "below": "5", "eol": "2025-10-17", "label": "4.x" }
+      ]
+    },
+    "Magento": {
+      "kind": "cms",
+      "source": "https://business.adobe.com/products/magento/magento-commerce.html",
+      "cycles": [{ "below": "2", "eol": "2020-06-30", "label": "1.x" }]
+    },
+    "AngularJS": {
+      "kind": "frontend",
+      "source": "https://docs.angularjs.org/misc/version-support-status",
+      "cycles": [{ "below": "2", "eol": "2021-12-31", "label": "1.x (AngularJS)" }]
+    },
+    "Angular": {
+      "kind": "frontend",
+      "source": "https://angular.dev/reference/releases",
+      "cycles": [
+        { "below": "19", "eol": "2025-11-21", "label": "18 and older" },
+        { "below": "20", "eol": "2026-05-19", "label": "19" }
+      ]
+    },
+    "Vue.js": {
+      "kind": "frontend",
+      "source": "https://v2.vuejs.org/eol/",
+      "cycles": [{ "below": "3", "eol": "2023-12-31", "label": "2.x" }]
+    },
+    "jQuery": {
+      "kind": "frontend",
+      "source": "https://jquery.com/support/",
+      "cycles": [{ "below": "3", "eol": "2016-06-09", "label": "1.x / 2.x" }]
+    },
+    "Bootstrap": {
+      "kind": "frontend",
+      "source": "https://github.com/twbs/release",
+      "cycles": [
+        { "below": "4", "eol": "2019-07-24", "label": "3.x" },
+        { "below": "5", "eol": "2023-01-01", "label": "4.x" }
+      ]
+    }
+  }
+}
