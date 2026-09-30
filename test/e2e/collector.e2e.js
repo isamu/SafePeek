@@ -147,14 +147,6 @@ describe("collector in Chromium", () => {
     assert.equal(endless?.fetched, false);
   });
 
-  it("does not take a membership card number in a login form for a payment card", async () => {
-    const report = await scan("member-login.html");
-    assert.deepEqual(
-      report.findings.filter((f) => f.area === "payment").map((f) => f.id),
-      ["no_card_form"],
-    );
-  });
-
   it("recognises provider-hosted card fields", async () => {
     const report = await scan("hosted.html");
     const payment = report.findings.filter((f) => f.area === "payment").map((f) => f.id);
@@ -183,5 +175,13 @@ describe("collector in Chromium", () => {
     assert.ok((firebase?.confidence ?? 0) >= 60);
     assert.ok(report.findings.some((f) => f.id === "backend_managed"));
     assert.ok(!report.technologies.some((t) => t.impliedBy && ["PHP", "MySQL"].includes(t.name)));
+  });
+
+  it("does not take a membership card number in a login form for a payment card", async () => {
+    const report = await scan("member-login.html");
+    assert.deepEqual(
+      report.findings.filter((f) => f.area === "payment").map((f) => f.id),
+      ["no_card_form"],
+    );
   });
 });
