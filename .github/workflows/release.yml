@@ -16,6 +16,9 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write # create the release
+      id-token: write # npm provenance
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -75,3 +78,13 @@ jobs:
             echo '```'
           } > notes.md
           gh release create "${GITHUB_REF_NAME}" "${name}.zip" "${name}.zip.sha256" --title "SafePeek ${GITHUB_REF_NAME}" --notes-file notes.md
+
+      # The analysis engine is also published to npm as `safepeek` (extension/package.json), when an
+      # NPM_TOKEN secret is configured. The package and the extension share the same source files.
+      - name: Publish npm package
+        if: env.NPM_TOKEN != ''
+        run: |
+          set -euo pipefail
+          cp LICENSE extension/LICENSE
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          (cd extension && npm publish --provenance --access public)
