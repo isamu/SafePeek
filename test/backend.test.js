@@ -97,6 +97,39 @@ describe("inferBackends (real rules)", () => {
   });
 });
 
+describe("API calls the page made", () => {
+  it("infer frameworks and managed backends from the URLs the page fetched", () => {
+    const cases = [
+      ["Laravel", "https://shop.example/sanctum/csrf-cookie"],
+      ["Laravel", "https://shop.example/livewire/message/cart-counter"],
+      ["Laravel", "https://shop.example/livewire/update"],
+      ["Ruby on Rails", "https://shop.example/rails/active_storage/direct_uploads"],
+      ["Supabase", "https://abcdefgh.supabase.co/rest/v1/items"],
+      ["AWS Amplify / Cognito / AppSync", "https://cognito-idp.ap-northeast-1.amazonaws.com/"],
+    ];
+    for (const [name, url] of cases) {
+      assert.ok(byName(inferBackends(makePage({ requests: [url] }), db.backends))[name], url);
+    }
+  });
+
+  it("show only the host and the matched part of the URL, never the rest of its path", () => {
+    const [laravel] = inferBackends(makePage({ requests: ["https://shop.example/magic/alpha-beta-gamma/sanctum/csrf-cookie"] }), db.backends);
+    const [signal] = laravel.signals;
+    assert.equal(signal.match, "shop.example …/sanctum/csrf-cookie");
+    const [livewire] = inferBackends(makePage({ requests: ["https://shop.example/livewire/message/CorrectHorseBatteryStaple"] }), db.backends);
+    assert.equal(livewire.signals[0].match, "shop.example …/livewire/message/");
+    const [php] = inferBackends(makePage({ requests: ["https://shop.example/share/private-reset-token.php"] }), db.backends);
+    assert.equal(php.signals[0].match, "shop.example ….php");
+  });
+
+  it("do not read a matching path in the page's text or links as an API call", () => {
+    for (const text of ["https://abcdefgh.supabase.co/rest/v1/items", "/sanctum/csrf-cookie"]) {
+      const found = inferBackends(makePage({ html: text, text }), db.backends);
+      assert.ok(!found.some((b) => b.signals.some((sig) => sig.type === "api")), text);
+    }
+  });
+});
+
 describe("mentions are not traces", () => {
   // Text a page can show about these frameworks without running them: a README, a commit message, a blog post.
   const MENTIONS = [
@@ -199,10 +232,21 @@ describe("checkBackends", () => {
   });
 });
 
+/**
+ * Whether the path part of an API pattern can match variable text. The host part (up to the first "/" after an
+ * optional ^https://) may use classes for project and region names; the path may hold only literals and (?:a|b).
+ * @param {string} pattern
+ */
+const capturesPathText = (pattern) => {
+  const afterScheme = pattern.replace(/^\^https:\/\//, "");
+  const path = afterScheme.slice(Math.max(0, afterScheme.indexOf("/")));
+  return /\[|(?<!\\)\.|[*+{?]|\\[wWsSdD]/.test(path.replaceAll("(?:", "("));
+};
+
 describe("backend-signatures.json (contributed rules)", () => {
   const file = JSON.parse(readFileSync(new URL("../extension/data/backend-signatures.json", import.meta.url), "utf8"));
   const REPORT_THRESHOLD = 30;
-  const TYPES = ["link", "param", "html", "source", "script", "cookie", "header", "global", "host"];
+  const TYPES = ["link", "param", "html", "source", "script", "cookie", "header", "global", "host", "api"];
 
   for (const rule of file.backends) {
     it(rule.name, () => {
@@ -222,9 +266,20 @@ describe("backend-signatures.json (contributed rules)", () => {
     });
   }
 
+  it("keeps the path part of API patterns to fixed text, since the matched part is shown", () => {
+    for (const bad of ["/livewire/message/[A-Za-z0-9-]+", "/reset/[0-9A-Fa-f-]{36}", "/share/.+", "/t/\\w+", "/id/\\d?"]) {
+      assert.ok(capturesPathText(bad), bad);
+    }
+    for (const rule of file.backends) {
+      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "api")) {
+        assert.ok(!capturesPathText(s.pattern), `${rule.name}: ${s.pattern}`);
+      }
+    }
+  });
+
   it("never lets a URL shape or hostname alone reach an end-of-life report", () => {
     for (const rule of file.backends.filter((/** @type {any} */ r) => r.status === "eol")) {
-      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "link" || x.type === "host")) {
+      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "link" || x.type === "host" || x.type === "api")) {
         assert.ok(s.weight < REPORT_THRESHOLD, `${rule.name}: ${s.pattern} weighs ${s.weight}`);
       }
     }

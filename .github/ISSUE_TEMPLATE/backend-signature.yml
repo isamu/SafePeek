@@ -53,7 +53,7 @@ body:
       label: Traces
       description: |
         What in the page gives it away? One per line: type, pattern (regex), how strong (1-100), note.
-        Types: link (URL path), param (form field / query name), html, source (script code or comments), script (script URL), cookie, header ("name: regex"), global (JS variable), host (domain).
+        Types: link (URL path), param (form field / query name), html, source (script code or comments), script (script URL), cookie, header ("name: regex"), global (JS variable), host (domain), api (a URL the page fetched, without query).
       placeholder: |
         param | ^org\.apache\.struts\.taglib\.html\.TOKEN$ | 80 | Struts 1 token field
         link | \.do$ | 20 | *.do action URLs (also Spring MVC)

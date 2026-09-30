@@ -15,7 +15,47 @@
   const MAX_INPUTS = 200;
   const MAX_FORMS = 50;
   const MAX_FRAMES = 10;
+  const MAX_REQUESTS = 300;
+  const REQUEST_INITIATORS = ["fetch", "xmlhttprequest", "beacon"];
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
+  const OWN_FETCHES_KEY = "SafePeekOwnFetches";
+  const ROUTE_WORD = /^[A-Za-z_][A-Za-z_.-]{0,39}$/;
+  const API_VERSION = /^v\d{1,2}$/;
+  const FILE_EXTENSION = /\.[A-Za-z]{1,6}$/;
+
+  // The isolated world outlives one injection, so a later scan still knows what an earlier one re-requested.
+  const ownFetches = ownFetchSet();
+
+  /** @returns {Set<string>} */
+  function ownFetchSet() {
+    const previous = Reflect.get(globalThis, OWN_FETCHES_KEY);
+    const set = previous instanceof Set ? previous : new Set();
+    Reflect.set(globalThis, OWN_FETCHES_KEY, set);
+    return set;
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}  the URL as resource timing names it (absolute, no fragment), or "" if it does not parse
+   */
+  function timingName(raw) {
+    const url = parseUrl(raw);
+    if (!url) return "";
+    url.hash = "";
+    return url.href;
+  }
+
+  /**
+   * @param {string} raw  absolute, or relative to the page
+   * @returns {URL | null}
+   */
+  function parseUrl(raw) {
+    try {
+      return new URL(raw, location.href);
+    } catch {
+      return null;
+    }
+  }
 
   /**
    * @param {string} url
@@ -25,6 +65,7 @@
   async function fetchWithTimeout(url, init) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    ownFetches.add(timingName(url));
     try {
       return await fetch(url, { ...init, signal: controller.signal });
     } catch {
@@ -43,6 +84,7 @@
   async function fetchScriptText(url) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    ownFetches.add(timingName(url));
     try {
       const response = await fetch(url, { cache: "force-cache", credentials: "same-origin", signal: controller.signal });
       if (!response.ok || !response.body) return { text: "", complete: false };
@@ -116,6 +158,76 @@
       .map((el) => ({ src: absolute(el.getAttribute("src") ?? "", el.baseURI), integrity: el.getAttribute("integrity") ?? "", content: "", fetched: false }))
       .filter((script) => script.src !== "")
       .slice(0, MAX_SCRIPTS);
+  }
+
+  /**
+   * What the page has loaded so far, from the browser's own resource-timing record: no new request is made. SafePeek's
+   * own re-requests from earlier scans of this document are left out.
+   * @returns {PerformanceResourceTiming[]}
+   */
+  function resourceEntries() {
+    return performance
+      .getEntriesByType("resource")
+      .filter((e) => e instanceof PerformanceResourceTiming)
+      .filter((e) => !(e.initiatorType === "fetch" && ownFetches.has(timingName(e.name))));
+  }
+
+  /**
+   * The URLs the page itself has fetched (fetch, XHR, beacons). Only scheme, host and path are kept, since query
+   * strings, fragments and path parameters often hold tokens; path segments not shaped like route names are masked too.
+   * @param {PerformanceResourceTiming[]} entries
+   * @returns {string[]}
+   */
+  function readRequests(entries) {
+    const urls = entries
+      .filter((e) => REQUEST_INITIATORS.includes(e.initiatorType))
+      .map((e) => redactedUrl(e.name))
+      .filter((u) => u !== "");
+    return [...new Set(urls)].slice(0, MAX_REQUESTS);
+  }
+
+  /**
+   * Every host the page has contacted: scripts, styles, images, frames, fonts, fetches, beacons.
+   * @param {PerformanceResourceTiming[]} entries
+   * @returns {string[]}
+   */
+  function readContactedHosts(entries) {
+    const hosts = entries.map((e) => hostOfUrl(e.name)).filter((h) => h !== "");
+    return [...new Set(hosts)].slice(0, MAX_REQUESTS);
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}
+   */
+  function hostOfUrl(raw) {
+    return parseUrl(raw)?.hostname ?? "";
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}  scheme, host and path only, with path parameters dropped and non-route segments masked
+   */
+  function redactedUrl(raw) {
+    const url = parseUrl(raw);
+    return url?.protocol === "https:" || url?.protocol === "http:" ? `${url.origin}${maskTokens(url.pathname)}` : "";
+  }
+
+  /**
+   * Keeps route-name and API-version segments; ids, UUIDs and tokens become {token}, keeping `.php` / `.do` visible.
+   * @param {string} pathname
+   * @returns {string}
+   */
+  function maskTokens(pathname) {
+    return pathname
+      .split("/")
+      .map((withParams) => {
+        const segment = withParams.split(";")[0];
+        const extension = FILE_EXTENSION.exec(segment)?.[0] ?? "";
+        const base = segment.slice(0, segment.length - extension.length);
+        return base === "" || ROUTE_WORD.test(base) || API_VERSION.test(base) ? segment : `{token}${extension}`;
+      })
+      .join("/");
   }
 
   /** @returns {{ meta: Record<string, string[]>, metaCsp: string[] }} */
@@ -329,6 +441,7 @@
    */
   async function collect(domQueries, paymentHosts) {
     const docs = documents();
+    const entries = resourceEntries();
     const [headers, scripts] = await Promise.all([readHeaders(), readScripts()]);
     return {
       url: location.href,
@@ -347,6 +460,8 @@
       html: document.documentElement.outerHTML.slice(0, MAX_HTML),
       text: (document.body?.innerText ?? "").slice(0, MAX_TEXT),
       dom: readDom(domQueries),
+      requests: readRequests(entries),
+      contactedHosts: readContactedHosts(entries),
     };
   }
 

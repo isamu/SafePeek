@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'info' = identifies the framework or language only.",
+  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname; 'api' = URLs the page itself fetched (fetch / XHR / beacon), scheme, host and path only, with path segments not shaped like route names masked as {token}. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'info' = identifies the framework or language only.",
   "reviewed": "2026-09-30",
   "backends": [
     {
@@ -29,6 +29,13 @@
           "weight": 15,
           "note": "Struts 1 frame in a stack trace shown in the page (text a page about Struts can show too; counts only with another trace)",
           "noteJa": "ページに表示されたスタックトレースに Struts 1 のクラス（解説ページにも出うる文章なので、他の痕跡と合わさったときだけ効く）"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.do$",
+          "weight": 20,
+          "note": "*.do API calls (Struts 1 convention, also Spring MVC)",
+          "noteJa": "*.do 形式の API 呼び出し（Struts 1 の慣習。Spring MVC でも使われる）"
         }
       ]
     },
@@ -146,6 +153,13 @@
           "weight": 60,
           "note": "Struts 2 bundled static files",
           "noteJa": "Struts 2 同梱のファイル"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.action$",
+          "weight": 50,
+          "note": "*.action API calls (Struts 2 convention)",
+          "noteJa": "*.action 形式の API 呼び出し（Struts 2 の慣習）"
         }
       ]
     },
@@ -270,6 +284,13 @@
           "weight": 50,
           "note": "WebResource.axd / ScriptResource.axd",
           "noteJa": "WebResource.axd / ScriptResource.axd"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.asmx/",
+          "weight": 50,
+          "note": "ASMX web service calls",
+          "noteJa": "ASMX Web サービスの呼び出し"
         }
       ]
     },
@@ -405,6 +426,13 @@
           "weight": 80,
           "note": "PHP error message shown in the page",
           "noteJa": "ページに PHP のエラーメッセージが表示されている"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.php$",
+          "weight": 40,
+          "note": "*.php API calls",
+          "noteJa": "*.php 形式の API 呼び出し"
         }
       ]
     },
@@ -433,6 +461,27 @@
           "weight": 20,
           "note": "*_session cookie",
           "noteJa": "*_session Cookie"
+        },
+        {
+          "type": "api",
+          "pattern": "/sanctum/csrf-cookie$",
+          "weight": 60,
+          "note": "Laravel Sanctum CSRF cookie request",
+          "noteJa": "Laravel Sanctum の CSRF Cookie 取得"
+        },
+        {
+          "type": "api",
+          "pattern": "/livewire/update$",
+          "weight": 60,
+          "note": "Livewire 3+ update endpoint",
+          "noteJa": "Livewire 3 以降の更新エンドポイント"
+        },
+        {
+          "type": "api",
+          "pattern": "/livewire/message/",
+          "weight": 60,
+          "note": "Livewire 2 component message endpoint",
+          "noteJa": "Livewire 2 のコンポーネント通信エンドポイント"
         }
       ]
     },
@@ -454,6 +503,20 @@
           "weight": 40,
           "note": "X-Runtime header",
           "noteJa": "X-Runtime ヘッダー"
+        },
+        {
+          "type": "api",
+          "pattern": "/rails/active_storage/(?:direct_uploads(?:/|$)|blobs/|representations/)",
+          "weight": 60,
+          "note": "Active Storage endpoint",
+          "noteJa": "Active Storage のエンドポイント"
+        },
+        {
+          "type": "api",
+          "pattern": "/cable$",
+          "weight": 20,
+          "note": "Action Cable endpoint (a common path)",
+          "noteJa": "Action Cable のエンドポイント（よくあるパス）"
         }
       ]
     },
@@ -489,6 +552,13 @@
           "weight": 60,
           "note": "__RequestVerificationToken field",
           "noteJa": "__RequestVerificationToken フィールド"
+        },
+        {
+          "type": "api",
+          "pattern": "/_blazor/negotiate$",
+          "weight": 60,
+          "note": "Blazor Server connection",
+          "noteJa": "Blazor Server の接続"
         }
       ]
     },
@@ -538,6 +608,13 @@
           "weight": 60,
           "note": "Firebase Hosting response header",
           "noteJa": "Firebase Hosting のレスポンスヘッダー"
+        },
+        {
+          "type": "api",
+          "pattern": "^https://(?:firestore|identitytoolkit|securetoken|firebaseinstallations)\\.googleapis\\.com/",
+          "weight": 60,
+          "note": "calls to Firebase APIs",
+          "noteJa": "Firebase の API への通信"
         }
       ]
     },
@@ -566,6 +643,13 @@
           "weight": 40,
           "note": "supabase global",
           "noteJa": "supabase 変数"
+        },
+        {
+          "type": "api",
+          "pattern": "^https://[a-z0-9]+\\.supabase\\.co/(?:rest|auth|storage|realtime|functions)/v1/",
+          "weight": 70,
+          "note": "calls to a Supabase project",
+          "noteJa": "Supabase プロジェクトへの通信"
         }
       ]
     },
@@ -594,6 +678,20 @@
           "weight": 40,
           "note": "Amplify library script",
           "noteJa": "Amplify ライブラリのスクリプト"
+        },
+        {
+          "type": "api",
+          "pattern": "^https://cognito-idp\\.[a-z0-9-]+\\.amazonaws\\.com/",
+          "weight": 70,
+          "note": "calls to Amazon Cognito",
+          "noteJa": "Amazon Cognito への通信"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.appsync-api\\.[a-z0-9-]+\\.amazonaws\\.com/graphql$",
+          "weight": 70,
+          "note": "calls to AWS AppSync",
+          "noteJa": "AWS AppSync への通信"
         }
       ]
     },
@@ -615,6 +713,20 @@
           "weight": 70,
           "note": "API Gateway response header",
           "noteJa": "API Gateway のレスポンスヘッダー"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.execute-api\\.[a-z0-9-]+\\.amazonaws\\.com/",
+          "weight": 60,
+          "note": "calls to API Gateway",
+          "noteJa": "API Gateway への通信"
+        },
+        {
+          "type": "api",
+          "pattern": "\\.lambda-url\\.[a-z0-9-]+\\.on\\.aws/",
+          "weight": 60,
+          "note": "calls to a Lambda function URL",
+          "noteJa": "Lambda 関数 URL への通信"
         }
       ]
     },

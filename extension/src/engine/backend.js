@@ -9,7 +9,7 @@ const THRESHOLD = 30;
 
 /**
  * @typedef {object} Signal
- * @property {"link" | "param" | "html" | "source" | "script" | "cookie" | "header" | "global" | "host"} type
+ * @property {"link" | "param" | "html" | "source" | "script" | "cookie" | "header" | "global" | "host" | "api"} type  "api": a URL the page itself fetched
  * @property {string} pattern
  * @property {number} weight
  * @property {string} note
@@ -89,6 +89,8 @@ function matchSignal(signal, page, traces) {
       return signal.pattern in page.globals ? `window.${signal.pattern}` : null;
     case "link":
       return firstMatch(signal.pattern, traces.paths);
+    case "api":
+      return matchedRequestPart(signal.pattern, page.requests);
     case "param":
       return firstMatch(signal.pattern, traces.params);
     case "cookie":
@@ -113,6 +115,21 @@ function matchSignal(signal, page, traces) {
 function firstMatch(pattern, values) {
   const regex = new RegExp(pattern, "i");
   return values.find((v) => v !== "" && regex.test(v)) ?? null;
+}
+
+/**
+ * Only the host and the part the rule matched: the rest of a request path can hold a token no mask recognises.
+ * @param {string} pattern
+ * @param {string[]} requests
+ * @returns {string | null}
+ */
+function matchedRequestPart(pattern, requests) {
+  const regex = new RegExp(pattern, "i");
+  for (const url of requests) {
+    const match = regex.exec(url);
+    if (match) return match.index === 0 ? match[0] : `${hostOf(url)} …${match[0]}`;
+  }
+  return null;
 }
 
 /**

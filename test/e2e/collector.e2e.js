@@ -95,17 +95,19 @@ async function scan(name) {
  * @param {"load" | "domcontentloaded"} [waitUntil]  "domcontentloaded" for pages whose load event never fires
  * @returns {Promise<import("../../extension/src/types.js").PageData>}
  */
-async function collect(name, waitUntil = "load") {
+async function collect(name, waitUntil = "load", scans = 1) {
   const page = await browser.newPage();
   // Third-party hosts in the fixtures are never contacted: tests must not depend on the network.
   await page.route(/^https:\/\//, (route) => route.abort());
   await page.goto(`${base}/${name}`, { waitUntil });
+  // A fixture that makes its own requests marks data-loaded="0" until they have all finished.
+  await page.waitForFunction(() => document.body?.dataset.loaded !== "0");
   await page.addScriptTag({ path: collectorPath });
   const hosts = db.providers.flatMap((p) => p.hosts);
-  const collected = await page.evaluate(
-    ([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h),
-    [buildDomQueries(db.technologies), hosts],
-  );
+  const scan = () =>
+    page.evaluate(([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h), [buildDomQueries(db.technologies), hosts]);
+  let collected = await scan();
+  for (let n = 1; n < scans; n++) collected = await scan();
   const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire), ...backendGlobalPaths(db.backends)])];
   const globals = await page.evaluate(probeGlobals, paths);
   await page.close();
@@ -217,5 +219,37 @@ describe("collector in Chromium", () => {
     const report = await scan("framed-tokenized.html");
     const payment = report.findings.find((f) => f.area === "payment");
     assert.deepEqual([payment?.id, payment?.params.provider], ["card_tokenized_on_page", "GMO Payment Gateway"]);
+  });
+
+  it("reads the API calls the page made, without their query strings", async () => {
+    const page = await collect("api-calls.html");
+    const call = page.requests.find((u) => u.endsWith("/sanctum/csrf-cookie"));
+    assert.ok(call, page.requests.join(", "));
+    assert.ok(!page.requests.some((u) => u.includes("SECRET")), page.requests.join(", "));
+    assert.ok(
+      page.requests.some((u) => u.endsWith("/api/session")),
+      "path parameters are dropped, the path is kept",
+    );
+    assert.ok(
+      page.requests.some((u) => u.endsWith("/password/reset/{token}/confirm")),
+      "a token in the path is masked",
+    );
+    for (const masked of ["/verify/{token}", "/magic/{token}/login", "/session/{token}", "/share/{token}", "/api/v1/items/{token}/detail.php"]) {
+      assert.ok(
+        page.requests.some((u) => u.endsWith(masked)),
+        masked,
+      );
+    }
+    assert.ok(!page.requests.some((u) => /550e8400|eyJ|12345|%2F/.test(u)), page.requests.join(", "));
+    assert.ok(page.contactedHosts.includes("shop.test"));
+  });
+
+  it("does not count its own earlier re-requests as the page's on a second scan", async () => {
+    const page = await collect("api-calls.html", "load", 2);
+    assert.ok(
+      page.requests.some((u) => u.endsWith("/sanctum/csrf-cookie")),
+      page.requests.join(", "),
+    );
+    assert.ok(!page.requests.some((u) => u.endsWith("/api-calls.html") || u.endsWith("/js/kumu.js")), page.requests.join(", "));
   });
 });
