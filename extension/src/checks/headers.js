@@ -108,12 +108,8 @@ function limitsFraming(frameOptions, headerPolicies) {
  * @returns {boolean}
  */
 function frameOptionsBlock(header) {
-  const values = new Set(
-    (header ?? "")
-      .split(",")
-      .map((v) => v.trim().toLowerCase())
-      .filter((v) => v !== ""),
-  );
+  // Empty members count: "ALLOWALL," is two values, blocked as confusing.
+  const values = new Set((header ?? "").split(",").map((v) => v.trim().toLowerCase()));
   if (values.size > 1) return CONFUSING_FRAME_OPTIONS.some((v) => values.has(v));
   return BLOCKING_FRAME_OPTIONS.some((v) => values.has(v));
 }

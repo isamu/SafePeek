@@ -1,35 +1,57 @@
 // The max-age a browser takes from a Strict-Transport-Security header, parsed as RFC 6797 section 6.1 and 8.1 say.
 
 const DIGITS = /^\d+$/;
+// RFC 9110 token characters: a directive name, and an unquoted value.
+const TOKEN = /^[!#$%&'*+.^_`|~0-9a-z-]+$/i;
 const QUOTE = '"';
 const ESCAPE = "\\";
 
 /**
- * Only the first header counts (fetch() joins repeated ones with ", "), directive names are case-insensitive, a quoted
- * value is unescaped, and a header repeating a directive or with a malformed max-age is ignored.
+ * Only the first header counts (fetch() joins repeated ones with ", "), and a browser ignores the whole header unless
+ * every directive is well-formed: a token name, a token or quoted value, no directive twice, includeSubDomains without
+ * a value, and a max-age of digits.
  * @param {string | undefined} header
  * @returns {number}  the max-age in seconds, 0 when the browser keeps no HSTS from this header
  */
 export function hstsMaxAge(header) {
   const [first] = splitOutsideQuotes(header ?? "", ",");
   const directives = splitOutsideQuotes(first, ";")
-    .map(parseDirective)
-    .filter((d) => d.name !== "");
+    .filter((part) => part.trim() !== "")
+    .map(parseDirective);
   const names = directives.map((d) => d.name);
-  if (new Set(names).size !== names.length) return 0;
+  if (new Set(names).size !== names.length || !directives.every(isWellFormed)) return 0;
   const maxAge = directives.find((d) => d.name === "max-age")?.value;
   return maxAge !== undefined && DIGITS.test(maxAge) ? Number(maxAge) : 0;
 }
 
 /**
+ * @param {Directive} directive
+ * @returns {boolean}
+ */
+function isWellFormed({ name, value, quoted, bare }) {
+  if (!TOKEN.test(name) || value === undefined) return false;
+  if (name === "includesubdomains") return bare;
+  return bare || quoted || TOKEN.test(value);
+}
+
+/**
+ * @typedef {object} Directive
+ * @property {string} name  lower-cased
+ * @property {string | undefined} value  undefined when a quoted string is left open
+ * @property {boolean} quoted
+ * @property {boolean} bare  no "=" at all
+ */
+
+/**
  * @param {string} part
- * @returns {{ name: string, value: string | undefined }}  value is undefined when a quoted string is left open
+ * @returns {Directive}
  */
 function parseDirective(part) {
   const at = part.indexOf("=");
   const name = (at < 0 ? part : part.slice(0, at)).trim().toLowerCase();
   const raw = at < 0 ? "" : part.slice(at + 1).trim();
-  return { name, value: raw.startsWith(QUOTE) ? unquote(raw) : raw };
+  const quoted = raw.startsWith(QUOTE);
+  return { name, value: quoted ? unquote(raw) : raw, quoted, bare: at < 0 };
 }
 
 /**

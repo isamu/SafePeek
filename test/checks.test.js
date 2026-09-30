@@ -82,6 +82,15 @@ describe("transport and headers", () => {
     assert.deepEqual(withHsts('foo="a;max-age=0"; max-age=31536000'), [], "nor does a semicolon start another directive");
     assert.deepEqual(withHsts('max-age="3153\\6000"'), [], "a quoted value is unescaped");
     assert.deepEqual(withHsts('max-age="31536000"x'), ["no_hsts"], "text after the closing quote is malformed");
+    for (const malformed of [
+      "max-age=31536000; bad name",
+      "max-age=31536000; foo=bar baz",
+      "max-age=31536000; includeSubDomains=true",
+      "max-age=31536000; =x",
+    ]) {
+      assert.deepEqual(withHsts(malformed), ["no_hsts"], malformed);
+    }
+    assert.deepEqual(withHsts("max-age=31536000; includeSubDomains; preload; foo=bar;"), [], "well-formed extensions and a trailing ; are fine");
   });
 
   it("counts only X-Frame-Options values and frame-ancestors that browsers honour", () => {
@@ -114,6 +123,8 @@ describe("transport and headers", () => {
     for (const value of ["ALLOWALL, INVALID", "INVALID, DENY", "SAMEORIGIN, DENY"]) assert.deepEqual(framing(value), [], `${value}: confusing values block`);
     assert.deepEqual(framing("INVALID, OTHER"), ["no_clickjacking"], "several unknown values do not");
     assert.deepEqual(framing("ALLOWALL"), ["no_clickjacking"], "ALLOWALL alone allows framing");
+    assert.deepEqual(framing("ALLOWALL,"), [], "an empty member makes two values, blocked as confusing");
+    assert.deepEqual(framing("   "), ["no_clickjacking"], "an empty header is none");
   });
 
   it("flags a CSP that allows inline scripts without nonces", () => {
