@@ -8,8 +8,8 @@ const MAX_POLICY_EVIDENCE = 300;
 const ANY_HOST_SCHEMES = new Set(["http:", "https:", "data:"]);
 // A host-source's host part: after an optional scheme, up to a port or path.
 const HOST_OF_SOURCE = /^(?:[a-z][a-z\d+.-]*:\/\/)?([^:/]*)/;
-// Browsers ignore 'unsafe-inline' when a nonce, a hash or 'strict-dynamic' is present.
-const INLINE_ALLOW_LISTS = /^'(?:nonce-|sha(?:256|384|512)-|strict-dynamic')/;
+// Browsers ignore 'unsafe-inline' when a well-formed nonce or hash, or 'strict-dynamic', is present; a malformed one is itself ignored.
+const INLINE_ALLOW_LISTS = /^'(?:strict-dynamic|nonce-[a-z\d+/_-]+={0,2}|sha(?:256|384|512)-[a-z\d+/_-]+={0,2})'$/;
 const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
 const SCRIPT_ATTRIBUTES = ["script-src-attr", "script-src", "default-src"];
 // A weakness is reported when, for one of its directive chains, every policy that governs it allows the weakness.

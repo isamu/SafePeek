@@ -119,6 +119,9 @@ describe("transport and headers", () => {
     assert.deepEqual(withCsp("script-src 'unsafe-inline' 'STRICT-DYNAMIC'"), []);
     assert.deepEqual(withCsp("script-src 'unsafe-inline' 'Nonce-abc'"), []);
     assert.deepEqual(withCsp("script-src 'unsafe-inline' 'SHA256-abc='"), []);
+    for (const malformed of ["'nonce-*'", "'nonce-'", "'sha256-'", "'sha1-abc'", "'strict-dynamic-x'", "'nonce-abc'x"]) {
+      assert.deepEqual(withCsp(`script-src 'self' 'unsafe-inline' ${malformed}`), ["csp_unsafe_inline"], malformed);
+    }
     assert.deepEqual(withCsp("script-src 'self' HTTPS: 'Strict-Dynamic'"), []);
   });
 
