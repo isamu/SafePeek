@@ -12,7 +12,8 @@ const SAMPLES = {
   restricted: sample(["rk", "live", ""].join("_"), 99),
   github: sample(["ghp", ""].join("_"), 36),
   fineGrained: sample(["github", "pat", ""].join("_"), 82),
-  slack: `${["xoxb", "1234567890"].join("-")}-${RANDOM.slice(0, 24)}`,
+  slack: `${["xoxb", "1234567890", "9876543210"].join("-")}-${RANDOM.slice(0, 24)}`,
+  installation: `${["ghs", "123456", "eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiIxMjMifQ."].join("_")}${RANDOM.slice(0, 43)}`,
   pem: `"-----BEGIN RSA PRIVATE KEY-----\\n${RANDOM}${RANDOM}\\n"`,
 };
 
@@ -25,6 +26,11 @@ describe("secrets in the page", () => {
       assert.deepEqual(found({ scripts: [{ src: null, integrity: "", content: `const key = "${value}";`, fetched: false }] }), ["secret_in_page"], name);
       assert.deepEqual(found({ html: `<div data-key="${value}"></div>` }), ["secret_in_page"], name);
     }
+  });
+
+  it("keeps looking past a placeholder to a real key in the same text", () => {
+    const placeholder = `${["sk", "live", ""].join("_")}${"x".repeat(24)}`;
+    assert.deepEqual(found({ html: `${placeholder} ${SAMPLES.stripe}` }), ["secret_in_page"]);
   });
 
   it("shows no kind, value or place (SPEC S9)", () => {
@@ -43,8 +49,17 @@ describe("secrets in the page", () => {
       sample(["ghp", ""].join("_"), 37),
       'const HEADER = "-----BEGIN PRIVATE KEY-----";',
       sample("AIza", 35),
+      `${["xoxb", "1234567890", "9876543210"].join("-")}-${"ab".repeat(12)}`,
     ];
     for (const value of values) assert.deepEqual(found({ html: value }), [], value);
+  });
+
+  it("judges only the random part: each sample's group is cut from the random text, never from ids or prefixes", () => {
+    for (const [name, value] of Object.entries(SAMPLES)) {
+      const groups = secrets.flatMap((format) => [...value.matchAll(new RegExp(format.pattern, "g"))].map((m) => m[1]));
+      assert.ok(groups.length > 0, name);
+      for (const group of groups) assert.ok(RANDOM.repeat(2).includes(group), `${name}: ${group}`);
+    }
   });
 
   it("documents every format with a source and a pattern that has a random-part group", () => {

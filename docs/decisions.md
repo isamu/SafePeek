@@ -116,6 +116,9 @@ A server-side key in the page's code means the site does not keep its own secret
 - **Only formats with a documented, distinctive prefix** (Stripe `sk_live_` / `rk_live_`, GitHub `ghp_` … `github_pat_`, Slack `xoxb-` / `xoxp-`, a PEM private key with its body). A generic "long random string" rule would flag every hash, nonce and build id.
 - **Keys meant to be public are left out:** Stripe `pk_live_` and Google `AIza…` keys are designed to be in pages. Test keys (`sk_test_`) are left out because they cannot move money.
 - **An AWS secret access key is left out**: it has no prefix, and an access key id alone is not a secret.
+- **Only the random part is judged**: for Slack, the final section (the one Slack calls the secret), not the id sections before it; for a stateless GitHub App token (`ghs_APPID_JWT`), the JWT signature.
+- **A vendor's own documentation example can be reported.** It has the real shape and enough distinct characters (Slack's `xoxp-111-222-333-…`), and a list of known examples would never be complete. A page that prints a real-shaped key is rare, and the message says "looks like".
+- **A PEM key does not need its END line**: the collected HTML and scripts can be cut off before it, and a private key body on its own is already the leak.
 - **Placeholders**: a random part with fewer than 12 distinct characters (`sk_live_xxxx…`, `ghp_0123456789…`) is not counted. A PEM header on its own is not counted either, because crypto libraries carry it as a parser constant.
 
 ## Where a password is sent

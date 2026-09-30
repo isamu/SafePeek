@@ -20,15 +20,20 @@ const MIN_DISTINCT_CHARACTERS = 12;
  */
 export function checkExposedSecrets(page, formats) {
   const texts = [page.html, ...page.scripts.map((s) => s.content)];
-  const found = formats.some((format) => texts.some((text) => containsSecret(text, format.pattern)));
+  const patterns = formats.map((format) => new RegExp(format.pattern, "g"));
+  const found = patterns.some((pattern) => texts.some((text) => containsSecret(text, pattern)));
   return found ? [finding("secret_in_page", "medium", "page")] : [];
 }
 
 /**
+ * Stops at the first real match, so a bundle full of placeholders is not collected into memory.
  * @param {string} text
- * @param {string} pattern
+ * @param {RegExp} pattern  global, so matchAll can iterate it
  * @returns {boolean}
  */
 function containsSecret(text, pattern) {
-  return [...text.matchAll(new RegExp(pattern, "g"))].some((match) => new Set(match[1]).size >= MIN_DISTINCT_CHARACTERS);
+  for (const match of text.matchAll(pattern)) {
+    if (new Set(match[1]).size >= MIN_DISTINCT_CHARACTERS) return true;
+  }
+  return false;
 }
