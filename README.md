@@ -41,7 +41,7 @@ Chrome may warn about developer-mode extensions at startup, and managed (work) b
 
 ## npm package
 
-The analysis engine is also an npm package, `safepeek` — the same source files, no dependencies — for crawlers, CI and other tools. See [extension/README.md](extension/README.md). (Not published yet.)
+The analysis engine is also an npm package, `safepeek` — the same source files, no dependencies — for checking your own sites in CI or building other visitor tools. It is not meant for scanning other people's sites in bulk. See [extension/README.md](extension/README.md). (Not published yet.)
 
 ## Limitations
 
