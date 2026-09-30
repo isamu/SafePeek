@@ -185,6 +185,11 @@ const JA = {
     detail: () =>
       "日本語のページなのに、日本では使わない簡体字、中国語の言語指定、「◯天」（日数）のような表現があります。警察や国民生活センターは、中国語から機械翻訳された偽ショップの特徴として挙げています。これだけで偽物とは言えませんが、会社の実在や特定商取引法に基づく表記も確かめてください。",
   },
+  legal_notice_link_missing: {
+    title: () => "ショップのページに、特定商取引法に基づく表記へのリンクが見当たりません",
+    detail: () =>
+      "通信販売の事業者は、販売業者名・所在地・電話番号などを「特定商取引法に基づく表記」として示す義務があり、ふつうはどのページのフッターにもリンクがあります。このページにはその言葉がどこにもありません。購入前に、運営会社・住所・電話番号がどこに書かれているか探してください。見つからなければ注意が必要です。",
+  },
   legal_notice_incomplete: {
     title: (p) => `特定商取引法に基づく表記に、必要な項目が見当たりません（${p.count}項目）`,
     detail: () =>
@@ -381,6 +386,11 @@ const EN = {
     title: () => "A Japanese shop page shows traces of Simplified Chinese",
     detail: () =>
       "The page is in Japanese but uses Simplified Chinese characters Japanese does not use, declares Chinese as its language, or counts days with 天. The police and the National Consumer Affairs Center list this as a sign of a fake shop machine-translated from Chinese. It is not proof on its own; check that the company exists and read its 特定商取引法 notice.",
+  },
+  legal_notice_link_missing: {
+    title: () => "This shop page has no link to its 特定商取引法 notice",
+    detail: () =>
+      "Japanese law requires mail-order sellers to show their name, address and phone number in a 特定商取引法 notice, normally linked from every page's footer. Nothing on this page mentions it. Before buying, look for the company, its address and its phone number; be careful if you cannot find them.",
   },
   legal_notice_incomplete: {
     title: (p) => `The 特定商取引法 notice lacks required items (${p.count})`,
