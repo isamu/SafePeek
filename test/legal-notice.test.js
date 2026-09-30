@@ -83,6 +83,8 @@ describe("特定商取引法 notice", () => {
       "ご請求額は遅滞なくお振込みください",
       "代金の請求額は遅滞なく通知します",
       "ご請求があれば遅滞なく通知します",
+      "請求があれば遅滞なく請求書を送付します",
+      "請求があった場合には遅滞なく商品を送付します",
     ]) {
       const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutAddress, sentence].join("\n")));
       assert.deepEqual(found?.evidence, ["所在地"], sentence);
@@ -122,6 +124,19 @@ describe("特定商取引法 notice", () => {
     }
     const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutShipping.join("\n")));
     assert.deepEqual(found.evidence, ["送料"]);
+  });
+
+  it("reads an unlabelled address under the seller's name", () => {
+    const withoutAddress = COMPLETE.split("\n").filter((line) => !/所在地/.test(line));
+    for (const block of [
+      "販売業者 株式会社サンプル 〒100-0001",
+      "運営会社 株式会社サンプル 神奈川県横浜市中区1-1",
+      "事業者 株式会社サンプル 東京都千代田区1-1",
+    ]) {
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutAddress, block].join("\n"))), [], block);
+    }
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutAddress.join("\n")));
+    assert.deepEqual(found.evidence, ["所在地"]);
   });
 
   it("reads common label variants", () => {

@@ -17,12 +17,18 @@ const POLITE_REQUEST_PHRASES = ["いただいた場合", "いただければ", "
 const ON_REQUEST = new RegExp(
   `(?:請求|申し?出)(?:${REQUEST_PHRASES.join("|")}|を?(?:${POLITE_REQUEST_PHRASES.join("|")}))[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付)`,
 );
+// What 11 has the seller provide on request is the omitted matters, so a sentence sending an invoice or the goods is not
+// the statement: 提供 / 交付 / 送付 count only with the information named; 開示 always names it.
+const DISCLOSED_DETAILS = /開示|書面|電子メール|電磁的記録|事項|情報|内容|詳細/;
+const POSTAL_CODE = /〒\s?\d{3}-?\d{4}/;
+const PREFECTURE_AND_CITY = /(?:東京都|北海道|京都府|大阪府|\S{2,3}県)\S{1,8}?[市区町村郡]/;
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement (price and shipping too, when they are
 // not all shown: https://www.no-trouble.caa.go.jp/qa/advertising.html Q5). The return terms never may.
 const ITEMS = [
   { label: "販売業者", pattern: /販売業者|販売事業者|事業者|会社名|商号|運営会社|販売元|店舗名/, onRequest: true },
-  { label: "所在地", pattern: /所在地|住所/, onRequest: true },
+  // Some notices put the address under the seller's name without a label: a postal code or prefecture-and-city counts.
+  { label: "所在地", pattern: new RegExp(["所在地|住所", POSTAL_CODE.source, PREFECTURE_AND_CITY.source].join("|")), onRequest: true },
   { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
   // 「商品代金以外の必要料金」 and 「代金引換」 are about other charges and payment, not the price.
@@ -56,7 +62,9 @@ export function checkLegalNotice(page) {
  * @returns {boolean}
  */
 function hasGeneralOnRequest(text) {
-  return text.split(/[。\n]/).some((sentence) => ON_REQUEST.test(sentence) && !ITEMS.some((item) => item.pattern.test(sentence)));
+  return text
+    .split(/[。\n]/)
+    .some((sentence) => ON_REQUEST.test(sentence) && DISCLOSED_DETAILS.test(sentence) && !ITEMS.some((item) => item.pattern.test(sentence)));
 }
 
 /**
