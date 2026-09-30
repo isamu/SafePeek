@@ -118,6 +118,8 @@ describe("payment", () => {
     }
     const card = [inputField("card_number", inLogin), inputField("exp", { ...inLogin, autocomplete: "cc-exp" })];
     assert.equal(checkPayment(makePage({ inputs: card }), db.providers)[0].id, "card_on_page");
+    const memberCard = [inputField("card_number", inLogin), inputField("valid", { ...inLogin, hints: "有効期限" })];
+    assert.deepEqual(ids(checkPayment(makePage({ inputs: memberCard }), db.providers)), ["no_card_form"], "a hint-only expiry does not confirm a login form");
   });
 
   it("does not take an expiry date alone for a card", () => {

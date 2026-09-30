@@ -39,15 +39,21 @@ function autocompleteKind(token) {
  * @returns {import("../types.js").InputField[]}
  */
 export function cardFields(inputs) {
-  const kinds = inputs.map((field) => ({ field, kind: cardFieldKind(field) }));
+  const kinds = inputs.map((field) => ({ field, kind: countedKind(field) }));
   const formHas = (/** @type {number} */ form, /** @type {(kind: string | null) => boolean} */ test) =>
     kinds.some((k) => k.field.form === form && test(k.kind));
   const holdsCard = (/** @type {number} */ form) =>
     formHas(form, (kind) => kind === "number") && formHas(form, (kind) => kind === "security" || kind === "expiry");
-  return kinds
-    .filter(({ field, kind }) => {
-      if (kind === null || (kind === "expiry" && !CARD_AUTOCOMPLETE.test(field.autocomplete.trim()))) return false;
-      return !field.inPasswordForm || holdsCard(field.form);
-    })
-    .map(({ field }) => field);
+  return kinds.filter(({ field, kind }) => kind !== null && (!field.inPasswordForm || holdsCard(field.form))).map(({ field }) => field);
+}
+
+/**
+ * The kind a field counts as. An expiry date counts only when the field says so with cc-exp* autocomplete;
+ * a label such as 有効期限 alone may belong to a coupon, points or a membership card.
+ * @param {import("../types.js").InputField} field
+ * @returns {"number" | "security" | "expiry" | null}
+ */
+function countedKind(field) {
+  const kind = cardFieldKind(field);
+  return kind === "expiry" && !CARD_AUTOCOMPLETE.test(field.autocomplete.trim()) ? null : kind;
 }
