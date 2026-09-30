@@ -112,6 +112,14 @@ describe("API calls the page made", () => {
     }
   });
 
+  it("show only the host and the matched part of the URL, never the rest of its path", () => {
+    const [laravel] = inferBackends(makePage({ requests: ["https://shop.example/magic/alpha-beta-gamma/sanctum/csrf-cookie"] }), db.backends);
+    const [signal] = laravel.signals;
+    assert.equal(signal.match, "shop.example …/sanctum/csrf-cookie");
+    const [php] = inferBackends(makePage({ requests: ["https://shop.example/share/private-reset-token.php"] }), db.backends);
+    assert.equal(php.signals[0].match, "shop.example ….php");
+  });
+
   it("do not read a matching path in the page's text or links as an API call", () => {
     for (const text of ["https://abcdefgh.supabase.co/rest/v1/items", "/sanctum/csrf-cookie"]) {
       const found = inferBackends(makePage({ html: text, text }), db.backends);

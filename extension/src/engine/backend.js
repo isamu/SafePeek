@@ -90,7 +90,7 @@ function matchSignal(signal, page, traces) {
     case "link":
       return firstMatch(signal.pattern, traces.paths);
     case "api":
-      return firstMatch(signal.pattern, page.requests);
+      return matchedRequestPart(signal.pattern, page.requests);
     case "param":
       return firstMatch(signal.pattern, traces.params);
     case "cookie":
@@ -115,6 +115,21 @@ function matchSignal(signal, page, traces) {
 function firstMatch(pattern, values) {
   const regex = new RegExp(pattern, "i");
   return values.find((v) => v !== "" && regex.test(v)) ?? null;
+}
+
+/**
+ * Only the host and the part the rule matched: the rest of a request path can hold a token no mask recognises.
+ * @param {string} pattern
+ * @param {string[]} requests
+ * @returns {string | null}
+ */
+function matchedRequestPart(pattern, requests) {
+  const regex = new RegExp(pattern, "i");
+  for (const url of requests) {
+    const match = regex.exec(url);
+    if (match) return match.index === 0 ? match[0] : `${hostOf(url)} …${match[0]}`;
+  }
+  return null;
 }
 
 /**

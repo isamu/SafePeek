@@ -14,7 +14,7 @@ SafePeek declares two permissions. There are no host permissions, no content scr
 - Re-requests the current page URL with `HEAD` (or `GET` if `HEAD` fails) to read its response headers.
 - Re-requests the page's own script files (up to 40, cache first) to read library version banners.
 - In the page's JavaScript world, reads property paths such as `jQuery.fn.jquery`. It never evaluates code strings.
-- Reads the browser's record of what the page has already loaded (resource timing): the address of the page's own API calls (no query string, fragment or path parameters, and every path part not shaped like a route name masked), and the hosts it loaded anything from. This makes no request.
+- Reads the browser's record of what the page has already loaded (resource timing): the address of the page's own API calls (no query string, fragment or path parameters, and every path part not shaped like a route name masked; only the host and the part a rule matched are ever shown), and the hosts it loaded anything from. This makes no request.
 
 The injected code never writes to the page, never submits forms, and never sends data to any other server. Everything it collects goes back to the popup and is discarded when the popup closes.
 
