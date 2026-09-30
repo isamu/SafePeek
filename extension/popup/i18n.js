@@ -156,6 +156,11 @@ const JA = {
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
   no_clickjacking: { title: () => "クリックジャッキング対策がありません", detail: () => "X-Frame-Options も CSP の frame-ancestors もありません。" },
+  password_other_site: {
+    title: (p) => `パスワードが別の組織らしいドメインに送られます（${p.hosts}）`,
+    detail: () =>
+      "このページのログインフォームは、サイトとは別の組織に見えるドメインにパスワードを送ります。知られたログインサービスは除いています。フィッシングか、フォームの設定の誤りかもしれません。見慣れないドメインなら入力しないでください。",
+  },
   card_page_third_party: {
     title: (p) => `カード番号を入力するページで、別のドメインのスクリプトが動いています（${p.count}か所）`,
     detail: () =>
@@ -323,6 +328,11 @@ const EN = {
   csp_unsafe_inline: { title: () => "CSP allows inline scripts", detail: () => "'unsafe-inline' largely disables CSP's protection against injected scripts." },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
   no_clickjacking: { title: () => "No clickjacking protection", detail: () => "Neither X-Frame-Options nor CSP frame-ancestors is set." },
+  password_other_site: {
+    title: (p) => `Your password would be sent to another organisation's domain (${p.hosts})`,
+    detail: () =>
+      "This login form sends the password to a domain that does not look like the site's own. Known sign-in services are left out. It may be phishing or a misconfigured form; if you do not recognise the domain, do not enter your password.",
+  },
   card_page_third_party: {
     title: (p) => `Scripts from other domains run where you type your card number (${p.count} hosts)`,
     detail: () =>

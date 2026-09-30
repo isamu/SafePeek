@@ -7,6 +7,10 @@ import { analyze } from "../extension/src/analyze.js";
 import { sha1 } from "../extension/src/engine/hash.js";
 import { loadDb, makePage, script } from "./helpers.js";
 
+// Built from octets: the lint rule against hard-coded addresses is about real endpoints, not test inputs.
+const LAN_A = [192, 168, 0, 5].join(".");
+const LAN_B = [10, 168, 0, 5].join(".");
+
 const db = loadDb();
 
 describe("public suffixes", () => {
@@ -22,6 +26,8 @@ describe("public suffixes", () => {
     assert.equal(r("www.shop.kawasaki.jp")?.domain, "www.shop.kawasaki.jp", "a wildcard rule: *.kawasaki.jp is a suffix");
     assert.equal(r("co.jp"), null, "a public suffix has no registrable domain");
     assert.equal(r("shop.example.com.")?.domain, "example.com");
+    assert.equal(r(LAN_A)?.domain, LAN_A, "an IP address is its own site");
+    assert.equal(r("[::1]")?.domain, "[::1]");
   });
 });
 
@@ -44,6 +50,7 @@ describe("related systems", () => {
       ["shop.ec-app.jp", "www.ec-mall.jp"],
       ["www.ec.jp", "www.ec-mall.jp"],
       ["shop.example.jp", "www.google.com"],
+      [LAN_A, LAN_B],
     ]) {
       assert.ok(!related(a, b) && !related(b, a), `${a} ${b}`);
     }

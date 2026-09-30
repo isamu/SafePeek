@@ -101,3 +101,14 @@ Hosts are listed with *other* and *ads* first.
 
 - **Only script CDNs named in a report of malicious code are listed.** The attackers' own redirect and payload domains are left out; no site loads them on purpose.
 - **The wording is "tries to load".** Some of these domains no longer serve anything, and SafePeek cannot see whether a cross-origin script ran.
+
+## Where a password is sent
+
+- **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
+- **Left out:** the page's own registrable domain and listed sign-in services by host or URL prefix. The related-systems rule is deliberately not used: it relates the same name under another suffix (`mybank.co.jp` and `mybank.net`), which is exactly how a look-alike phishing domain is made. A company logging in on its sister domain is warned about too; the target domain is shown, so the visitor can judge. A site that hands login to Auth0 or Okta is not warned about.
+- **A sign-in path alone does not let a target through.** Keycloak is recognised by a path, and a path fits any host, so a phishing form could borrow it. A company's own Keycloak sits on its own domain and is left out as a related host anyway.
+- **The target domain is shown.** It is public, and it is exactly what the visitor needs to judge (S9).
+- **Only the form's default target is checked.** A submit button's `formaction` can send the form elsewhere, and so can a script. Neither is seen: the collector does not read `formaction`, and the values a script sends are never read.
+  - A determined phishing page can therefore avoid this finding.
+  - The check is for misconfigured forms and plain phishing kits, not a guarantee.
+  - Reading `formaction` would also need room in the collector, which is at its size limit.
