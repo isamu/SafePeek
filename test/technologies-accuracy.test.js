@@ -42,6 +42,27 @@ describe("technology detection", () => {
     assert.ok(names(makePage({ scripts: [gtm] })).includes("Adenzo"));
   });
 
+  it("keeps a platform that a directly seen technology implies, whatever implied it first", () => {
+    // AScript (script-only) reaches Framework and Language first; CDirect reaches Framework one step later via Mid.
+    const tiny = {
+      technologies: {
+        AScript: { scripts: "ascript-marker", implies: "Framework", cats: [] },
+        CDirect: { meta: { generator: "^CDirect$" }, implies: "Mid", cats: [] },
+        Mid: { implies: "Framework", cats: [] },
+        Framework: { implies: "Language", cats: [18] },
+        Language: { cats: [27] },
+      },
+      categories: {},
+    };
+    const page = makePage({ meta: { generator: ["CDirect"] }, scripts: [script("https://site.example/a.js", "ascript-marker")] });
+    assert.deepEqual(
+      detectTechnologies(page, tiny)
+        .map((t) => t.name)
+        .sort(),
+      ["AScript", "CDirect", "Framework", "Language", "Mid"],
+    );
+  });
+
   it("does not let a confidence:0 hit imply anything", () => {
     const tiny = {
       technologies: { Theme: { meta: { version: "^(.+)$\\;version:\\1\\;confidence:0" }, implies: "Shop", cats: [] }, Shop: { cats: [] } },

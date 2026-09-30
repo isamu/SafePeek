@@ -195,15 +195,21 @@ function applyImplies(hits, technologies) {
   const queue = [...hits.keys()];
   while (queue.length > 0) {
     const name = queue.shift() ?? "";
+    const source = hits.get(name);
     for (const implied of toList(technologies[name]?.implies)) {
       const pattern = parsePattern(implied);
-      if (!technologies[pattern.source] || hits.has(pattern.source)) continue;
+      const existing = hits.get(pattern.source);
+      if (existing?.impliedBy && source?.direct && !existing.direct) {
+        existing.direct = true; // a directly seen technology implies it too; pass that on down the chain
+        queue.push(pattern.source);
+      }
+      if (!technologies[pattern.source] || existing) continue;
       hits.set(pattern.source, {
         confidence: pattern.confidence,
         versions: [],
         evidence: [`implied by ${name}`],
         impliedBy: name,
-        direct: hits.get(name)?.direct,
+        direct: source?.direct,
       });
       queue.push(pattern.source);
     }
