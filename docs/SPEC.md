@@ -8,6 +8,27 @@ A browser extension that, on demand, tells a visitor what a website is built wit
 
 Non-goals: active scanning or probing of sites, crawling, reputation lookups, any server component, any telemetry.
 
+### What it can tell you (overview)
+
+| Question | How | Output |
+| --- | --- | --- |
+| What is this site built with? | webappanalyzer fingerprints over headers, cookies, meta, script URLs and code, HTML, DOM, JS globals | technologies with versions; ones known only through another's "implies" are marked as such |
+| Is the backend an abandoned framework? | **backend inference** from indirect traces: URL conventions (`.do`, `.action`, `.php`), hidden field and parameter names, headers, script names and code/comments, JS globals, cookies, error output, hostname | each guess with a **confidence** (high/medium/low) and every trace with its **strength**; end-of-life (e.g. Struts 1, Seasar2, symfony 1) and old-generation (Struts 2, CakePHP 1/2, Classic ASP, Web Forms, ColdFusion, Perl CGI) flagged |
+| Does it run on a BaaS / managed platform? | domains, SDKs, endpoints in code, platform headers (Firebase, Supabase, AWS Amplify/Cognito/AppSync/API Gateway/S3/CloudFront, Vercel, Netlify, Cloudflare Pages, App Engine/Cloud Run, Heroku) | reported as information; contradictory implied server stacks (PHP, MySQL …) are dropped |
+| Is its software past end of life? | versions from headers, fingerprints and library scans against `eol.json` (PHP, Apache 2.2, IIS, OpenSSL, Python, Drupal, Joomla, Magento 1, AngularJS, Angular, Vue 2, jQuery 1/2, Bootstrap 3/4) | `eol` / `eol_soon` findings with the date and source |
+| Is WordPress up to date? | core version from the generator tag or `/wp-includes/` asset versions; plugins and themes from `/wp-content/` asset URLs | core below 4.7 (no security updates since July 2025) high; older than the latest series medium; plugin/theme list with vulnerability lookup links; XML-RPC exposure |
+| Which JS libraries have known CVEs? | Retire.js over script URLs, file banners, hashes and globals | vulnerable library findings with CVEs |
+| How is my card number handled? | card-like fields, provider iframes, redirects, tokenization scripts | provider frame / redirect (good), in-page tokenization (medium), raw form on the site (high) |
+| Are the basics in place? | response headers, cookies, forms, loaded resources | HTTPS, HSTS, CSP, nosniff, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts and SRI |
+
+Everything is inference from what the page exposes. "No problems found" is never a statement that a site is safe.
+
+### Ways to use it
+
+- **Browser extension** (Chrome, from GitHub; see README).
+- **npm package `safepeek`**: the same engine as ES modules (`extension/package.json`, entry `src/index.js`), for use in crawlers, CI or other tools. Page data must be collected in a real page (the collector plus `probeGlobals`).
+- **Contributing traces**: users paste the popup's "Copy the inference" output into the *Backend inference* issue form; maintainers turn it into rules (`docs/backend-signatures.md`).
+
 ## 2. Security invariants (enforced by `test/policy.test.js`)
 
 | # | Invariant | How it is enforced |
@@ -49,6 +70,14 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | payment | `payment_redirect` | good | link/form to a known provider host |
 | payment | `payment_scripts_only` | info | provider script but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
+| backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
+| backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
+| backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |
+| cms | `wp_core_eol` | high | WordPress below 4.7 (no security backports since 2025-07) |
+| cms | `wp_core_outdated` | medium | WordPress older than the latest series in `wordpress.json` |
+| cms | `wp_version_exposed` | low | WordPress version readable from the page |
+| cms | `wp_xmlrpc` | low | pingback / `X-Pingback` advertises XML-RPC |
+| cms | `wp_components` | info | plugins and themes seen, with vulnerability lookup links |
 | libraries | `vulnerable_library` | max vuln severity (critical→high) | Retire.js match with vulnerabilities |
 | eol | `eol` | high (server/CMS), medium (frontend) | version's cycle past its EOL date (`data/eol.json`) |
 | eol | `eol_soon` | low | EOL within 90 days |
@@ -76,6 +105,9 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 - **Libraries**: Retire.js `jsrepository.json` (Apache-2.0). Extractors: uri, filename, filecontent, filecontentreplace, hashes (SHA-1 of fetched bodies), func — only expressions reducible to property paths (`a.b.c`, `(A || B).c`, `A && A.b`); others are skipped by design (S3).
 - **EOL**: hand-maintained `data/eol.json`; a version maps to the first cycle whose `below` it is under. Retire.js versions for jQuery, AngularJS, Vue, Bootstrap also feed this check.
 
+- **Backends**: hand-maintained `data/backend-signatures.json` (see `docs/backend-signatures.md`). Trace types: link, param, html, source, script, cookie, header, global, host. Confidence = sum of matched weights, capped at 100, reported from 30. When a strong `managed` backend is found, technologies that are only implied (no trace of their own) in the web framework, web server, language and database categories are dropped.
+- **WordPress**: `data/wordpress.json` holds the latest series and the backport cut-off; core version from the generator meta tag, else the most common `?ver=` of `/wp-includes/` assets; plugins and themes from `/wp-content/` asset paths.
+
 ## 7. Data
 
 | File | Origin | Update |
@@ -85,10 +117,12 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 | `sources.json` | written by the tool: upstream commits and dates | same |
 | `eol.json` | hand-maintained, `reviewed` date | by hand, with source links |
 | `payment-providers.json` | hand-maintained | by hand, with source links in the PR |
+| `backend-signatures.json` | hand-maintained, contributed through the issue form | by hand; validated by `test/backend.test.js` |
+| `wordpress.json` | hand-maintained, `reviewed` date | by hand when a WordPress major ships |
 
 ## 8. UI
 
-Popup, 420 px, light/dark. Sections: summary (level, counts, disclaimer), card payment, security findings (expandable, evidence), technologies (grouped by category, EOL highlighted), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
+Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button and a link to the issue form — nothing is sent by SafePeek itself), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
 
 ## 9. Quality gates
 
@@ -97,6 +131,7 @@ Popup, 420 px, light/dark. Sections: summary (level, counts, disclaimer), card p
 ## 10. Roadmap
 
 - Firefox package (AMO self-distribution signing).
+- Publish the npm package (needs an `NPM_TOKEN` secret; the release workflow does the rest).
 - Optional in-popup "update data" that downloads data JSON (never code) from this repository's releases, behind an optional host permission.
 - Popup screenshot tests from the fixtures.
 - Same-origin iframes (card fields inside a same-site frame).
