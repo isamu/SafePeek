@@ -73,7 +73,7 @@ describe("template leftovers on a shop page", () => {
     for (const guide of ["特定商取引法に基づく表記の書き方", "ネットショップの作り方", "デモストアです", "表記の記載例"]) {
       assert.deepEqual(checkTemplateLeftovers(shop(`${guide}\n販売業者 株式会社〇〇`)), [], guide);
     }
-    const noBuy = makePage({ text: `${"税込価格の送料について説明します。".repeat(20)}\n販売業者 株式会社〇〇`, html: "<html></html>" });
+    const noBuy = makePage({ text: `${"税込価格と送料についてのご案内をこちらにまとめています。".repeat(20)}\n販売業者 株式会社〇〇`, html: "<html></html>" });
     assert.deepEqual(checkTemplateLeftovers(noBuy), []);
   });
 
