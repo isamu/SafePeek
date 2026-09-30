@@ -13,7 +13,7 @@ SafePeek is a browser extension you open on any page to see:
 5. **BaaS and managed platforms** — Firebase, Supabase, AWS (Amplify, Cognito, AppSync, API Gateway, S3, CloudFront), Vercel, Netlify, Cloudflare Pages, App Engine / Cloud Run, Heroku. When one is found, contradictory server stacks that are only implied by other fingerprints (PHP, MySQL …) are dropped.
 6. **WordPress** — core version against the supported series (below 4.7: no security updates since July 2025), plugins and themes with vulnerability lookup links, XML-RPC exposure.
 7. **Security basics** — HTTPS, HSTS, CSP, clickjacking protection, exposed server versions, session cookies readable by JavaScript, mixed content, third-party scripts.
-8. **Fake-shop signs** — signs the police and consumer centres list for fake online shops:
+8. **Fake-shop signs** — signs of fake or tampered shops, from the police, consumer centres and security research:
    - a card field in the page beside the payment provider's own card frame (a skimming shape);
    - a Japanese shop page with no link to its 特定商取引法 notice, or a notice missing required items;
    - traces of Simplified Chinese on a Japanese shop page.
