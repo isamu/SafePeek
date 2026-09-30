@@ -128,6 +128,20 @@ A server-side key in the page's code means the site does not keep its own secret
 - **A PEM key does not need its END line**: the collected HTML and scripts can be cut off before it, and a private key body on its own is already the leak.
 - **Placeholders**: a random part with fewer than 12 distinct characters (`sk_live_xxxx…`, `ghp_0123456789…`) is not counted. A PEM header on its own is not counted either, because crypto libraries carry it as a parser constant.
 
+## The 特定商取引法 notice
+
+Every public body's fake-shop checklist starts with this notice (`docs/fake-shop-research.md`, item 3). SafePeek sees one page, so it judges the notice only when the visitor scans the notice itself.
+
+- **A title part or a top heading must be the notice's own name** (…に基づく表記, …による表示), so a footer link on every page, an article about the law (特商法とは), or a guide to writing the notice (…の書き方) does not make a page the notice.
+- **An item counts when its label appears anywhere in the text.** This is lenient on purpose: it misses a fake that fills in labels with made-up values, and it never reports a real notice laid out with unusual wording as missing everything.
+- **A statement that details are given on request counts** for the items the 消費者庁 table lets it replace: seller, address, phone, representative, payment and delivery timing. It may replace the price and the other charges too (消費者庁 Q&A, advertising Q5), but never the return terms. Only phrasings of the consumer's request count (請求があった場合, 請求があれば …), followed by 遅滞なく and a promise to provide or disclose, so billing prose about an invoice or an amount due never does.
+- **Only an on-request statement that names no item excuses the rest.** One that names the phone already puts the phone's label on the page; letting it also excuse a missing delivery timing would read a narrow promise as a general one.
+- **Delivery timing includes services and rights** (役務の提供時期, 権利の移転時期), as the law words it.
+- **Payment timing is not checked.** The table lets it be left out only under conditions (prepayment, whether every charge is shown) the notice page does not state reliably.
+- **Only the kinds of missing item are shown**, never a value: an address or phone number on the page is the seller's, and is left to the page.
+- **One unread term alone is not reported.** Real notices word the price, timing and charges many ways (利用料金, サービス開始時期, お支払い金額 …); reviews against real notices kept finding one more. A single unread term on an otherwise complete notice is more often such wording than a gap, so the other terms are reported when two or more are missing. The seller's name, address and phone, and the return terms (which the law never lets a notice omit), are reported alone.
+- **A shop page with no link to the notice is a separate check**, because the collected HTML and text can be cut off before the footer.
+
 ## Where a password is sent
 
 - **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
