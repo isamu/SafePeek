@@ -70,7 +70,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | payment | `card_on_page` | high | card-like fields in the page and no known tokenization script |
 | payment | `card_tokenized_on_page` | medium | card-like fields + a provider tokenization script (e.g. GMO-PG token.js, PAY.JP v1, Stripe v1/v2) |
 | payment | `card_hosted_iframe` | good | an iframe matching a provider's `cardFrames` (card-entry frames known for that provider, e.g. Stripe `elements-inner-card`); other frames of a provider — buttons, wallets, Stripe's hidden `m-outer` — only count as the provider being used |
-| payment | `payment_redirect` | good | link/form to a known provider host |
+| payment | `payment_redirect` | good | a form posting (`method=post`, no password field) to a known provider host, or a link matching a provider's `checkoutLinks` (e.g. Stripe Checkout / Payment Links, PayPal checkout) — a link to a provider's information pages does not count |
 | payment | `payment_scripts_only` | info | provider script or non-card provider frame, but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |

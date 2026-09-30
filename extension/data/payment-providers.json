@@ -1,8 +1,8 @@
 {
-  "_comment": "Payment providers SafePeek recognises. 'hosts' match a hostname or any subdomain of it. 'tokenScripts' are script URLs whose presence means card fields on the merchant's own page are converted to a token in the browser (the card number never reaches the merchant's server, but any script on the page can still read it). 'cardFrames' are the iframe URLs of that provider known to hold card entry; only those count as card entry inside the provider's frame (Stripe, for one, loads hidden frames such as m-outer and controller on every page). A provider without 'cardFrames' is reported as used, never as holding the card. Keep this list factual; add providers with a source link in the pull request.",
+  "_comment": "Payment providers SafePeek recognises. 'hosts' match a hostname or any subdomain of it. 'tokenScripts' are script URLs whose presence means card fields on the merchant's own page are converted to a token in the browser (the card number never reaches the merchant's server, but any script on the page can still read it). 'cardFrames' are the iframe URLs of that provider known to hold card entry; only those count as card entry inside the provider's frame (Stripe, for one, loads hidden frames such as m-outer and controller on every page). A provider without 'cardFrames' is reported as used, never as holding the card. 'checkoutLinks' are the link URLs that start that provider's payment (a checkout or payment-link page); only those, and forms posting to the provider's hosts, count as sending the customer to pay there — a link to the provider's own information pages does not. Keep this list factual; add providers with a source link in the pull request.",
   "providers": [
-    { "name": "Stripe", "hosts": ["js.stripe.com", "checkout.stripe.com", "buy.stripe.com", "m.stripe.network", "hooks.stripe.com"], "tokenScripts": ["js\\.stripe\\.com/v[12]/"], "cardFrames": ["js\\.stripe\\.com/v3/elements-inner-(?:card|payment)"] },
-    { "name": "PayPal", "hosts": ["paypal.com", "paypalobjects.com"] },
+    { "name": "Stripe", "hosts": ["js.stripe.com", "checkout.stripe.com", "buy.stripe.com", "m.stripe.network", "hooks.stripe.com"], "tokenScripts": ["js\\.stripe\\.com/v[12]/"], "cardFrames": ["js\\.stripe\\.com/v3/elements-inner-(?:card|payment)"], "checkoutLinks": ["checkout\\.stripe\\.com/c/pay/", "buy\\.stripe\\.com/"] },
+    { "name": "PayPal", "hosts": ["paypal.com", "paypalobjects.com"], "checkoutLinks": ["paypal\\.com/checkoutnow", "paypal\\.com/cgi-bin/webscr"] },
     { "name": "Braintree", "hosts": ["braintreegateway.com", "braintree-api.com"], "cardFrames": ["^https://assets\\.braintreegateway\\.com/web/[^/?#]+/html/hosted-fields-frame(?:\\.min)?\\.html(?:[?#]|$)"] },
     { "name": "Adyen", "hosts": ["adyen.com", "adyenpayments.com"], "cardFrames": ["^https://checkoutshopper-[a-z0-9-]+\\.adyen\\.com/checkoutshopper/securedfields/[^?#]+/securedFields\\.html\\?(?:[^#]*&)?type=card(?:Compat)?(?:[&#]|$)"] },
     { "name": "Square", "hosts": ["squarecdn.com", "squareup.com", "square.link"], "cardFrames": ["^https://(?:sandbox\\.)?web\\.squarecdn\\.com/[^/?#]+/single-card-element-iframe\\.html(?:[?#]|$)"] },
@@ -12,7 +12,7 @@
     { "name": "PAY.JP", "hosts": ["pay.jp"], "tokenScripts": ["js\\.pay\\.jp/v1/"], "cardFrames": ["^https://js\\.pay\\.jp/v2/element_iframe\\.[^/?#]+\\.html(?:[?#]|$)"] },
     { "name": "KOMOJU", "hosts": ["komoju.com"] },
     { "name": "GMO Payment Gateway", "hosts": ["mul-pay.jp", "gmo-pg.com"], "tokenScripts": ["mul-pay\\.jp/ext/js/token\\.js", "mul-pay\\.jp/payment/js/mp-token"] },
-    { "name": "SB Payment Service", "hosts": ["sbpayment.jp"], "tokenScripts": ["sbpayment\\.jp/.*token"] },
+    { "name": "SB Payment Service", "hosts": ["sbpayment.jp", "sps-system.com"], "tokenScripts": ["sbpayment\\.jp/.*token"] },
     { "name": "DGFT Veritrans", "hosts": ["veritrans.co.jp"], "tokenScripts": ["veritrans\\.co\\.jp/.*token"] },
     { "name": "Zeus", "hosts": ["cardservice.co.jp"] },
     { "name": "Paidy", "hosts": ["paidy.com"] },
