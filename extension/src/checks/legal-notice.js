@@ -4,10 +4,11 @@
 import { finding } from "./finding.js";
 
 const NOTICE_HEADING = /特定商取引法|特商法|特定商取引に関する法律|通信販売に関する表示/;
-const HEADINGS = /<(title|h1|h2)\b[^>]*>([^<]{0,200})<\/\1>/gi;
-// 特定商取引法 11 lets a seller leave some items out when the notice says it will give them without delay on request;
-// an invoice (請求書) sent without delay is not that statement.
-const ON_REQUEST = /請求(?!書)[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付|通知)/;
+const HEADINGS = /<(title|h1|h2)\b[^>]*>([\s\S]{0,400}?)<\/\1>/gi;
+// 特定商取引法 11 lets a seller leave some items out when the notice says it will give them without delay when the
+// consumer asks; only phrasings of such a request count, so billing prose (請求書, 請求額) never does.
+const ON_REQUEST =
+  /請求(?:が(?:あった|ある)場合|があれば|により|いただ(?:いた場合|ければ)|に応じ|を受け)[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付|通知)/;
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement. Price and returns never may.
 const ITEMS = [
@@ -15,7 +16,10 @@ const ITEMS = [
   { label: "所在地", pattern: /所在地|住所/, onRequest: true },
   { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
-  { label: "販売価格・送料", pattern: /価格|代金|送料|料金/, onRequest: false },
+  // 「商品代金以外の必要料金」 and 「代金引換」 are about other charges and payment, not the price.
+  { label: "販売価格", pattern: /価格|代金(?!以外|引換|引き換)/, onRequest: false },
+  { label: "送料", pattern: /送料|配送料|必要料金|手数料/, onRequest: false },
+  // Payment timing may be left out only on conditions the page cannot show, so only the method is checked.
   { label: "支払方法", pattern: /支払|決済/, onRequest: true },
   { label: "引渡し時期", pattern: /引渡|引き渡|受渡|受け渡|発送|配送|お届け/, onRequest: true },
   { label: "返品", pattern: /返品|返金|キャンセル|交換|解約/, onRequest: false },

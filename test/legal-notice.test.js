@@ -51,12 +51,16 @@ describe("特定商取引法 notice", () => {
   it("lets the on-request statement stand in for the items the law allows, but never for price or returns", () => {
     const omittable = /販売業者|所在地|電話番号|責任者|支払|引渡し/;
     const kept = COMPLETE.split("\n").filter((line) => !omittable.test(line));
-    for (const statement of ["※ご請求があれば遅滞なく開示いたします", "請求があった場合には、遅滞なく電子メールにて提供します"]) {
+    for (const statement of [
+      "※ご請求があれば遅滞なく開示いたします",
+      "請求があった場合には、遅滞なく電子メールにて提供します",
+      "上記以外の事項は、ご請求いただければ遅滞なく書面を交付いたします",
+    ]) {
       assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...kept, statement].join("\n"))), [], statement);
     }
     const noTerms = kept.filter((line) => !/返品|販売価格/.test(line));
     const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", [...noTerms, "※ご請求があれば遅滞なく開示いたします"].join("\n")));
-    assert.deepEqual(found.evidence, ["販売価格・送料", "返品"]);
+    assert.deepEqual(found.evidence, ["販売価格", "送料", "返品"]);
   });
 
   it("does not take an invoice sentence, or 速やかに, for the on-request statement", () => {
@@ -72,12 +76,27 @@ describe("特定商取引法 notice", () => {
     }
   });
 
+  it("does not take other charges or cash on delivery for the price", () => {
+    const withoutPrice = COMPLETE.split("\n").filter((line) => !/販売価格/.test(line));
+    const text = [...withoutPrice, "商品代金以外の必要料金 送料500円", "お支払方法 代金引換"].join("\n");
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", text));
+    assert.deepEqual(found.evidence, ["販売価格"]);
+  });
+
+  it("reads a heading whose text sits in nested markup", () => {
+    const nested = makePage({ html: '<html><body><h1 class="t"><span>特定商取引法に基づく<br>表記</span></h1></body></html>', text: COMPLETE });
+    assert.deepEqual(checkLegalNotice(nested), []);
+    const nestedIncomplete = makePage({ html: "<html><body><h1><span>特定商取引法に基づく表記</span></h1></body></html>", text: "" });
+    assert.equal(checkLegalNotice(nestedIncomplete).length, 1);
+  });
+
   it("reads common label variants", () => {
     const variants = [
       "事業者の名称 株式会社サンプル",
       "運営統括責任者 山田太郎",
       "住所 大阪府大阪市1-1",
       "TEL 06-0000-0000",
+      "販売価格 表示価格（税込）",
       "商品代金以外の必要料金 送料",
       "お支払方法 代金引換",
       "商品受渡し時期 入金確認後",
