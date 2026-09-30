@@ -13,6 +13,12 @@ SafePeek is a browser extension you open on any page to see:
 5. **BaaS and managed platforms** — Firebase, Supabase, AWS (Amplify, Cognito, AppSync, API Gateway, S3, CloudFront), Vercel, Netlify, Cloudflare Pages, App Engine / Cloud Run, Heroku. When one is found, contradictory server stacks that are only implied by other fingerprints (PHP, MySQL …) are dropped.
 6. **WordPress** — core version against the supported series (below 4.7: no security updates since July 2025), plugins and themes with vulnerability lookup links, XML-RPC exposure.
 7. **Security basics** — HTTPS, HSTS, CSP, clickjacking protection, exposed server versions, session cookies readable by JavaScript, mixed content, third-party scripts.
+8. **Fake-shop signs** — signs of fake or tampered shops, from the police, consumer centres and security research:
+   - a card field in the page beside the payment provider's own card frame (a skimming shape);
+   - a Japanese shop page with no link to its 特定商取引法 notice, or a notice missing required items;
+   - traces of Simplified Chinese on a Japanese shop page.
+
+   A hosted cart service is shown as information, not as a good sign, since anyone can open a shop on one.
 
 Every finding shows its evidence (the header, script URL or form field it came from), so you can check it yourself. The full list is at the top of [docs/SPEC.md](docs/SPEC.md).
 
@@ -45,7 +51,7 @@ The analysis engine is also an npm package, `safepeek` — the same source files
 
 ## Limitations
 
-SafePeek infers from what the browser can see. Well-run sites often hide server details, OS vendors backport security fixes into old version numbers, and a checkout page may differ from the page you are on. "No major problems found" is not a guarantee of safety.
+SafePeek infers from what the browser can see. Well-run sites often hide server details, OS vendors backport security fixes into old version numbers, and a checkout page may differ from the page you are on. "No major problems found" is not a guarantee of safety. The fake-shop signs are hints: a fake shop can show none of them.
 
 ## Data sources
 

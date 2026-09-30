@@ -20,6 +20,7 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 - **Related systems**: other hosts of the same organisation the page hands off to, with what their URL shapes suggest.
 - **WordPress**: core support status, plugins and themes, XML-RPC.
 - **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts, scripts from a CDN that has been taken over, server-side secrets in the page (reported without kind, value or place).
+- **Fake-shop signs**: a card field beside the provider's card frame (skimming shape), a Japanese shop page with no 特定商取引法 notice link, a notice missing required items, Simplified Chinese on a Japanese shop; a hosted cart is information, not a good sign. Research in `docs/fake-shop-research.md`.
 - **False-result report link**: opens a GitHub issue form pre-filled with the origin and the finding only; the user submits it.
 - **npm package** `safepeek`: the same engine for checking your own sites in CI (not published); not for bulk scanning of others' sites.
 
