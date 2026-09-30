@@ -4,6 +4,20 @@ import { finding } from "./finding.js";
 
 /** @typedef {import("../types.js").Finding} Finding */
 
+const MAX_POLICY_EVIDENCE = 300;
+const ANY_HOST_SCHEMES = new Set(["http:", "https:", "data:"]);
+// A host-source's host part: after an optional scheme, up to a port or path.
+const HOST_OF_SOURCE = /^(?:[a-z][a-z\d+.-]*:\/\/)?([^:/]*)/;
+// Browsers ignore 'unsafe-inline' when a well-formed nonce or hash, or 'strict-dynamic', is present; a malformed one is itself ignored.
+const INLINE_ALLOW_LISTS = /^'(?:strict-dynamic|nonce-[a-z\d+/_-]+={0,2}|sha(?:256|384|512)-[a-z\d+/_-]+={0,2})'$/;
+const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
+const SCRIPT_ATTRIBUTES = ["script-src-attr", "script-src", "default-src"];
+// A weakness is reported when, for one of its directive chains, every policy that governs it allows the weakness.
+const CSP_WEAKNESSES = [
+  { id: "csp_unsafe_inline", chains: [SCRIPT_ELEMENTS, SCRIPT_ATTRIBUTES], allows: allowsInlineScript },
+  { id: "csp_any_script_host", chains: [SCRIPT_ELEMENTS], allows: allowsAnyScriptSource },
+];
+
 const SESSION_COOKIE =
   /^(phpsessid|jsessionid|asp\.net_sessionid|aspsessionid\w*|laravel_session|connect\.sid|_session_id|sessionid|session|sid|ci_session|cakephp|eccube)$/i;
 
@@ -69,40 +83,77 @@ function cspPolicies(header) {
 }
 
 /**
- * Every policy is enforced, so inline scripts run only when each policy that governs scripts allows them.
+ * Every policy is enforced, so a script runs only when each policy that governs it allows it.
  * @param {string[]} policies
  * @returns {Finding[]}
  */
 function checkCsp(policies) {
   if (policies.length === 0) return [finding("no_csp", "low", "headers")];
-  const scriptPolicies = policies.filter((p) => scriptDirective(p) !== null);
-  if (scriptPolicies.length === 0 || !scriptPolicies.every(allowsInlineScript)) return [];
-  return [
-    finding(
-      "csp_unsafe_inline",
-      "low",
-      "headers",
-      {},
-      scriptPolicies.map((p) => p.slice(0, 300)),
-    ),
-  ];
+  return CSP_WEAKNESSES.flatMap(({ id, chains, allows }) => {
+    const governing = chains.map((chain) => policies.filter((p) => effectiveDirective(p, chain) !== null));
+    const index = chains.findIndex((chain, i) => governing[i].length > 0 && governing[i].every((p) => allows(effectiveDirective(p, chain) ?? "")));
+    if (index < 0) return [];
+    return [
+      finding(
+        id,
+        "low",
+        "headers",
+        {},
+        governing[index].map((p) => p.slice(0, MAX_POLICY_EVIDENCE)),
+      ),
+    ];
+  });
 }
 
 /**
+ * The first of the fallback chain that the policy sets, as CSP Level 3 resolves script directives.
  * @param {string} policy
+ * @param {string[]} chain
  * @returns {string | null}
  */
-function scriptDirective(policy) {
-  return directive(policy, "script-src") ?? directive(policy, "default-src");
+function effectiveDirective(policy, chain) {
+  for (const name of chain) {
+    const found = directive(policy, name);
+    if (found !== null) return found;
+  }
+  return null;
 }
 
 /**
- * @param {string} policy
+ * CSP matches keywords, scheme names and hash algorithms case-insensitively.
+ * @param {string} sourceList
+ * @returns {string[]}
+ */
+function sourceTokens(sourceList) {
+  return sourceList.toLowerCase().split(/\s+/);
+}
+
+/**
+ * @param {string} sourceList
  * @returns {boolean}
  */
-function allowsInlineScript(policy) {
-  const scriptSrc = scriptDirective(policy) ?? "";
-  return scriptSrc.includes("'unsafe-inline'") && !/'nonce-|'sha(256|384|512)-|'strict-dynamic'/.test(scriptSrc);
+function allowsInlineScript(sourceList) {
+  const sources = sourceTokens(sourceList);
+  return sources.includes("'unsafe-inline'") && !sources.some((source) => INLINE_ALLOW_LISTS.test(source));
+}
+
+/**
+ * 'strict-dynamic' makes browsers ignore host and scheme sources, so a wildcard beside it admits nothing.
+ * @param {string} sourceList
+ * @returns {boolean}
+ */
+function allowsAnyScriptSource(sourceList) {
+  const sources = sourceTokens(sourceList);
+  return !sources.includes("'strict-dynamic'") && sources.some(admitsAnyHost);
+}
+
+/**
+ * A scheme source admits every host of its scheme; a host-source admits every host when its host is "*", whatever its port or path.
+ * @param {string} source
+ * @returns {boolean}
+ */
+function admitsAnyHost(source) {
+  return ANY_HOST_SCHEMES.has(source) || HOST_OF_SOURCE.exec(source)?.[1] === "*";
 }
 
 /**
@@ -113,7 +164,7 @@ function allowsInlineScript(policy) {
 function directive(policy, name) {
   for (const part of policy.split(";")) {
     const trimmed = part.trim();
-    if (trimmed.toLowerCase().startsWith(name + " ") || trimmed.toLowerCase() === name) return trimmed;
+    if (trimmed.split(/\s+/)[0].toLowerCase() === name) return trimmed;
   }
   return null;
 }
