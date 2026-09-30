@@ -2,6 +2,8 @@
 
 import { finding } from "./finding.js";
 
+const FULL_CONFIDENCE = 100;
+
 /**
  * @typedef {object} CheckoutPlatform
  * @property {string} name  webappanalyzer technology name
@@ -20,6 +22,19 @@ function evidenceKinds(tech) {
 }
 
 /**
+ * Two kinds of trace, or one for a product whose every full-confidence trace comes from the shop itself. A trace the
+ * fingerprint marks as lower confidence (Magento's `frontend` cookie, PrestaShop's `priceDisplayMethod`) is generic.
+ * @param {import("../types.js").Technology} tech
+ * @param {CheckoutPlatform} platform
+ * @returns {boolean}
+ */
+function isEnoughEvidence(tech, platform) {
+  const kinds = evidenceKinds(tech);
+  if (kinds >= 2) return true;
+  return platform.singleTraceReason !== undefined && tech.confidence >= FULL_CONFIDENCE;
+}
+
+/**
  * Directly seen products from the curated checkout-platform list. Implied ones are left out: only what the page
  * itself shows says who runs its checkout.
  * @param {import("../types.js").Technology[]} technologies
@@ -30,7 +45,7 @@ export function checkCheckout(technologies, platforms) {
   const byName = new Map(platforms.map((p) => [p.name, p]));
   const seen = technologies.filter((t) => {
     const platform = byName.get(t.name);
-    return platform !== undefined && !t.impliedBy && evidenceKinds(t) >= (platform.singleTraceReason ? 1 : 2);
+    return platform !== undefined && !t.impliedBy && isEnoughEvidence(t, platform);
   });
   const of = (/** @type {"hosted" | "self"} */ kind) => seen.filter((t) => byName.get(t.name)?.kind === kind);
   return [...platformFinding("checkout_saas", "good", of("hosted")), ...platformFinding("checkout_self_hosted", "info", of("self"))];

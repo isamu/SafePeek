@@ -55,6 +55,16 @@ describe("who runs the checkout", () => {
     assert.deepEqual(summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/js/eccube.js"])], db.checkout)), ["checkout_self_hosted:EC-CUBE"]);
   });
 
+  it("does not take a trace the fingerprint marks as generic", async () => {
+    const today = new Date("2026-09-30T00:00:00Z");
+    const cookieOnly = await analyze(makePage({ cookies: { frontend: "abc" } }), db, { today, sha1 });
+    assert.ok(!cookieOnly.findings.some((f) => f.id.startsWith("checkout_")), "Magento's frontend cookie");
+    const globalOnly = await analyze(makePage({ globals: { priceDisplayMethod: true } }), db, { today, sha1 });
+    assert.ok(!globalOnly.findings.some((f) => f.id.startsWith("checkout_")), "PrestaShop's priceDisplayMethod");
+    const mageCookie = await analyze(makePage({ cookies: { "mage-cache-storage": "{}" } }), db, { today, sha1 });
+    assert.deepEqual(summary(mageCookie.findings.filter((f) => f.id.startsWith("checkout_"))), ["checkout_self_hosted:Magento"]);
+  });
+
   it("says nothing for a plain Squarespace site, whose server header every Squarespace site sends", async () => {
     const report = await analyze(makePage({ headers: { ...makePage().headers, server: "Squarespace" } }), db, {
       today: new Date("2026-09-30T00:00:00Z"),
