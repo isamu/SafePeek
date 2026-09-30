@@ -15,6 +15,8 @@ describe("scripts from a CDN that has been taken over", () => {
       ["https://polyfill.io/v3/polyfill.min.js?features=es6", "polyfill.io"],
       ["https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js", "bootcdn.net"],
       ["https://cdn.staticfile.org/vue/2.6.14/vue.min.js", "staticfile.org"],
+      ["https://cdn.staticfile.net/vue/2.6.14/vue.min.js", "staticfile.net"],
+      ["https://cdn.bootcss.com/jquery/3.6.0/jquery.min.js", "bootcss.com"],
     ]) {
       assert.deepEqual(ids(checkCompromisedHosts(makePage({ scripts: [script(src)] }), db.compromised)), [`script_compromised_host:${domain}`], src);
     }
@@ -45,6 +47,11 @@ describe("scripts from a CDN that has been taken over", () => {
 });
 
 describe("compromised-script-hosts.json", () => {
+  it("lists exactly the script CDNs the Sansec report names", () => {
+    const expected = ["bootcdn.net", "bootcss.com", "polyfill.io", "staticfile.net", "staticfile.org"];
+    assert.deepEqual(db.compromised.map((h) => h.domain).sort(), expected, "change this list only together with a source");
+  });
+
   for (const h of db.compromised) {
     it(h.domain, () => {
       assert.match(h.domain, /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/, "a bare domain");
