@@ -4,7 +4,7 @@ Working notes for AI agents in this repo. What the tool is lives in **README.md*
 
 ## Purpose
 
-Let an ordinary visitor judge, from the browser alone, whether a site they are about to trust (above all with a card number) looks carefully run. SafePeek reads what the page already exposes and turns it into findings with evidence; it never probes the server or sends anything by itself. What people most want to know is **where the card number goes**: straight to a payment provider, or into the site's own servers.
+Let an ordinary visitor judge, from the browser alone, whether a site they are about to trust (above all with a card number) looks carefully run. SafePeek reads what the page already exposes and turns it into findings with evidence; its only requests re-read the page and the scripts it already loaded, and it sends nothing anywhere by itself. What people most want to know is **where the card number goes**: straight to a payment provider, or into the site's own servers.
 
 ## Major features
 
