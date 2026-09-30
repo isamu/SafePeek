@@ -55,7 +55,7 @@ export function checkPayment(page, providers) {
   const scriptProviders = providersIn(scriptSrcs, providers);
   const tokenizer = providers.find((p) => (p.tokenScripts ?? []).some((re) => scriptSrcs.some((src) => new RegExp(re, "i").test(src))));
 
-  const cardInputs = cardFields(page.inputs, page.forms);
+  const cardInputs = cardFields(page.inputs);
   const findings = [];
   if (cardInputs.length > 0) findings.push(cardFieldFinding(cardInputs, tokenizer));
   if (iframeProviders.length > 0) {

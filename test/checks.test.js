@@ -97,15 +97,14 @@ describe("payment", () => {
   });
 
   it("reads a card number in a login form as a membership card", () => {
-    const login = { action: "https://api.example/login", method: "post", hasPassword: true };
-    const inputs = [inputField("tpLoginForm:cardNo1", { form: 0 }), inputField("tpLoginForm:cardNo2", { form: 0 })];
-    assert.deepEqual(ids(checkPayment(makePage({ forms: [login], inputs }), db.providers)), ["no_card_form"]);
-    const withCvc = [...inputs, inputField("cvc", { form: 0 })];
-    assert.equal(
-      checkPayment(makePage({ forms: [login], inputs: withCvc }), db.providers)[0].id,
-      "card_on_page",
-      "a login form that also asks for the CVC takes a card",
-    );
+    const inLogin = { form: 0, inPasswordForm: true };
+    const inputs = [inputField("tpLoginForm:cardNo1", inLogin), inputField("tpLoginForm:cardNo2", inLogin)];
+    assert.deepEqual(ids(checkPayment(makePage({ inputs }), db.providers)), ["no_card_form"]);
+    const withCvc = [...inputs, inputField("cvc", inLogin)];
+    assert.equal(checkPayment(makePage({ inputs: withCvc }), db.providers)[0].id, "card_on_page", "a login form that also asks for the CVC takes a card");
+    const cvcInAnotherForm = [...inputs, inputField("cvc", { form: 1 })];
+    const [finding] = checkPayment(makePage({ inputs: cvcInAnotherForm }), db.providers);
+    assert.deepEqual(finding.evidence, ['<input name="cvc" id="cvc">'], "another form's CVC does not confirm the login form");
   });
 
   it("does not take an expiry date alone for a card", () => {

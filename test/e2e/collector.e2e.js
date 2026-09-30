@@ -178,10 +178,13 @@ describe("collector in Chromium", () => {
   });
 
   it("does not take a membership card number in a login form for a payment card", async () => {
-    const report = await scan("member-login.html");
-    assert.deepEqual(
-      report.findings.filter((f) => f.area === "payment").map((f) => f.id),
-      ["no_card_form"],
-    );
+    for (const fixture of ["member-login.html", "member-login-detached.html"]) {
+      const report = await scan(fixture);
+      assert.deepEqual(
+        report.findings.filter((f) => f.area === "payment").map((f) => f.id),
+        ["no_card_form"],
+        fixture,
+      );
+    }
   });
 });

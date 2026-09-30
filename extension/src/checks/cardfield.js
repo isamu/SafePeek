@@ -35,16 +35,15 @@ function autocompleteKind(token) {
  * In a form with a password field — a login — a "card number" is usually a membership card, so there it
  * counts only when the same form also asks for a security code or an expiry date.
  * @param {import("../types.js").InputField[]} inputs
- * @param {import("../types.js").FormInfo[]} forms
  * @returns {import("../types.js").InputField[]}
  */
-export function cardFields(inputs, forms) {
+export function cardFields(inputs) {
   const kinds = inputs.map((field) => ({ field, kind: cardFieldKind(field) }));
   const confirmed = (/** @type {number} */ form) => kinds.some((k) => k.field.form === form && (k.kind === "security" || k.kind === "expiry"));
   return kinds
     .filter(({ field, kind }) => {
       if (kind === null || (kind === "expiry" && !CARD_AUTOCOMPLETE.test(field.autocomplete.trim()))) return false;
-      return !forms[field.form]?.hasPassword || confirmed(field.form);
+      return !field.inPasswordForm || confirmed(field.form);
     })
     .map(({ field }) => field);
 }

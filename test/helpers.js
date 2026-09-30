@@ -65,7 +65,7 @@ export function script(src, content = "") {
  * @returns {import("../extension/src/types.js").InputField}
  */
 export function inputField(name, overrides = {}) {
-  return { tag: "input", type: "text", name, id: name, autocomplete: "", hints: "", form: -1, ...overrides };
+  return { tag: "input", type: "text", name, id: name, autocomplete: "", hints: "", form: -1, inPasswordForm: false, ...overrides };
 }
 
 export const noHash = async () => "";

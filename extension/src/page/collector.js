@@ -119,9 +119,18 @@
     return { meta, metaCsp };
   }
 
+  /**
+   * By form ownership, so a password field attached with form="…" from outside the <form> counts too.
+   * @param {HTMLFormElement} form
+   * @returns {boolean}
+   */
+  function hasPasswordField(form) {
+    return [...form.elements].some((el) => el instanceof HTMLInputElement && el.type === "password");
+  }
+
   /** @returns {import("../types.js").InputField[]} */
   function readInputs() {
-    const forms = [...document.forms].slice(0, MAX_FORMS);
+    const forms = [...document.forms];
     return [...document.querySelectorAll("input, select")]
       .filter((el) => !(el instanceof HTMLInputElement && SKIPPED_INPUT_TYPES.includes(el.type)))
       .slice(0, MAX_INPUTS)
@@ -132,8 +141,18 @@
         id: el.id,
         autocomplete: el.getAttribute("autocomplete") ?? "",
         hints: ["placeholder", "aria-label", "data-encrypted-name"].map((a) => el.getAttribute(a) ?? "").join(" "),
-        form: (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) && el.form ? forms.indexOf(el.form) : -1,
+        ...formOf(el, forms),
       }));
+  }
+
+  /**
+   * @param {Element} el
+   * @param {HTMLFormElement[]} forms  every form of the document, not only the ones collected
+   * @returns {{ form: number, inPasswordForm: boolean }}
+   */
+  function formOf(el, forms) {
+    const owner = el instanceof HTMLInputElement || el instanceof HTMLSelectElement ? el.form : null;
+    return owner ? { form: forms.indexOf(owner), inPasswordForm: hasPasswordField(owner) } : { form: -1, inPasswordForm: false };
   }
 
   /** @returns {import("../types.js").FormInfo[]} */
@@ -141,7 +160,7 @@
     return [...document.forms].slice(0, MAX_FORMS).map((form) => ({
       action: form.action,
       method: (form.getAttribute("method") ?? "get").toLowerCase(),
-      hasPassword: form.querySelector("input[type=password]") !== null,
+      hasPassword: hasPasswordField(form),
     }));
   }
 
