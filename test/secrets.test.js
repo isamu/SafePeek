@@ -10,6 +10,7 @@ const sample = (/** @type {string} */ prefix, /** @type {number} */ length) => p
 const SAMPLES = {
   stripe: sample(["sk", "live", ""].join("_"), 24),
   restricted: sample(["rk", "live", ""].join("_"), 99),
+  organization: sample(["sk", "org", ""].join("_"), 32),
   github: sample(["ghp", ""].join("_"), 36),
   fineGrained: sample(["github", "pat", ""].join("_"), 82),
   slack: `${["xoxb", "1234567890", "9876543210"].join("-")}-${RANDOM.slice(0, 24)}`,
@@ -43,6 +44,7 @@ describe("secrets in the page", () => {
     const values = [
       sample(["pk", "live", ""].join("_"), 24),
       sample(["sk", "test", ""].join("_"), 24),
+      sample(["sk", "org", "test", ""].join("_"), 32),
       `${["sk", "live", ""].join("_")}${"x".repeat(24)}`,
       `${["ghp", ""].join("_")}${"0123456789".repeat(3)}012345`,
       sample(["sk", "live", ""].join("_"), 23),
