@@ -97,6 +97,41 @@ describe("inferBackends (real rules)", () => {
   });
 });
 
+describe("mentions are not traces", () => {
+  // Text a page can show about these frameworks without running them: a README, a commit message, a blog post.
+  const MENTIONS = [
+    "<p>We migrated off SAStruts and Teeda (Seasar2) in 2016; see teeda.js and kumu.js.</p>",
+    "<p>Struts 1 apps extend <code>org.apache.struts.action.Action</code>; Seasar lives in <code>org.seasar.framework</code>.</p>",
+    "<pre><code>&lt;!-- Powered by SAStruts --&gt;\nxmlns:te=&quot;http://www.seasar.org/teeda/extension&quot;</code></pre>",
+    "<li>symfony 1, CakePHP 2, ColdFusion and Classic ASP are old; java.lang.NullPointerException is common.</li>",
+  ];
+
+  it("reports no end-of-life or old-generation backend for a page that only talks about them", () => {
+    for (const html of MENTIONS) {
+      const flagged = inferBackends(makePage({ url: "https://github.com/example/repo", html }), db.backends).filter(
+        (b) => b.status === "eol" || b.status === "legacy",
+      );
+      assert.deepEqual(
+        flagged.map((b) => b.name),
+        [],
+        html,
+      );
+    }
+  });
+
+  it("still reads real traces: a stack trace, a Teeda namespace, an HTML comment", () => {
+    const pages = {
+      "Apache Struts 1": "<pre>javax.servlet.ServletException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre>",
+      "Seasar2 (SAStruts / Teeda)": '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>',
+    };
+    for (const [name, html] of Object.entries(pages)) {
+      assert.ok(byName(inferBackends(makePage({ html }), db.backends))[name], name);
+    }
+    const comment = byName(inferBackends(makePage({ html: "<!-- Powered by SAStruts --><p>x</p>" }), db.backends));
+    assert.equal(comment["Seasar2 (SAStruts / Teeda)"]?.confidence, 50);
+  });
+});
+
 describe("managed backends (BaaS / PaaS)", () => {
   it("recognises a Firebase site from its domain, SDK and endpoints", () => {
     const page = makePage({

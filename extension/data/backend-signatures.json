@@ -25,10 +25,10 @@
         },
         {
           "type": "html",
-          "pattern": "org\\.apache\\.struts\\.(?:action|util|config)\\.",
+          "pattern": "\\bat org\\.apache\\.struts\\.(?:action|util|config)\\.[\\w.$]+\\(",
           "weight": 70,
-          "note": "Struts 1 class name in the page (typically an error page)",
-          "noteJa": "ページ内に Struts 1 のクラス名（多くはエラー画面）"
+          "note": "Struts 1 frame in a stack trace shown in the page",
+          "noteJa": "ページに表示されたスタックトレースに Struts 1 のクラス"
         }
       ]
     },
@@ -41,10 +41,10 @@
       "signals": [
         {
           "type": "html",
-          "pattern": "org\\.seasar\\.",
+          "pattern": "\\bat org\\.seasar\\.[\\w.$]+\\(|xmlns:\\w+=[\"']https?://www\\.seasar\\.org/",
           "weight": 80,
-          "note": "org.seasar package name in the page",
-          "noteJa": "ページ内に org.seasar のパッケージ名"
+          "note": "Seasar frame in a stack trace, or a Teeda XML namespace in the markup",
+          "noteJa": "スタックトレースに Seasar のクラス、またはマークアップに Teeda の XML 名前空間"
         },
         {
           "type": "source",
@@ -55,10 +55,10 @@
         },
         {
           "type": "html",
-          "pattern": "\\bsastruts\\b|\\bteeda\\b",
+          "pattern": "<!--[^<>]{0,200}\\b(?:sastruts|teeda)\\b",
           "weight": 50,
-          "note": "SAStruts or Teeda mentioned in the page",
-          "noteJa": "ページ内に SAStruts / Teeda の記述"
+          "note": "SAStruts or Teeda named in an HTML comment",
+          "noteJa": "HTMLコメントに SAStruts / Teeda の記述"
         },
         {
           "type": "script",
@@ -345,10 +345,10 @@
         },
         {
           "type": "html",
-          "pattern": "\\bjava\\.lang\\.\\w+(?:Exception|Error)\\b|\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+\\(",
+          "pattern": "\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+\\(",
           "weight": 80,
-          "note": "Java exception or stack trace shown in the page",
-          "noteJa": "ページに Java の例外・スタックトレースが表示されている"
+          "note": "Java stack trace shown in the page",
+          "noteJa": "ページに Java のスタックトレースが表示されている"
         }
       ]
     },
