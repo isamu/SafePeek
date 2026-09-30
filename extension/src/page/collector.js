@@ -121,23 +121,34 @@
   }
 
   /**
-   * The page and its same-origin frames. A frame on another origin (a payment provider's) cannot be read and is
-   * judged by its URL instead; a same-origin frame is part of the site's own page.
+   * The page and its same-origin frames, nested ones included, up to MAX_FRAMES. A frame on another origin (a
+   * payment provider's) cannot be read and is judged by its URL instead; a same-origin frame is part of the site's
+   * own page.
    * @returns {Document[]}
    */
   function documents() {
     const docs = [document];
-    for (const frame of document.querySelectorAll("iframe, frame")) {
-      if (docs.length > MAX_FRAMES) break;
-      if (!isFrame(frame)) continue;
-      try {
-        const doc = frame.contentDocument;
-        if (doc?.documentElement) docs.push(doc);
-      } catch {
-        // another origin
+    for (let i = 0; i < docs.length && docs.length <= MAX_FRAMES; i++) {
+      for (const frame of docs[i].querySelectorAll("iframe, frame")) {
+        const doc = readableDocument(frame);
+        if (doc && docs.length <= MAX_FRAMES) docs.push(doc);
       }
     }
     return docs;
+  }
+
+  /**
+   * @param {Element} frame
+   * @returns {Document | null}  its document when the frame is on the same origin
+   */
+  function readableDocument(frame) {
+    if (!isFrame(frame)) return null;
+    try {
+      const doc = frame.contentDocument;
+      return doc?.documentElement ? doc : null;
+    } catch {
+      return null; // another origin
+    }
   }
 
   /**
@@ -166,9 +177,11 @@
     return [...form.elements].some((el) => isField(el) && el.tagName === "INPUT" && el.type === "password");
   }
 
-  /** @returns {import("../types.js").InputField[]} */
-  function readInputs() {
-    const docs = documents();
+  /**
+   * @param {Document[]} docs
+   * @returns {import("../types.js").InputField[]}
+   */
+  function readInputs(docs) {
     const forms = docs.flatMap((doc) => [...doc.forms]);
     return docs
       .flatMap((doc) => [...doc.querySelectorAll("input, select")])
@@ -195,9 +208,12 @@
     return owner ? { form: forms.indexOf(owner), inPasswordForm: hasPasswordField(owner) } : { form: -1, inPasswordForm: false };
   }
 
-  /** @returns {import("../types.js").FormInfo[]} */
-  function readForms() {
-    return documents()
+  /**
+   * @param {Document[]} docs
+   * @returns {import("../types.js").FormInfo[]}
+   */
+  function readForms(docs) {
+    return docs
       .flatMap((doc) => [...doc.forms])
       .slice(0, MAX_FORMS)
       .map((form) => ({
@@ -265,12 +281,13 @@
   }
 
   /**
+   * @param {Document[]} docs
    * @param {string} selector
    * @param {string} attr
    * @returns {string[]}
    */
-  function urls(selector, attr) {
-    return documents()
+  function urls(docs, selector, attr) {
+    return docs
       .flatMap((doc) => [...doc.querySelectorAll(selector)])
       .map((el) => absolute(el.getAttribute(attr) ?? "", el.baseURI))
       .filter((u) => u !== "")
@@ -297,6 +314,7 @@
    */
   async function collect(domQueries, paymentHosts) {
     const [headers, scripts] = await Promise.all([readHeaders(), readScripts()]);
+    const docs = documents();
     return {
       url: location.href,
       protocol: location.protocol,
@@ -304,12 +322,12 @@
       headers,
       ...readMeta(),
       scripts,
-      stylesheets: urls("link[rel~=stylesheet][href]", "href"),
-      iframes: urls("iframe[src]", "src"),
-      images: urls("img[src]", "src"),
+      stylesheets: urls(docs, "link[rel~=stylesheet][href]", "href"),
+      iframes: urls(docs, "iframe[src]", "src"),
+      images: urls(docs, "img[src]", "src"),
       links: readPaymentLinks(paymentHosts),
-      forms: readForms(),
-      inputs: readInputs(),
+      forms: readForms(docs),
+      inputs: readInputs(docs),
       cookies: readCookies(),
       html: document.documentElement.outerHTML.slice(0, MAX_HTML),
       text: (document.body?.innerText ?? "").slice(0, MAX_TEXT),

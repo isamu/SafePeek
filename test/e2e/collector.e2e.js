@@ -202,8 +202,10 @@ describe("collector in Chromium", () => {
   });
 
   it("reads card fields inside a same-origin frame as the site's own page", async () => {
-    const report = await scan("framed-card.html");
-    assert.equal(report.findings.find((f) => f.area === "payment")?.id, "card_on_page");
+    for (const fixture of ["framed-card.html", "nested-framed-card.html"]) {
+      const report = await scan(fixture);
+      assert.equal(report.findings.find((f) => f.area === "payment")?.id, "card_on_page", fixture);
+    }
   });
 
   it("finds a provider's card frame nested in a same-origin frame", async () => {
