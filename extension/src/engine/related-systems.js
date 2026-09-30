@@ -50,7 +50,7 @@ const SECOND_LEVEL_SUFFIXES = new Set([
 
 /**
  * @param {string} host
- * @returns {string}  e.g. "misumi-ec.com" for "jp.misumi-ec.com", "example.co.jp" for "www.example.co.jp"
+ * @returns {string}  e.g. "acme-ec.com" for "jp.acme-ec.com", "example.co.jp" for "www.example.co.jp"
  */
 export function registrableDomain(host) {
   const labels = host.toLowerCase().replace(/\.$/, "").split(".");
@@ -59,7 +59,7 @@ export function registrableDomain(host) {
 }
 
 /**
- * The words of a registrable domain's name that can identify the organisation ("misumi" from "misumi-ec.com").
+ * The words of a registrable domain's name that can identify the organisation ("acme" from "acme-ec.com").
  * @param {string} host
  * @returns {string[]}
  */

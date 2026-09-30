@@ -10,13 +10,13 @@ const db = loadDb();
 
 describe("related systems", () => {
   it("knows registrable domains, including second-level ones", () => {
-    assert.equal(registrableDomain("jp.misumi-ec.com"), "misumi-ec.com");
+    assert.equal(registrableDomain("jp.acme-ec.com"), "acme-ec.com");
     assert.equal(registrableDomain("www.example.co.jp"), "example.co.jp");
     assert.equal(registrableDomain("shop.example.com."), "example.com");
   });
 
   it("relates hosts of one domain, or of domains sharing a brand word, and nothing else", () => {
-    assert.ok(isRelatedHost("jp.misumi-ec.com", "ec.misumi.jp"), "brand word 'misumi'");
+    assert.ok(isRelatedHost("jp.acme-ec.com", "ec.acme.jp"), "brand word 'acme'");
     assert.ok(isRelatedHost("www.example.co.jp", "order.example.co.jp"), "same registrable domain");
     assert.ok(!isRelatedHost("www.example.co.jp", "www.example.co.jp"), "the page's own host");
     assert.ok(!isRelatedHost("shop.example.jp", "www.google.com"));
@@ -26,13 +26,13 @@ describe("related systems", () => {
 
   it("finds an order system on another host from a URL in a script body", () => {
     const page = makePage({
-      url: "https://jp.misumi-ec.com/vona2/",
-      scripts: [script("https://jp.misumi-ec.com/vcommon/common/js/vona2.js", 'form.action = "https://ec.misumi.jp/wos/order/inputOrderCmd.do";')],
+      url: "https://jp.acme-ec.com/catalog/",
+      scripts: [script("https://jp.acme-ec.com/js/app.js", 'form.action = "https://ec.acme.jp/order/input.do";')],
     });
     const systems = inferRelatedSystems(page, db.backends);
     assert.deepEqual(
       systems.map((s) => s.host),
-      ["ec.misumi.jp"],
+      ["ec.acme.jp"],
     );
     assert.ok(
       systems[0].hints.some((h) => h.backend === "Apache Struts 1" && h.match === ".do"),
