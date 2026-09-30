@@ -175,6 +175,11 @@ const JA = {
     detail: () =>
       "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析・タグマネージャー・エラー監視だけなら「情報」、画面操作の記録（セッションリプレイ）や広告、正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
   },
+  legal_notice_incomplete: {
+    title: (p) => `特定商取引法に基づく表記に、必要な項目が見当たりません（${p.count}項目）`,
+    detail: () =>
+      "通信販売の事業者は、販売業者名・所在地・電話番号・代表者または責任者・支払方法・引渡し時期・返品の条件などを表示する義務があります。見当たらない項目の種類を根拠に挙げています。販売業者名・所在地・電話番号が無い場合は特に注意してください。表示があっても、実在する会社のものか（法人番号の検索など）確かめると安心です。",
+  },
   secret_in_page: {
     title: () => "ページのコードにサーバー用の秘密の鍵らしき値が含まれています",
     detail: () =>
@@ -356,6 +361,11 @@ const EN = {
     title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
     detail: () =>
       "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics, tag managers and monitoring alone make this information; session replay, ads or unknown hosts make it low. Some may be the site's own asset domains.",
+  },
+  legal_notice_incomplete: {
+    title: (p) => `The 特定商取引法 notice lacks required items (${p.count})`,
+    detail: () =>
+      "Japanese law requires mail-order sellers to show their name, address, phone number, the person responsible, payment method, delivery timing and return terms. The missing kinds are listed as evidence. Be especially careful when the seller's name, address or phone number is missing. Even when they are shown, checking that the company exists (for example in the corporate number search) is worthwhile.",
   },
   secret_in_page: {
     title: () => "The page's code contains what looks like a server-side secret key",

@@ -124,6 +124,16 @@ A server-side key in the page's code means the site does not keep its own secret
 - **A PEM key does not need its END line**: the collected HTML and scripts can be cut off before it, and a private key body on its own is already the leak.
 - **Placeholders**: a random part with fewer than 12 distinct characters (`sk_live_xxxx…`, `ghp_0123456789…`) is not counted. A PEM header on its own is not counted either, because crypto libraries carry it as a parser constant.
 
+## The 特定商取引法 notice
+
+Every public body's fake-shop checklist starts with this notice (`docs/fake-shop-research.md`, item 3). SafePeek sees one page, so it judges the notice only when the visitor scans the notice itself.
+
+- **The page must name the notice in its title or a top heading**, so a footer link on every page does not make a page the notice.
+- **An item counts when its label appears anywhere in the text.** This is lenient on purpose: it misses a fake that fills in labels with made-up values, and it never reports a real notice laid out with unusual wording as missing everything.
+- **A statement that details are given on request counts** for the address, phone and representative, as the law allows.
+- **Only the kinds of missing item are shown**, never a value: an address or phone number on the page is the seller's, and is left to the page.
+- **A shop page with no link to the notice is a separate check**, because the collected HTML and text can be cut off before the footer.
+
 ## Where a password is sent
 
 - **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
