@@ -1,0 +1,10 @@
+{
+  "_comment": "Hand-maintained: domains that served malicious JavaScript to the sites loading scripts from them (a taken-over or sold CDN). A page loading any script from one of these, or from a subdomain, is reported. Every entry needs a report that names the domain as serving malicious code. Only script CDNs sites load code from are listed: the same reports also name the attackers' redirect and payload domains (unionadjs.com, xhsbpza.com …), which no site loads on purpose.",
+  "hosts": [
+    {"domain": "polyfill.io", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "bootcdn.net", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "bootcss.com", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "staticfile.org", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]},
+    {"domain": "staticfile.net", "incident": "2024-06", "sources": ["https://sansec.io/research/polyfill-supply-chain-attack"]}
+  ]
+}

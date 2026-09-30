@@ -166,6 +166,11 @@ const JA = {
     detail: () =>
       "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。自社の配信用ドメインや、ロボット対策（reCAPTCHA など）の一般的なものも含まれますが、ログイン画面では少ないほど安全です。",
   },
+  script_compromised_host: {
+    title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
+    detail: () =>
+      "この配信元は、利用しているサイトに悪意のあるコードを配ったことが報告されています。すでに止まっている配信元もありますが、読み込まれればページ上の入力内容をすべて読めます。カード番号やパスワードは入力しないでください。サイトの運営者に知らせてください。",
+  },
   third_party_scripts: {
     title: (p) => `外部のスクリプトを読み込んでいます（${p.hosts}ドメイン, ${p.count}件）`,
     detail: () => "外部スクリプトはページ上の入力内容をすべて読み取れます。広告・解析タグなど多くは一般的なものです。",
@@ -327,6 +332,11 @@ const EN = {
     title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
     detail: () =>
       "The password goes into this page's own field, so scripts from other domains running here can read it too. Some are the site's own asset domains or common bot checks such as reCAPTCHA, but on a login page, the fewer the safer.",
+  },
+  script_compromised_host: {
+    title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,
+    detail: () =>
+      "This CDN has been reported serving malicious code to the sites that use it. Some such domains no longer serve anything, but a script that does load can read everything typed on the page. Do not enter card numbers or passwords, and let the site know.",
   },
   third_party_scripts: {
     title: (p) => `Third-party scripts (${p.hosts} domains, ${p.count} files)`,
