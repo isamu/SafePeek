@@ -10,6 +10,7 @@ SafePeek declares two permissions. There are no host permissions, no content scr
 ## What the injected code does
 
 - Reads the DOM: meta tags, script and stylesheet URLs, iframes, forms, the attributes (never the values) of form fields, cookies visible to JavaScript, the page text and HTML (truncated).
+- In the page's same-origin frames (including nested ones, up to 10), reads the same kinds of form, form-field, iframe, stylesheet and image information, and the URLs of their external scripts (not the scripts' contents) — never field values. Frames on other origins cannot be read and are not.
 - Re-requests the current page URL with `HEAD` (or `GET` if `HEAD` fails) to read its response headers.
 - Re-requests the page's own script files (up to 40, cache first) to read library version banners.
 - In the page's JavaScript world, reads property paths such as `jQuery.fn.jquery`. It never evaluates code strings.
