@@ -8,57 +8,52 @@ import { indexPublicSuffixes } from "./engine/public-suffix.js";
  * @typedef {(name: string) => Promise<string>} ReadText  returns the text of data/<name>
  */
 
+// Every JSON data file, by the name the loader refers to it by. Order does not matter.
+const JSON_FILES = {
+  auth: "auth-services.json",
+  backends: "backend-signatures.json",
+  botChecks: "bot-checks.json",
+  categories: "categories.json",
+  checkout: "checkout-platforms.json",
+  compromised: "compromised-script-hosts.json",
+  destinations: "data-destinations.json",
+  eol: "eol.json",
+  payment: "payment-providers.json",
+  publicSuffixes: "public-suffixes.json",
+  sources: "sources.json",
+  technologies: "technologies.json",
+  wordpress: "wordpress.json",
+};
+
 /**
  * @param {ReadText} readText
  * @returns {Promise<import("./analyze.js").Databases & { sources: Record<string, any> }>}
  */
 export async function loadDatabases(readText) {
-  const json = async (/** @type {string} */ name) => JSON.parse(await readText(name));
-  const [
-    technologies,
-    categories,
-    retireText,
-    eol,
-    payment,
-    backends,
-    wordpress,
-    checkout,
-    auth,
-    destinations,
-    compromised,
-    publicSuffixes,
-    botChecks,
-    sources,
-  ] = await Promise.all([
-    json("technologies.json"),
-    json("categories.json"),
-    readText("retire.json"),
-    json("eol.json"),
-    json("payment-providers.json"),
-    json("backend-signatures.json"),
-    json("wordpress.json"),
-    json("checkout-platforms.json"),
-    json("auth-services.json"),
-    json("data-destinations.json"),
-    json("compromised-script-hosts.json"),
-    json("public-suffixes.json"),
-    json("bot-checks.json"),
-    json("sources.json"),
-  ]);
+  const [files, retireText] = await Promise.all([readAll(readText), readText("retire.json")]);
   return {
-    technologies,
-    categories,
+    technologies: files.technologies,
+    categories: files.categories,
     retire: parseRetireRepository(retireText),
-    eol,
-    providers: payment.providers,
-    backends: backends.backends,
-    wordpress,
-    checkout: checkout.platforms,
-    auth: auth.services,
-    destinations: { purposes: destinations.purposes, services: destinations.services },
-    compromised: compromised.hosts,
-    suffixes: indexPublicSuffixes(publicSuffixes),
-    botChecks: botChecks.services,
-    sources,
+    eol: files.eol,
+    providers: files.payment.providers,
+    backends: files.backends.backends,
+    wordpress: files.wordpress,
+    checkout: files.checkout.platforms,
+    auth: files.auth.services,
+    destinations: { purposes: files.destinations.purposes, services: files.destinations.services },
+    compromised: files.compromised.hosts,
+    suffixes: indexPublicSuffixes(files.publicSuffixes),
+    botChecks: files.botChecks.services,
+    sources: files.sources,
   };
+}
+
+/**
+ * @param {ReadText} readText
+ * @returns {Promise<Record<keyof typeof JSON_FILES, any>>}  each JSON file, parsed, under its name
+ */
+async function readAll(readText) {
+  const entries = await Promise.all(Object.entries(JSON_FILES).map(async ([key, file]) => [key, JSON.parse(await readText(file))]));
+  return Object.fromEntries(entries);
 }

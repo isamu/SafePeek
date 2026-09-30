@@ -20,7 +20,7 @@ export function loadDb() {
     compromised: JSON.parse(data("compromised-script-hosts.json")).hosts,
     auth: JSON.parse(data("auth-services.json")).services,
     botChecks: JSON.parse(data("bot-checks.json")).services,
-    destinations: JSON.parse(data("data-destinations.json")),
+    destinations: (({ purposes, services }) => ({ purposes, services }))(JSON.parse(data("data-destinations.json"))),
     suffixes: indexPublicSuffixes(JSON.parse(data("public-suffixes.json"))),
   };
 }
