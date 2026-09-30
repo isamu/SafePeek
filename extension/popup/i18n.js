@@ -180,6 +180,11 @@ const JA = {
     detail: () =>
       "パスワードはこのページ自身の入力欄に入力するので、ここで動く別ドメインのスクリプトからも読み取れます。ロボット対策（reCAPTCHA など）とログインサービスは数えていません。解析・タグマネージャー・エラー監視だけなら「情報」、画面操作の記録（セッションリプレイ）や広告、正体の分からないドメインがあれば「軽微」にしています。自社の配信用ドメインの場合もあります。",
   },
+  shop_simplified_chinese: {
+    title: () => "日本語のショップに、中国語（簡体字）の痕跡があります",
+    detail: () =>
+      "日本語のページなのに、日本では使わない簡体字、中国語の言語指定、「◯天」（日数）のような表現があります。警察や国民生活センターは、中国語から機械翻訳された偽ショップの特徴として挙げています。これだけで偽物とは言えませんが、会社の実在や特定商取引法に基づく表記も確かめてください。",
+  },
   legal_notice_incomplete: {
     title: (p) => `特定商取引法に基づく表記に、必要な項目が見当たりません（${p.count}項目）`,
     detail: () =>
@@ -371,6 +376,11 @@ const EN = {
     title: (p) => `Scripts from other domains run where you type your password (${p.count} hosts)`,
     detail: () =>
       "The password goes into this page's own field, so scripts from other domains running here can read it too. Bot checks (reCAPTCHA …) and sign-in services are not counted. Analytics, tag managers and monitoring alone make this information; session replay, ads or unknown hosts make it low. Some may be the site's own asset domains.",
+  },
+  shop_simplified_chinese: {
+    title: () => "A Japanese shop page shows traces of Simplified Chinese",
+    detail: () =>
+      "The page is in Japanese but uses Simplified Chinese characters Japanese does not use, declares Chinese as its language, or counts days with 天. The police and the National Consumer Affairs Center list this as a sign of a fake shop machine-translated from Chinese. It is not proof on its own; check that the company exists and read its 特定商取引法 notice.",
   },
   legal_notice_incomplete: {
     title: (p) => `The 特定商取引法 notice lacks required items (${p.count})`,

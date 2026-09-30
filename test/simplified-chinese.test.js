@@ -1,0 +1,53 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { checkSimplifiedChinese } from "../extension/src/checks/simplified-chinese.js";
+import { makePage } from "./helpers.js";
+
+const JAPANESE_SHOP = "こちらの商品はカートに入れてご購入いただけます。税込価格で表示しています。送料は全国一律です。".repeat(10);
+
+/** @param {string} text @param {string} [html] */
+const shop = (text, html = '<html lang="ja"><body></body></html>') => makePage({ text, html });
+
+describe("simplified Chinese on a Japanese shop", () => {
+  it("says nothing about an ordinary Japanese shop", () => {
+    assert.deepEqual(checkSimplifiedChinese(shop(JAPANESE_SHOP)), []);
+  });
+
+  it("reports several simplified-only characters, and shows which", () => {
+    const [found] = checkSimplifiedChinese(shop(`${JAPANESE_SHOP}优质商品，这是我们的新货。`));
+    assert.equal(found.id, "shop_simplified_chinese");
+    assert.equal(found.severity, "low");
+    assert.match(found.evidence[0], /^simplified: /);
+    for (const char of "优质这们货") assert.ok(found.evidence[0].includes(char), char);
+  });
+
+  it("is medium when two kinds of sign appear together", () => {
+    const [found] = checkSimplifiedChinese(shop(`${JAPANESE_SHOP}休業日：365天受付`, '<html lang="zh-CN"><body></body></html>'));
+    assert.deepEqual([found.severity, found.evidence], ["medium", ['<html lang="zh…">', "365天"]]);
+  });
+
+  it("does not count one or two characters, such as a quoted name", () => {
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}上海の「东方」ブランド`)), []);
+  });
+
+  it("stays out of pages that are not Japanese shops", () => {
+    // Shop words, but hardly any kana: a Chinese-language shop, not a Japanese one.
+    const chinese = `${"优质商品，这是我们的新货。请联系客服。".repeat(20)}カート 購入`;
+    assert.deepEqual(checkSimplifiedChinese(shop(chinese, '<html lang="zh-CN"><body></body></html>')), [], "a Chinese-language site");
+    // Plenty of kana, but no shop words: a Japanese page about Chinese.
+    const article = "中国語の簡体字では、这や们や优のように書きます。".repeat(30);
+    assert.deepEqual(checkSimplifiedChinese(shop(article)), [], "a Japanese page about Chinese, with no shop words");
+  });
+
+  it("reads the language only from the <html> tag, not from an element inside the page", () => {
+    const quoted = '<html lang="ja"><body><span lang="zh-CN">北京</span></body></html>';
+    assert.deepEqual(
+      checkSimplifiedChinese(shop(`${JAPANESE_SHOP}休業日：365天受付`, quoted)).map((f) => f.evidence),
+      [["365天"]],
+    );
+  });
+
+  it("does not take 天 in Japanese words for days", () => {
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}天然素材、天気、晴天の日に発送`)), []);
+  });
+});
