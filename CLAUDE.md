@@ -58,6 +58,23 @@ Checks are tuned against real pages; each of these came from a false result.
 - **When the same rule draws a third finding, invert it into what is permitted** instead of patching another case.
 - Verify a check on real sites before trusting it; a fixture proves only what it was written to show.
 
+## Releasing: a version is released only by its tag
+
+Bumping the version does not release anything. `.github/workflows/release.yml` builds the zip and creates the GitHub release only when a `v*` tag is pushed. It checks that the tag is on `main` and matches `extension/manifest.json`.
+
+1. Bump the version in `extension/manifest.json`, `extension/package.json` and `package.json`: they must match (`test/package.test.js`). Open it as its own `chore: version x.y.z` PR and merge it with `--merge`.
+2. Tag the merge commit of that PR, and push that tag only:
+   ```
+   git fetch origin
+   git tag -a vX.Y.Z -m "SafePeek vX.Y.Z" <merge commit of the version PR>
+   git push origin vX.Y.Z
+   ```
+3. Watch the run: `gh run list --workflow release.yml`, then `gh run watch <id> --exit-status`. Check that `gh release list` shows the new release.
+
+- **Tag every version.** A version without a tag is never released. If one was missed, tag it on its own version-PR merge commit, oldest first, one tag at a time.
+- **Never tag a commit whose manifest has another version:** the workflow refuses it.
+- **npm:** the same workflow publishes the npm package when an `NPM_TOKEN` secret is set. None is set, so a tag creates the GitHub release only. Do not publish to npm by hand.
+
 ## Things that must not happen
 
 - A finding that mainly helps an attacker: a secret value, the exact place of an exposed secret or debug feature, internal or staging host names, a bypass route, a takeover candidate, a tamperable field (SPEC S9). State such facts in general terms.
