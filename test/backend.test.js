@@ -253,6 +253,17 @@ describe("checkBackends", () => {
     assert.deepEqual(checkBackends([backend({ status: "info" })], today), []);
   });
 
+  it("counts error output but never shows its text, which can hold server paths, user names and addresses (SPEC S9)", () => {
+    const internal = ["/var/www/html/shop/includes/db_connect.php", "shop_admin", ["10", "0", "3", "12"].join(".")];
+    const phpWarning = `<br />\n<b>Warning</b>:  mysqli_connect(): Access denied for user '${internal[1]}'@'${internal[2]}' in <b>${internal[0]}</b> on line <b>14</b><br />`;
+    const javaTrace = `<pre>java.lang.NullPointerException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)\n\tat jp.example.internal.${internal[1]}.OrderAction.execute(OrderAction.java:88)</pre>`;
+    const found = byName(inferBackends(makePage({ html: `<html><body>${phpWarning}${javaTrace}</body></html>` }), db.backends));
+    const signals = Object.values(found).flatMap((b) => b.signals);
+    assert.ok(signals.some((s) => s.note === "PHP error message shown in the page" && s.match === ""));
+    assert.ok(signals.some((s) => s.note === "Java stack trace shown in the page" && s.match === ""));
+    for (const text of internal) assert.ok(!JSON.stringify(found).includes(text), text);
+  });
+
   it("carries the weighted signals to the finding", () => {
     const signals = [{ type: /** @type {const} */ ("param"), note: "n", noteJa: "n", weight: 80, match: "m" }];
     assert.deepEqual(checkBackends([backend({ signals })], today)[0].signals, signals);
@@ -289,6 +300,7 @@ describe("backend-signatures.json (contributed rules)", () => {
         if (s.type === "header") assert.match(s.pattern, /^[\w-]+: /, "header pattern is 'name: regex'");
         if (s.type === "global") assert.match(s.pattern, /^[A-Za-z_$][\w$.]*$/, "global is a property path");
         else assert.doesNotThrow(() => new RegExp(s.type === "header" ? s.pattern.slice(s.pattern.indexOf(":") + 1).trim() : s.pattern), s.pattern);
+        if (s.type === "html" && /stack trace|error message/i.test(s.note)) assert.equal(s.hideMatch, true, `error output hides its text: ${s.note}`);
       }
     });
   }

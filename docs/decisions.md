@@ -85,6 +85,8 @@ Hosts are listed with *other*, *session replay* and *ads* first.
   - Only the site's own HTML, forms, API calls and scripts are read; a vendor script's body names the vendor's hosts.
   - The result never feeds the page's own backend or an end-of-life verdict.
 
+- **Error output counts but is never shown.** A PHP warning or a stack trace is strong evidence of the backend, and its text is also where server paths, database user names and internal addresses leak. So the note is shown ("PHP error message shown in the page") and the excerpt is not.
+
 ## The page's own requests
 
 - **Read, never made.** SafePeek reads the browser's record of what the page fetched. Its own re-requests are left out, including those from an earlier scan of the same page.

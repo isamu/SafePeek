@@ -14,6 +14,7 @@ const THRESHOLD = 30;
  * @property {number} weight
  * @property {string} note
  * @property {string} [noteJa]
+ * @property {boolean} [hideMatch]  error output: it counts, but its text can hold server paths, user names and internal addresses, so it is never shown (SPEC S9)
  */
 
 /**
@@ -56,7 +57,8 @@ export function inferBackends(page, rules) {
     const signals = [];
     for (const signal of rule.signals) {
       const match = matchSignal(signal, page, traces);
-      if (match !== null) signals.push({ type: signal.type, note: signal.note, noteJa: signal.noteJa ?? signal.note, weight: signal.weight, match });
+      if (match === null) continue;
+      signals.push({ type: signal.type, note: signal.note, noteJa: signal.noteJa ?? signal.note, weight: signal.weight, match: signal.hideMatch ? "" : match });
     }
     const score = signals.reduce((sum, s) => sum + s.weight, 0);
     if (score < THRESHOLD) continue;

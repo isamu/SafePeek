@@ -21,7 +21,7 @@ export function renderSignals(signals) {
   for (const signal of signals) {
     const item = el("li", "signal");
     item.append(el("span", `strength w-${strengthKey(signal.weight)}`, strengthLabel(signal.weight)), el("span", "signal-note", signalNote(signal)));
-    item.append(el("code", "signal-match", signal.match));
+    if (signal.match !== "") item.append(el("code", "signal-match", signal.match));
     list.append(item);
   }
   wrap.append(list);
