@@ -36,6 +36,13 @@ describe("where data goes", () => {
     assert.deepEqual(checkDestinations([tech("jQuery")], db.destinations, makePage()), []);
   });
 
+  it("does not take a local measurement library for a monitoring service", () => {
+    for (const name of ["web-vitals", "Boomerang"]) {
+      assert.ok(db.technologies[name]?.cats.includes(78), `${name} is in the RUM category`);
+      assert.deepEqual(checkDestinations([tech(name)], db.destinations, makePage()), [], name);
+    }
+  });
+
   it("does not count a product that is only mentioned or implied", () => {
     const mentioned = [tech("Hotjar", ["script content"]), tech("Google Analytics", ["html"]), tech("Criteo", ["page text"])];
     assert.deepEqual(checkDestinations(mentioned, db.destinations, makePage()), []);
