@@ -92,7 +92,7 @@
  * @typedef {object} Backend
  * @property {string} name
  * @property {string} language
- * @property {"eol" | "legacy" | "managed" | "info"} status
+ * @property {"eol" | "legacy" | "managed" | "hosting" | "info"} status
  * @property {string} eol  end-of-life date, or ""
  * @property {string} source  link that documents the status, or ""
  * @property {number} confidence  sum of signal weights, capped at 100

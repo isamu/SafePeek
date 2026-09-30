@@ -196,6 +196,14 @@ describe("managed backends (BaaS / PaaS)", () => {
     assert.ok(found["Vercel"]);
   });
 
+  it("says a hosting platform serves the page, not that it runs the backend", () => {
+    const found = byName(inferBackends(makePage({ headers: { ...makePage().headers, server: "Vercel", "x-vercel-id": "hnd1::abc" } }), db.backends));
+    assert.equal(found.Vercel?.status, "hosting");
+    const [f] = checkBackends([found.Vercel], today);
+    assert.equal(f.id, "backend_hosting");
+    assert.equal(f.severity, "info");
+  });
+
   it("reports a strong managed backend as information, not a problem", () => {
     const [f] = checkBackends([{ name: "Firebase", language: "BaaS", status: "managed", eol: "", source: "", confidence: 100, signals: [] }], today);
     assert.equal(f.id, "backend_managed");
@@ -251,7 +259,7 @@ describe("backend-signatures.json (contributed rules)", () => {
   for (const rule of file.backends) {
     it(rule.name, () => {
       assert.ok(rule.name && rule.language, "name and language");
-      assert.ok(["eol", "legacy", "managed", "info"].includes(rule.status), "status");
+      assert.ok(["eol", "legacy", "managed", "hosting", "info"].includes(rule.status), "status");
       if (rule.status === "eol") assert.ok(!Number.isNaN(Date.parse(rule.eol)), "eol date");
       if (rule.status === "eol" || rule.status === "legacy") assert.match(rule.source ?? "", /^https:\/\//, "eol and legacy rules need a source link");
       assert.ok(rule.signals.length > 0, "at least one signal");

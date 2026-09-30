@@ -20,7 +20,7 @@ const THRESHOLD = 30;
  * @typedef {object} BackendRule
  * @property {string} name
  * @property {string} language
- * @property {"eol" | "legacy" | "managed" | "info"} status
+ * @property {"eol" | "legacy" | "managed" | "hosting" | "info"} status
  * @property {string} [eol]
  * @property {string} [source]
  * @property {Signal[]} signals
