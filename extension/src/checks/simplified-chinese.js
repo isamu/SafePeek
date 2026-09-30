@@ -40,12 +40,15 @@ export function checkSimplifiedChinese(page) {
 function chineseSigns(page, kana) {
   const occurrences = [...page.text].filter((char) => SIMPLIFIED_ONLY.has(char));
   const simplified = [...new Set(occurrences)];
-  const stray = occurrences.length <= kana * MAX_SIMPLIFIED_PER_KANA && !CHINESE_STUDY.test(page.text);
+  // A page with a section written in Chinese uses its characters and 天 for days as a matter of course.
+  const chineseSection = occurrences.length > kana * MAX_SIMPLIFIED_PER_KANA;
   const signs = [];
-  if (simplified.length >= MIN_SIMPLIFIED && stray) signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
+  if (simplified.length >= MIN_SIMPLIFIED && !chineseSection && !CHINESE_STUDY.test(page.text)) {
+    signs.push(`simplified: ${simplified.slice(0, 10).join(" ")}`);
+  }
   if (CHINESE_LANG.test(htmlTag(page.html))) signs.push('<html lang="zh…">');
   const days = CHINESE_DAYS.exec(page.text);
-  if (days) signs.push(days[0]);
+  if (days && !chineseSection) signs.push(days[0]);
   return signs;
 }
 

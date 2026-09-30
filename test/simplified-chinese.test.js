@@ -42,14 +42,14 @@ describe("simplified Chinese on a Japanese shop", () => {
     );
   });
 
-  it("does not count characters that are common, as on a Japanese shop's page for Chinese-speaking customers", () => {
-    const chineseBody = "欢迎光临！我们提供优质商品，免税购买，请联系客服。运费说明：订单满额免费。".repeat(8);
-    const page = shop(`${JAPANESE_SHOP}${chineseBody}`);
-    assert.deepEqual(checkSimplifiedChinese(page), []);
+  it("counts neither characters nor 天 on a page with a section written in Chinese, as for Chinese-speaking customers", () => {
+    const chineseBody = "欢迎光临！我们提供优质商品，免税购买，请联系客服。运费说明：订单满额免费，14天内可退货。".repeat(8);
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${chineseBody}`)), []);
+    const declared = shop(`${JAPANESE_SHOP}${chineseBody}`, '<html lang="zh-CN"><body></body></html>');
     assert.deepEqual(
-      checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${chineseBody}365天受付`)).map((f) => f.evidence),
-      [["365天"]],
-      "other signs still count",
+      checkSimplifiedChinese(declared).map((f) => f.evidence),
+      [['<html lang="zh…">']],
+      "the declared language still counts",
     );
   });
 

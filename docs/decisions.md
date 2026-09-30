@@ -147,7 +147,7 @@ Every public body's fake-shop checklist starts with this notice (`docs/fake-shop
 Fake shops are often machine-translated from Chinese, and the police name simplified characters and phrases such as 「365天受付」 as a sign (`docs/fake-shop-research.md`, item 4).
 
 - **Only characters Japanese normally writes differently count** (这 for 這, 购 for 購 …), and only several distinct ones, so a quoted Chinese name does not. 个 and 价 are left out: Japanese knows them as old or variant forms (of 個・箇 and 価).
-- **Only stray characters count.** A Japanese shop's page for Chinese-speaking customers is written in Chinese under a Japanese header and footer, so simplified characters are common there. A fake shop's Japanese carries a few. Above a small share of the kana, the characters are not a sign; the language and the days still are.
+- **Only stray characters count.** A Japanese shop's page for Chinese-speaking customers is written in Chinese under a Japanese header and footer, so simplified characters are common there. A fake shop's Japanese carries a few. Above a small share of the kana, the page has a Chinese section, where the characters and 天 for days are ordinary, so neither is a sign; the declared language still is.
 - **A page about learning Chinese** (中国語, 簡体字, ピンイン, HSK, 中検) quotes simplified text on purpose, so its characters are not counted; the language and the days still are. A review found a Chinese-textbook catalogue reported otherwise.
 - **Only on a mainly Japanese page with shop words.** A Chinese-language site, or a page about China, is not what this is for.
 - **Chinese font names are left out.** CSS frameworks list them as fallbacks, so ordinary Japanese sites carry them.
