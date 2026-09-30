@@ -139,6 +139,22 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(found.evidence, ["所在地"]);
   });
 
+  it("does not ask a notice for a service for shipping", () => {
+    const service = [
+      "販売者の名称 株式会社サンプル",
+      "運営責任者 山田太郎",
+      "所在地 東京都千代田区1-1-1",
+      "電話番号 03-0000-0000",
+      "販売価格 月額1,000円（税込）",
+      "お支払方法 クレジットカード",
+      "役務の提供時期 決済完了後すぐにご利用いただけます",
+      "返品・キャンセル サービスの性質上、返金には応じられません",
+    ];
+    assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", service.join("\n"))), []);
+    const [goods] = checkLegalNotice(notice("特定商取引法に基づく表記", [...service, "ご注文後3日以内に発送します"].join("\n")));
+    assert.deepEqual(goods.evidence, ["送料"]);
+  });
+
   it("reads common label variants", () => {
     const variants = [
       "事業者の名称 株式会社サンプル",

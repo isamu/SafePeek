@@ -22,18 +22,20 @@ const ON_REQUEST = new RegExp(
 const DISCLOSED_DETAILS = /開示|書面|電子メール|電磁的記録|事項|情報|内容|詳細/;
 const POSTAL_CODE = /〒\s?\d{3}-?\d{4}/;
 const PREFECTURE_AND_CITY = /(?:東京都|北海道|京都府|大阪府|\S{2,3}県)\S{1,8}?[市区町村郡]/;
+const SHIPPED_GOODS = /発送|配送|お届け|配達|宅配/;
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement (price and shipping too, when they are
 // not all shown: https://www.no-trouble.caa.go.jp/qa/advertising.html Q5). The return terms never may.
 const ITEMS = [
-  { label: "販売業者", pattern: /販売業者|販売事業者|事業者|会社名|商号|運営会社|販売元|店舗名/, onRequest: true },
+  { label: "販売業者", pattern: /販売業者|販売事業者|販売者|事業者|会社名|商号|運営会社|販売元|店舗名/, onRequest: true },
   // Some notices put the address under the seller's name without a label: a postal code or prefecture-and-city counts.
   { label: "所在地", pattern: new RegExp(["所在地|住所", POSTAL_CODE.source, PREFECTURE_AND_CITY.source].join("|")), onRequest: true },
   { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
   { label: "代表者または責任者", pattern: /代表者|代表取締役|責任者/, onRequest: true },
   // 「商品代金以外の必要料金」 and 「代金引換」 are about other charges and payment, not the price.
   { label: "販売価格", pattern: /価格|代金(?!以外|引換|引き換)/, onRequest: true },
-  { label: "送料", pattern: /送料|配送料|必要な?(?:料金|費用)|負担[^。\n]{0,12}(?:料金|費用)|手数料/, onRequest: true },
+  // Shipping applies to goods sent to the buyer, so a notice for a service or a right is not asked for it.
+  { label: "送料", pattern: /送料|配送料|必要な?(?:料金|費用)|負担[^。\n]{0,12}(?:料金|費用)|手数料/, onRequest: true, onlyWhen: SHIPPED_GOODS },
   // Payment timing may be left out only on conditions the page cannot show, so only the method is checked.
   { label: "支払方法", pattern: /支払|決済/, onRequest: true },
   // The law's wording covers services and rights too: 役務の提供時期, 権利の移転時期.
@@ -49,7 +51,8 @@ const ITEMS = [
 export function checkLegalNotice(page) {
   if (!isNoticePage(page.html)) return [];
   const onRequest = hasGeneralOnRequest(page.text);
-  const missing = ITEMS.filter((item) => !item.pattern.test(page.text) && !(item.onRequest && onRequest)).map((item) => item.label);
+  const asked = ITEMS.filter((item) => !item.onlyWhen || item.onlyWhen.test(page.text));
+  const missing = asked.filter((item) => !item.pattern.test(page.text) && !(item.onRequest && onRequest)).map((item) => item.label);
   if (missing.length === 0) return [];
   const severity = missing.some((label) => IDENTITY_ITEMS.includes(label)) ? "medium" : "low";
   return [finding("legal_notice_incomplete", severity, "page", { count: missing.length }, missing)];
