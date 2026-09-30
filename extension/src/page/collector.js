@@ -142,11 +142,20 @@
     }));
   }
 
+  /** @returns {string} */
+  function readCookieString() {
+    try {
+      return document.cookie;
+    } catch {
+      return ""; // a document served with a CSP sandbox (without allow-same-origin) refuses cookie access
+    }
+  }
+
   /** @returns {Record<string, string>} */
   function readCookies() {
     /** @type {Record<string, string>} */
     const cookies = {};
-    for (const part of document.cookie.split(";")) {
+    for (const part of readCookieString().split(";")) {
       const eq = part.indexOf("=");
       const name = part.slice(0, eq).trim();
       if (name) cookies[name] = part.slice(eq + 1).trim();
