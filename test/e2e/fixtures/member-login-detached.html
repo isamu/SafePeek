@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Member login with a detached password field</title>
+  </head>
+  <body>
+    <div id="filler"></div>
+    <form id="login" action="/login" method="post">
+      <label>会員カード番号 <input type="text" name="cardNo1" /></label>
+      <input type="text" name="cardNo2" />
+    </form>
+    <label>パスワード <input type="password" name="password" form="login" /></label>
+    <script>
+      // More forms than the collector reports, before the login form.
+      const filler = document.getElementById("filler");
+      for (let i = 0; i < 60; i++) filler.append(Object.assign(document.createElement("form"), { action: "/search" }));
+    </script>
+  </body>
+</html>
