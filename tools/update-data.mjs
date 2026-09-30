@@ -38,9 +38,6 @@ const KEPT_FIELDS = [
   "requires",
   "requiresCategory",
   "excludes",
-  // Whether a product is a hosted service or software the site runs itself; tells a cart service from a shop package.
-  "saas",
-  "oss",
 ];
 
 function parseArgs(argv) {
