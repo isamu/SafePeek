@@ -7,8 +7,11 @@ const NOTICE_HEADING = /特定商取引法|特商法|特定商取引に関する
 const HEADINGS = /<(title|h1|h2)\b[^>]*>([\s\S]{0,400}?)<\/\1>/gi;
 // 特定商取引法 11 lets a seller leave some items out when the notice says it will give them without delay when the
 // consumer asks; only phrasings of such a request count, so billing prose (請求書, 請求額) never does.
-const ON_REQUEST =
-  /請求(?:が(?:あった|ある)場合|があれば|により|いただ(?:いた場合|ければ)|に応じ|を受け)[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付|通知)/;
+const REQUEST_PHRASES = ["があった場合", "がある場合", "があれば", "あり次第", "次第", "により", "された場合", "に応じ", "を受け"];
+const POLITE_REQUEST_PHRASES = ["いただいた場合", "いただければ", "いただきましたら", "いただき次第"];
+const ON_REQUEST = new RegExp(
+  `(?:請求|申し?出)(?:${REQUEST_PHRASES.join("|")}|を?(?:${POLITE_REQUEST_PHRASES.join("|")}))[^。]{0,40}遅滞なく[^。]{0,40}(?:提供|開示|交付|送付|通知)`,
+);
 const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement. Price and returns never may.
 const ITEMS = [
