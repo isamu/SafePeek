@@ -170,6 +170,7 @@ Fake shops come from shared kits, and a kit's placeholders are often left in (`d
 - **Names and numbers count only where the seller's identity is given, never in a form example.** Real checkout and contact forms show 「入力例：000-0000-0000」, reviews mask names as 〇〇様, and pages mention partners as 株式会社××. Input placeholders are not read at all, since they are nearly always examples.
 - **Only the notice itself is read.** There the identity is the seller's own. On other pages the same labels mean something else: a checkout form's example, what a buyer wants printed on a stamp or card, a guide to writing the notice. Reviews found each of these on real pages.
 - **English template wording is not used.** Real shops keep lorem ipsum in size guides and name products "Lorem Ipsum", write "your store name" in prose, and leave Magento's "Default Store View" label unchanged. Only the seller's identity filled with placeholders counts.
+- **A FAX of zeros and a demo store are not leftovers.** A zero FAX means the seller has no fax; a demo or test store says so and shows placeholders on purpose, while a fake shop never calls itself one.
 - **Low.** A shop still being built shows the same, so the message says so.
 
 ## Where a password is sent

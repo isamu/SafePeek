@@ -67,6 +67,16 @@ describe("template leftovers in the 特定商取引法 notice", () => {
     assert.deepEqual(checkTemplateLeftovers(notice("株式会社××との提携\n〇〇様からのレビュー")), [], "no identity label");
   });
 
+  it("does not take a FAX of zeros for a leftover: it means there is no fax", () => {
+    assert.deepEqual(checkTemplateLeftovers(notice("電話番号 TEL: 03-1234-5678 FAX: 000-0000-0000")), []);
+    assert.deepEqual(checkTemplateLeftovers(notice("FAX\n000-0000-0000")), [], "a FAX label with its number on the next line");
+    assert.equal(checkTemplateLeftovers(notice("TEL: 000-0000-0000 FAX: 03-1234-5678")).length, 1, "a zero TEL still counts");
+  });
+
+  it("stays out of a demo or test store's notice", () => {
+    assert.deepEqual(checkTemplateLeftovers(notice("こちらはデモストアです\n販売業者 株式会社〇〇\n所在地 〒000-0000")), []);
+  });
+
   it("does not take English template wording for a leftover, since real shops use it too", () => {
     for (const text of ["Please enter your store name when you register.", "Default Store View", "Lorem ipsum dolor sit amet"]) {
       assert.deepEqual(checkTemplateLeftovers(notice(text)), [], text);
