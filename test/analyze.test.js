@@ -37,6 +37,20 @@ describe("analyze", () => {
     assert.ok(report.technologies.some((t) => t.name === "Stripe"));
   });
 
+  it("rates a page with its own card field beside the provider's frame as dangerous, and still lists the other domains' scripts", async () => {
+    const page = makePage({
+      scripts: [script("https://js.stripe.com/v3/"), script("https://cdn.unknown-widgets.example/w.js")],
+      iframes: ["https://js.stripe.com/v3/elements-inner-card.html"],
+      inputs: [inputField("cardnumber", { autocomplete: "cc-number" }), inputField("cvc", { autocomplete: "cc-csc" })],
+    });
+    const report = await analyze(page, db, env);
+    assert.equal(report.level, "danger");
+    const ids = report.findings.map((f) => f.id);
+    assert.equal(ids[0], "card_form_beside_provider_frame");
+    assert.ok(ids.includes("card_page_third_party"));
+    assert.ok(!ids.includes("card_hosted_iframe") && !ids.includes("card_on_page"));
+  });
+
   it("fills a technology's version from the library scan", async () => {
     const page = makePage({ scripts: [script("https://shop.example/js/app.js", "/*! jQuery v1.12.4 | (c) jQuery Foundation */")], globals: { jQuery: true } });
     const report = await analyze(page, db, env);

@@ -261,6 +261,19 @@ describe("payment", () => {
     assert.ok(found[0].evidence.includes(frame));
   });
 
+  it("does not take a saved-card chooser for a card number field", () => {
+    const frame = "https://js.stripe.com/v3/elements-inner-card-1a2b.html";
+    for (const chooser of [
+      inputField("card_number", { tag: "select", type: "" }),
+      inputField("saved", { tag: "select", type: "", autocomplete: "cc-number" }),
+    ]) {
+      assert.deepEqual(ids(checkPayment(makePage({ inputs: [chooser], iframes: [frame] }), db.providers)), ["card_hosted_iframe"], chooser.name);
+      assert.deepEqual(ids(checkPayment(makePage({ inputs: [chooser] }), db.providers)), ["no_card_form"], chooser.name);
+    }
+    const expiryMonth = inputField("exp_month", { tag: "select", type: "", autocomplete: "cc-exp-month" });
+    assert.deepEqual(ids(checkPayment(makePage({ inputs: [expiryMonth] }), db.providers)), ["card_on_page"], "an expiry select still counts");
+  });
+
   it("keeps the ordinary findings when a tokenizer backs the field, or the page asks only for a security code", () => {
     const frame = "https://js.stripe.com/v3/elements-inner-card-1a2b.html";
     const number = inputField("cardno");

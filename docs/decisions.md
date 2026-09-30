@@ -70,6 +70,7 @@ Hosts are listed with *other*, *session replay* and *ads* first.
 - **A tokenizer is recognised only on its provider's host.** A URL elsewhere that merely contains the pattern is not a tokenizer.
 
 - **A card number field beside a provider's card frame is reported as a skimming shape.** A genuine checkout takes the card in one place. Skimmers have hidden the real frame behind a copy of the form (`docs/fake-shop-research.md`, item 1). A provider tokenizer on the page shows the field is a real second option, so it keeps the ordinary findings. A security code or expiry field alone does not count.
+- **A select is never a card number field.** A card number is typed; a select named for one chooses a saved card, and checkouts show it beside the provider's new-card frame. A read-only or disabled input showing a saved card is not told apart yet: the collector does not record those attributes.
 - **Card fields on a hosted-cart storefront are not reported yet.** Some carts' own checkout pages may take the card in the page with a tokenizer; that needs checking on real sites first.
 
 ## Who runs the shop
