@@ -30,6 +30,7 @@
  * @property {string} id
  * @property {string} autocomplete
  * @property {string} hints  placeholder, aria-label and data-encrypted-name, joined
+ * @property {number} form  index of its form in PageData.forms, or -1
  */
 
 /**

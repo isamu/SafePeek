@@ -96,6 +96,30 @@ describe("payment", () => {
     }
   });
 
+  it("reads a card number in a login form as a membership card", () => {
+    const login = { action: "https://api.example/login", method: "post", hasPassword: true };
+    const inputs = [inputField("tpLoginForm:cardNo1", { form: 0 }), inputField("tpLoginForm:cardNo2", { form: 0 })];
+    assert.deepEqual(ids(checkPayment(makePage({ forms: [login], inputs }), db.providers)), ["no_card_form"]);
+    const withCvc = [...inputs, inputField("cvc", { form: 0 })];
+    assert.equal(
+      checkPayment(makePage({ forms: [login], inputs: withCvc }), db.providers)[0].id,
+      "card_on_page",
+      "a login form that also asks for the CVC takes a card",
+    );
+  });
+
+  it("does not take an expiry date alone for a card", () => {
+    assert.deepEqual(ids(checkPayment(makePage({ inputs: [inputField("limit", { hints: "有効期限" })] }), db.providers)), ["no_card_form"]);
+    assert.equal(checkPayment(makePage({ inputs: [inputField("exp", { autocomplete: "cc-exp" })] }), db.providers)[0].id, "card_on_page");
+  });
+
+  it("does not count Stripe's hidden frames as card entry", () => {
+    const hidden = ["https://js.stripe.com/v3/m-outer-3437aadd.html#url=x", "https://js.stripe.com/v3/controller-abc.html"];
+    assert.deepEqual(ids(checkPayment(makePage({ iframes: hidden }), db.providers)), ["no_card_form"]);
+    const card = [...hidden, "https://js.stripe.com/v3/elements-inner-payment-1a2b.html"];
+    assert.deepEqual(ids(checkPayment(makePage({ iframes: card }), db.providers)), ["card_hosted_iframe"]);
+  });
+
   it("recognises in-page tokenization (GMO-PG token.js)", () => {
     const page = makePage({ inputs: [inputField("cardno")], scripts: [script("https://static.mul-pay.jp/ext/js/token.js")] });
     const [first] = checkPayment(page, db.providers);

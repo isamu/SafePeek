@@ -13,6 +13,7 @@
   const MAX_SCRIPTS = 40;
   const FETCH_TIMEOUT_MS = 5000;
   const MAX_INPUTS = 200;
+  const MAX_FORMS = 50;
   const SKIPPED_INPUT_TYPES = ["hidden", "submit", "button", "checkbox", "radio", "image", "reset", "file"];
 
   /**
@@ -120,6 +121,7 @@
 
   /** @returns {import("../types.js").InputField[]} */
   function readInputs() {
+    const forms = [...document.forms].slice(0, MAX_FORMS);
     return [...document.querySelectorAll("input, select")]
       .filter((el) => !(el instanceof HTMLInputElement && SKIPPED_INPUT_TYPES.includes(el.type)))
       .slice(0, MAX_INPUTS)
@@ -130,12 +132,13 @@
         id: el.id,
         autocomplete: el.getAttribute("autocomplete") ?? "",
         hints: ["placeholder", "aria-label", "data-encrypted-name"].map((a) => el.getAttribute(a) ?? "").join(" "),
+        form: (el instanceof HTMLInputElement || el instanceof HTMLSelectElement) && el.form ? forms.indexOf(el.form) : -1,
       }));
   }
 
   /** @returns {import("../types.js").FormInfo[]} */
   function readForms() {
-    return [...document.forms].slice(0, 50).map((form) => ({
+    return [...document.forms].slice(0, MAX_FORMS).map((form) => ({
       action: form.action,
       method: (form.getAttribute("method") ?? "get").toLowerCase(),
       hasPassword: form.querySelector("input[type=password]") !== null,
