@@ -27,6 +27,32 @@ describe("false-result issue links", () => {
     for (const secret of ["SECRET1", "SECRET2", "SECRET3", "SECRET5", "SECRET-PATH"]) assert.ok(!url.includes(secret), secret);
   });
 
+  it("never share a header value or cookie names, even when they look harmless", () => {
+    /** @type {import("../extension/src/types.js").Finding[]} */
+    const findings = [
+      { id: "powered_by_exposed", severity: "medium", area: "server", params: { value: "5.4.16" }, evidence: [] },
+      { id: "session_cookie_not_httponly", severity: "medium", area: "headers", params: { names: "ASPSessionIDSECRET8" }, evidence: [] },
+    ];
+    for (const finding of findings) {
+      const { result } = fields(findingReportUrl(finding, page, context));
+      assert.equal(result, `${finding.id} (${finding.severity}, ${finding.area})`);
+    }
+  });
+
+  it("keep the technology link short enough for GitHub to open", () => {
+    const many = Array.from({ length: 400 }, (_, i) => ({
+      name: `Technology number ${i}`,
+      version: "1.0.0",
+      confidence: 100,
+      categories: [],
+      website: "",
+      evidence: [],
+    }));
+    const url = technologiesReportUrl(many, page, context);
+    assert.ok(url.length <= 6000, String(url.length));
+    assert.match(fields(url).result, /- … and \d+ more$/);
+  });
+
   it("list detected technologies with plain versions only", () => {
     const tech = (/** @type {string} */ name, /** @type {string} */ version, impliedBy = "") => ({
       name,

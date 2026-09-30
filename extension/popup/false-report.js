@@ -1,8 +1,9 @@
 // Links that open the "False result" issue form with the result already filled in. The form opens on
-// GitHub and nothing is sent until the user submits it there. Like the backend report, it carries an
-// allowlist only: the page's origin, the finding's id and severity, parameters that come from SafePeek's
-// own data (names, dates, CVE ids) or are plain numbers and version numbers, and the extension and data
-// versions. Header values, evidence lines and anything else the page controls are left out.
+// GitHub and nothing is sent until the user submits it there. What goes in is decided per parameter, not by
+// the shape of its value: the page's origin, the finding's id and severity, the parameters listed in
+// DATA_PARAMS (values from SafePeek's own data), numbers, a detected version when it is a plain version
+// number, and the extension and data versions. Header values, cookie names, evidence lines and anything else
+// the page controls are left out.
 
 import { isPlainVersion, publicUrl } from "./report-text.js";
 
@@ -10,21 +11,11 @@ const NEW_ISSUE = "https://github.com/isamu/SafePeek/issues/new";
 const TEMPLATE = "false-result.yml";
 
 /** Finding parameters whose values come from SafePeek's data or code, not from the page. */
-const DATA_PARAMS = new Set([
-  "name",
-  "language",
-  "label",
-  "date",
-  "component",
-  "cves",
-  "provider",
-  "providers",
-  "series",
-  "latest",
-  "protocol",
-  "source",
-  "names",
-]);
+const DATA_PARAMS = new Set(["name", "language", "label", "date", "component", "cves", "provider", "providers", "series", "latest", "protocol", "source"]);
+/** Parameters that hold a detected version; shared only when they are a plain version number. */
+const VERSION_PARAMS = new Set(["version"]);
+/** GitHub answers 414 above roughly 8 KB; stay well below it. */
+const MAX_URL_LENGTH = 6000;
 
 /**
  * @typedef {object} ReportContext
@@ -39,7 +30,7 @@ const DATA_PARAMS = new Set([
  */
 function isShareable(key, value) {
   if (typeof value === "number") return true;
-  return DATA_PARAMS.has(key) || isPlainVersion(value);
+  return DATA_PARAMS.has(key) || (VERSION_PARAMS.has(key) && isPlainVersion(value));
 }
 
 /**
@@ -91,10 +82,21 @@ export function technologiesReportUrl(technologies, pageUrl, context) {
     const implied = tech.impliedBy ? ` (implied by ${tech.impliedBy})` : "";
     return `- ${tech.name}${version}${implied}`;
   });
-  return issueUrl({
+  const fields = (/** @type {string[]} */ shown) => ({
     title: `[false result] technologies on ${publicUrl(pageUrl)}`,
     page: publicUrl(pageUrl),
-    result: ["technologies detected:", ...lines].join("\n"),
+    result: ["technologies detected:", ...shown, ...omitted(lines.length - shown.length)].join("\n"),
     safepeek: `SafePeek ${context.extensionVersion}; data ${context.dataVersions}`,
   });
+  let count = lines.length;
+  while (count > 0 && issueUrl(fields(lines.slice(0, count))).length > MAX_URL_LENGTH) count--;
+  return issueUrl(fields(lines.slice(0, count)));
+}
+
+/**
+ * @param {number} count
+ * @returns {string[]}
+ */
+function omitted(count) {
+  return count > 0 ? [`- … and ${count} more`] : [];
 }
