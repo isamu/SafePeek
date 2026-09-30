@@ -152,11 +152,23 @@ describe("payment", () => {
   });
 
   it("reports a provider without known card frames as used, not as holding the card", () => {
-    const frames = [
-      "https://www.paypal.com/smart/buttons?style.layout=vertical",
-      "https://assets.braintreegateway.com/web/3.97.0/html/hosted-fields-frame.min.html",
-    ];
+    const frames = ["https://www.paypal.com/smart/buttons?style.layout=vertical", "https://komoju.com/fields/v1/card"];
     assert.deepEqual(ids(checkPayment(makePage({ iframes: frames }), db.providers)), ["payment_scripts_only"]);
+  });
+
+  it("recognises the card-entry frames of each provider that lists them, and not their other frames", () => {
+    const cardFrames = {
+      Braintree: "https://assets.braintreegateway.com/web/3.97.0/html/hosted-fields-frame.min.html#abc",
+      Adyen: "https://checkoutshopper-live.adyen.com/checkoutshopper/securedfields/pub.v2.123.abc/5.0.0/securedFields.html?type=card",
+      Square: "https://web.squarecdn.com/1.78.4/single-card-element-iframe.html",
+      "PAY.JP": "https://js.pay.jp/v2/element_iframe.1771219814365.html#componentName=cardNumber",
+    };
+    for (const [provider, url] of Object.entries(cardFrames)) {
+      const [f] = checkPayment(makePage({ iframes: [url] }), db.providers);
+      assert.deepEqual([f.id, f.params.providers], ["card_hosted_iframe", provider], provider);
+    }
+    const otherFrames = ["https://js.pay.jp/v2/payjp_api_iframe.1771219814365.html#origin=x", "https://api.pay.jp/v1/js/apitunnel.html"];
+    assert.deepEqual(ids(checkPayment(makePage({ iframes: otherFrames }), db.providers)), ["payment_scripts_only"]);
   });
 
   it("does not count Stripe's hidden frames as card entry", () => {
