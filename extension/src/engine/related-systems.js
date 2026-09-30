@@ -5,7 +5,8 @@
 import { registrable } from "./public-suffix.js";
 
 const MAX_URLS = 3000;
-const ABSOLUTE_URL = /https?:\/\/[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s"'`<>()\\]*)?/gi;
+// Any "http(s)://" run up to a quote, space or bracket; new URL() then decides what is a host, IDN included.
+const ABSOLUTE_URL = /https?:\/\/[^\s"'`<>()\\]+/gi;
 const ATTRIBUTE_URL = /\b(?:href|action|src)\s*=\s*["'](https?:\/\/[^"'#\s]+)["']/gi;
 const MIN_NAME_LENGTH = 4;
 

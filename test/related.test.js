@@ -77,6 +77,20 @@ describe("related systems", () => {
     );
   });
 
+  it("reads internationalised host names in the site's own script", () => {
+    for (const [pageUrl, target] of [
+      ["https://www.例え.jp/", "https://order.例え.jp/cart.do"],
+      ["https://www.xn--r8jz45g.xn--q9jyb4c/", "https://order.xn--r8jz45g.xn--q9jyb4c/cart.do"],
+    ]) {
+      const page = makePage({ url: pageUrl, scripts: [script(`${new URL(pageUrl).origin}/js/app.js`, `location.href = "${target}";`)] });
+      assert.deepEqual(
+        inferRelatedSystems(page, db.backends, db.suffixes).map((s) => s.host),
+        [new URL(target).hostname],
+        target,
+      );
+    }
+  });
+
   it("does not take URLs from a third-party script's body", () => {
     const page = makePage({
       url: "https://www.acme-ec.com/",
