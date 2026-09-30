@@ -28,6 +28,7 @@ Everything is inference from what the page exposes. "No problems found" is never
 - **Browser extension** (Chrome, from GitHub; see README).
 - **npm package `safepeek`**: the same engine as ES modules (`extension/package.json`, entry `src/index.js`), for use in crawlers, CI or other tools. Page data must be collected in a real page (the collector plus `probeGlobals`).
 - **Contributing traces**: users paste the popup's "Copy the inference" output into the *Backend inference* issue form; maintainers turn it into rules (`docs/backend-signatures.md`).
+- **Reporting a false result**: every finding, and the technology list, has a "Report a false result" link that opens the *False result* issue form pre-filled with the site's origin, the finding's id, severity and area, parameters taken from SafePeek's own data (names, dates, CVE ids), counts, a detected version when it is a plain version number, and the extension and data versions — decided per parameter, so never evidence lines, header values, cookie names or other page-controlled text (`popup/false-report.js`). The technology-list link is cut to stay below GitHub's URL limit. SafePeek sends nothing itself: opening the link is a user-initiated visit to GitHub, which receives the pre-filled values in the URL; they become a public issue only if the user submits the form.
 
 ## 2. Security invariants (enforced by `test/policy.test.js`)
 
@@ -122,7 +123,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 
 ## 8. UI
 
-Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button, which copies the page's origin and, per trace, its note plus only identifier names (form field, cookie, JS global, hostname), and technology versions only when they are plain version numbers — never URL paths, header values or page/script excerpts — and a link to the issue form; nothing is sent by SafePeek itself), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
+Popup, 420 px, light/dark. The title links to the GitHub repository. Sections: summary (level, counts, disclaimer), card payment, backend (inferred: findings with weighted traces, other guesses with confidence, "Copy the inference" button, which copies the page's origin and, per trace, its note plus only identifier names (form field, cookie, JS global, hostname), and technology versions only when they are plain version numbers — never URL paths, header values or page/script excerpts — and a link to the issue form; SafePeek sends nothing on its own), security findings (expandable, evidence), technologies (grouped by category, EOL highlighted, implied ones dashed with their source), footer (nothing-sent statement, data dates). Language: Japanese when the browser language starts with `ja`, else English. Every finding id must have a message in both languages (tested).
 
 ## 9. Quality gates
 

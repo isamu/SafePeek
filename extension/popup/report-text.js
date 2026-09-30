@@ -8,6 +8,14 @@
 /** A version number and nothing else; page-controlled strings that are not one are left out. */
 const PLAIN_VERSION = /^v?\d+(?:[._-]\d+)*(?:[a-z]\d*)?$/i;
 
+/**
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function isPlainVersion(value) {
+  return typeof value === "string" && PLAIN_VERSION.test(value);
+}
+
 /** Trace types whose match is an identifier name rather than a value. */
 const COPYABLE_TYPES = new Set(["param", "cookie", "global", "host"]);
 
@@ -43,7 +51,7 @@ export function backendReportText(report, extensionVersion) {
     lines.push(`- ${b.name} (${b.language}), status ${b.status}, confidence ${b.confidence}`, ...b.signals.map(signalLine));
   }
   if (report.backends.length === 0) lines.push("- (no backend inferred)");
-  const versions = report.technologies.filter((tech) => PLAIN_VERSION.test(tech.version)).map((tech) => `${tech.name} ${tech.version}`);
+  const versions = report.technologies.filter((tech) => isPlainVersion(tech.version)).map((tech) => `${tech.name} ${tech.version}`);
   if (versions.length > 0) lines.push("", `Versions seen: ${versions.join(", ")}`);
   lines.push("", `SafePeek ${extensionVersion}`);
   return lines.join("\n");
