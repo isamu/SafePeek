@@ -1,9 +1,9 @@
 // The text "Copy the inference" puts on the clipboard, meant to be pasted into a public GitHub issue.
-// It lists what is allowed and drops everything else: the page's origin (never its path), and for
-// each trace only an identifier name — form field, cookie, JS global, the site's hostname — plus plain
-// version numbers of the technologies seen. URL paths,
-// header values and page or script excerpts can carry session ids, tokens or personal data, so they
-// are never copied; the trace's note still says what kind of trace fired.
+// It lists what is allowed and drops everything else: the page's origin (never its path), for each
+// trace only an identifier name (form field, cookie, JS global, the site's hostname), and plain
+// version numbers of the technologies seen. URL paths, header values and page or script excerpts can
+// carry session ids, tokens or personal data, so they are never copied; each trace's note still says
+// what kind of trace fired.
 
 /** A version number and nothing else; page-controlled strings that are not one are left out. */
 const PLAIN_VERSION = /^v?\d+(?:[._-]\d+)*(?:[a-z]\d*)?$/i;
