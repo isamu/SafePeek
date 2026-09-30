@@ -22,8 +22,8 @@ Only the coarse weaknesses a visitor can read from the public header are reporte
 
 A header that browsers ignore protects nothing, so it is not counted as protection (the Mozilla HTTP Observatory rules, https://github.com/mdn/mdn-http-observatory).
 
-- **HSTS:** `max-age=0` tells the browser to forget HSTS, so it counts as none. An age under six months is reported on its own, since it lapses between visits.
-- **Framing:** only `DENY` and `SAMEORIGIN` count for `X-Frame-Options` (`ALLOW-FROM` is obsolete). A `frame-ancestors` that admits any host limits nothing.
+- **HSTS:** `max-age=0` tells the browser to forget HSTS, so it counts as none; so does a header RFC 6797 has the browser ignore (a repeated directive, a malformed max-age). Only the first of several headers counts. The HSTS preload list is not shipped, so the message says preloaded sites are protected without the header. An age under six months is reported on its own, since it lapses between visits.
+- **Framing:** a header CSP with `frame-ancestors` decides alone, since browsers then ignore `X-Frame-Options`; one that admits any host limits nothing. Otherwise `X-Frame-Options` follows the HTML Standard: `DENY` or `SAMEORIGIN` alone, or several distinct values including a known one (blocked as confusing); `ALLOW-FROM` is obsolete.
 
 ## Scripts from other domains on card and login pages
 

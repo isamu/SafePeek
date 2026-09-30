@@ -153,7 +153,11 @@ const JA = {
     detail: (p) => (p.password ? "パスワードを含むフォームがHTTPで送信されます。" : "入力内容がHTTPで送信されます。"),
   },
   headers_unavailable: { title: () => "レスポンスヘッダーを取得できませんでした", detail: () => "ヘッダーに関するチェックは行っていません。" },
-  no_hsts: { title: () => "HSTSが設定されていません", detail: () => "HTTPへ誘導する攻撃を防ぐ Strict-Transport-Security ヘッダーがありません。" },
+  no_hsts: {
+    title: () => "HSTSが設定されていません",
+    detail: () =>
+      "HTTPへ誘導する攻撃を防ぐ有効な Strict-Transport-Security ヘッダーがありません。ブラウザに組み込まれたHSTSプリロードリストに載っているサイトは、このヘッダーがなくても保護されます。",
+  },
   hsts_short: {
     title: (p) => `HSTSの有効期間が短すぎます（${p.seconds}秒）`,
     detail: () => "Strict-Transport-Security の max-age が6か月未満のため、しばらく訪れないと効果が切れ、HTTPへ誘導する攻撃を防げなくなります。",
@@ -365,7 +369,11 @@ const EN = {
     detail: (p) => (p.password ? "A form with a password field is sent unencrypted." : "Form input is sent unencrypted."),
   },
   headers_unavailable: { title: () => "Could not read response headers", detail: () => "Header checks were skipped." },
-  no_hsts: { title: () => "No HSTS", detail: () => "No Strict-Transport-Security header to prevent downgrade to HTTP." },
+  no_hsts: {
+    title: () => "No HSTS",
+    detail: () =>
+      "No valid Strict-Transport-Security header to prevent downgrade to HTTP. A site on the browser's built-in HSTS preload list is protected without it.",
+  },
   hsts_short: {
     title: (p) => `HSTS lasts too briefly (${p.seconds} seconds)`,
     detail: () => "Strict-Transport-Security has a max-age under six months, so it lapses between visits and no longer prevents downgrade to HTTP.",

@@ -66,6 +66,20 @@ describe("transport and headers", () => {
     assert.deepEqual(withHsts("MAX-AGE = 31536000; preload"), []);
   });
 
+  it("ignores an HSTS header the browser would ignore, and reads only the first of several", () => {
+    const withHsts = (/** @type {string} */ value) => ids(checkHeaders(makePage({ headers: { ...makePage().headers, "strict-transport-security": value } })));
+    for (const malformed of [
+      "max-age=31536000x",
+      'max-age="31536000',
+      "max-age=31536000; max-age=0",
+      "max-age=31536000; includeSubDomains; includesubdomains",
+    ]) {
+      assert.deepEqual(withHsts(malformed), ["no_hsts"], malformed);
+    }
+    assert.deepEqual(withHsts("max-age=31536000, max-age=0"), [], "the first header counts");
+    assert.deepEqual(withHsts("max-age=0, max-age=31536000"), ["no_hsts"], "only the first header counts");
+  });
+
   it("counts only X-Frame-Options values and frame-ancestors that browsers honour", () => {
     const base = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
     const framing = (/** @type {Record<string, string>} */ extra) => ids(checkHeaders(makePage({ headers: { ...base, ...extra } })));
@@ -76,6 +90,26 @@ describe("transport and headers", () => {
     for (const ancestors of ["frame-ancestors *", "frame-ancestors https:", "frame-ancestors https://*"]) {
       assert.deepEqual(framing({ "content-security-policy": `default-src 'self'; ${ancestors}` }), ["no_clickjacking"], ancestors);
     }
+    assert.deepEqual(
+      framing({ "content-security-policy": "default-src 'self'; frame-ancestors *://partner.example" }),
+      [],
+      "a wildcard scheme still names a host",
+    );
+  });
+
+  it("lets a header CSP with frame-ancestors decide over X-Frame-Options, as browsers do", () => {
+    const base = { ...makePage().headers, "x-frame-options": "DENY" };
+    const framing = (/** @type {string} */ csp) => ids(checkHeaders(makePage({ headers: { ...base, "content-security-policy": csp } })));
+    assert.deepEqual(framing("default-src 'self'; frame-ancestors *"), ["no_clickjacking"]);
+    assert.deepEqual(framing("default-src 'self'"), [], "without frame-ancestors, X-Frame-Options decides");
+  });
+
+  it("follows the HTML Standard for several X-Frame-Options values", () => {
+    const base = { ...makePage().headers, "content-security-policy": "default-src 'self'" };
+    const framing = (/** @type {string} */ value) => ids(checkHeaders(makePage({ headers: { ...base, "x-frame-options": value } })));
+    for (const value of ["ALLOWALL, INVALID", "INVALID, DENY", "SAMEORIGIN, DENY"]) assert.deepEqual(framing(value), [], `${value}: confusing values block`);
+    assert.deepEqual(framing("INVALID, OTHER"), ["no_clickjacking"], "several unknown values do not");
+    assert.deepEqual(framing("ALLOWALL"), ["no_clickjacking"], "ALLOWALL alone allows framing");
   });
 
   it("flags a CSP that allows inline scripts without nonces", () => {

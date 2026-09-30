@@ -1,16 +1,19 @@
 // Transport and response-header checks.
 
 import { finding } from "./finding.js";
+import { hstsMaxAge } from "./hsts.js";
 
 /** @typedef {import("../types.js").Finding} Finding */
 
 const MAX_POLICY_EVIDENCE = 300;
-const HSTS_MAX_AGE = /max-age\s*=\s*"?(\d+)/i;
 const MIN_HSTS_MAX_AGE_S = 15_552_000;
-const VALID_FRAME_OPTIONS = /^(?:deny|sameorigin)$/i;
+const BLOCKING_FRAME_OPTIONS = ["deny", "sameorigin"];
+// With more than one distinct value, the HTML Standard blocks framing when any of these is among them.
+const CONFUSING_FRAME_OPTIONS = ["deny", "sameorigin", "allowall"];
 const ANY_HOST_SCHEMES = new Set(["http:", "https:", "data:"]);
 // A host-source's host part: after an optional scheme, up to a port or path.
-const HOST_OF_SOURCE = /^(?:[a-z][a-z\d+.-]*:\/\/)?([^:/]*)/;
+// A scheme may itself be the wildcard (*://partner.example), which still names a host.
+const HOST_OF_SOURCE = /^(?:(?:[a-z][a-z\d+.-]*|\*):\/\/)?([^:/]*)/;
 // Browsers ignore 'unsafe-inline' when a well-formed nonce or hash, or 'strict-dynamic', is present; a malformed one is itself ignored.
 const INLINE_ALLOW_LISTS = /^'(?:strict-dynamic|nonce-[a-z\d+/_-]+={0,2}|sha(?:256|384|512)-[a-z\d+/_-]+={0,2})'$/;
 const SCRIPT_ELEMENTS = ["script-src-elem", "script-src", "default-src"];
@@ -80,24 +83,39 @@ export function checkHeaders(page) {
  * @returns {Finding[]}
  */
 function checkHsts(header) {
-  const maxAge = Number(HSTS_MAX_AGE.exec(header ?? "")?.[1] ?? 0);
+  const maxAge = hstsMaxAge(header);
   if (maxAge === 0) return [finding("no_hsts", "low", "headers")];
   return maxAge < MIN_HSTS_MAX_AGE_S ? [finding("hsts_short", "low", "headers", { seconds: maxAge }, [`Strict-Transport-Security: ${header}`])] : [];
 }
 
 /**
- * Browsers ignore X-Frame-Options values other than DENY and SAMEORIGIN (ALLOW-FROM is obsolete), and ignore
- * frame-ancestors in a <meta> policy; a frame-ancestors that admits any host limits nothing.
+ * A header CSP with frame-ancestors decides alone: browsers then ignore X-Frame-Options (HTML Standard), and they
+ * ignore frame-ancestors in a <meta> policy. A frame-ancestors that admits any host limits nothing.
  * @param {string | undefined} frameOptions
  * @param {string[]} headerPolicies
  * @returns {boolean}
  */
 function limitsFraming(frameOptions, headerPolicies) {
-  if (VALID_FRAME_OPTIONS.test((frameOptions ?? "").split(",")[0].trim())) return true;
-  return headerPolicies.some((policy) => {
-    const ancestors = directive(policy, "frame-ancestors");
-    return ancestors !== null && !sourceTokens(ancestors).slice(1).some(admitsAnyHost);
-  });
+  const ancestors = headerPolicies.map((policy) => directive(policy, "frame-ancestors")).filter((d) => d !== null);
+  if (ancestors.length > 0) return ancestors.some((d) => !sourceTokens(d).slice(1).some(admitsAnyHost));
+  return frameOptionsBlock(frameOptions);
+}
+
+/**
+ * The HTML Standard's processing of X-Frame-Options: its values form a set; several distinct ones including a known
+ * value block framing as confusing; one value blocks only when it is DENY or SAMEORIGIN (ALLOW-FROM is obsolete).
+ * @param {string | undefined} header
+ * @returns {boolean}
+ */
+function frameOptionsBlock(header) {
+  const values = new Set(
+    (header ?? "")
+      .split(",")
+      .map((v) => v.trim().toLowerCase())
+      .filter((v) => v !== ""),
+  );
+  if (values.size > 1) return CONFUSING_FRAME_OPTIONS.some((v) => values.has(v));
+  return BLOCKING_FRAME_OPTIONS.some((v) => values.has(v));
 }
 
 /**
