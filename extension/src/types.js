@@ -73,7 +73,7 @@
  * @typedef {object} Finding
  * @property {string} id  message key, see popup/i18n.js
  * @property {Severity} severity
- * @property {string} area  transport | headers | server | payment | backend | cms | libraries | eol | page
+ * @property {string} area  transport | headers | server | payment | auth | backend | cms | libraries | eol | page
  * @property {Record<string, string | number>} params
  * @property {string[]} evidence
  * @property {BackendSignal[]} [signals]  weighted evidence, for inferred backends

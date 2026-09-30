@@ -11,6 +11,7 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 - **Tech stack** from webappanalyzer fingerprints, with versions when visible.
 - **Outdated and vulnerable software**: JS libraries against the Retire.js DB, end-of-life server and front-end products.
 - **Card payment handling**: provider frame, in-page tokenization, the site's own form, or a hand-off link / form to a provider's checkout; card fields in same-origin frames are read too.
+- **Login services**: Auth0, Cognito, Firebase / Supabase Auth, Okta, Entra ID, Keycloak, Google / Apple / LINE sign-in … from the hosts and URLs the page contacts.
 - **Who runs the shop**: a hosted cart service (Shopify, BASE, MakeShop, futureshop …, recognised even on the shop's own domain) or shop software the site runs itself (EC-CUBE, Magento, WooCommerce …).
 - **API calls the page already made** (resource timing, no new request) feed backend inference; only the host and the matched part are shown.
 - **Backend inference** from weighted traces (URL conventions, parameters, headers, cookies, globals, script names, comments, error output), with confidence per guess and strength per trace; EOL and legacy backends flagged.

@@ -1,0 +1,22 @@
+{
+  "_comment": "Hand-maintained: login and identity services a page uses. A service is reported when the page contacts one of its 'hosts' (a domain without '*' matches itself and its subdomains; a pattern with '*' matches hosts with exactly as many labels, '*' standing for one), loads or calls a URL starting with one of its 'urls' (domain pattern + path prefix), calls a path containing one of its 'paths', or when webappanalyzer detects one of its 'technologies' directly. Every service lists the sources that document its traces. Whole vendor domains are avoided: their docs, support and widgets are not login. Evidence names the trace pattern, never the URL seen.",
+  "services": [
+    {"name": "Auth0", "sources": ["https://auth0.com/docs/api/authentication", "https://github.com/auth0/auth0.js/blob/master/src/authentication/index.js"], "technologies": ["Auth0", "Auth0 Lock"], "urls": ["auth0.com/authorize", "auth0.com/oauth/", "auth0.com/co/"]},
+    {"name": "Amazon Cognito", "sources": ["https://docs.aws.amazon.com/general/latest/gr/cognito_identity.html", "https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-assign-domain-prefix.html"], "technologies": ["Amazon Cognito"], "hosts": ["cognito-idp.*.amazonaws.com", "cognito-identity.*.amazonaws.com", "*.auth.*.amazoncognito.com"]},
+    {"name": "Firebase Authentication", "sources": ["https://firebase.google.com/docs/reference/rest/auth"], "hosts": ["identitytoolkit.googleapis.com", "securetoken.googleapis.com"]},
+    {"name": "Supabase Auth", "sources": ["https://github.com/supabase/supabase-js/blob/master/packages/core/supabase-js/src/SupabaseClient.ts"], "urls": ["*.supabase.co/auth/v1/"]},
+    {"name": "Okta", "sources": ["https://developer.okta.com/docs/reference/api/oidc/", "https://github.com/okta/okta-auth-js/blob/master/lib/authn/api.ts"], "technologies": ["Okta"], "urls": ["okta.com/oauth2/", "okta.com/api/v1/authn", "oktapreview.com/oauth2/", "oktapreview.com/api/v1/authn"]},
+    {"name": "Microsoft Entra ID", "sources": ["https://learn.microsoft.com/en-us/entra/identity-platform/authentication-national-cloud"], "technologies": ["Microsoft Authentication"], "hosts": ["login.microsoftonline.com"]},
+    {"name": "Azure AD B2C", "sources": ["https://learn.microsoft.com/en-us/azure/active-directory-b2c/b2clogin"], "technologies": ["Azure AD B2C"], "hosts": ["b2clogin.com"]},
+    {"name": "Clerk", "sources": ["https://github.com/clerk/javascript/blob/main/packages/shared/src/constants.ts"], "technologies": ["Clerk"], "hosts": ["accounts.dev"]},
+    {"name": "Keycloak", "sources": ["https://www.keycloak.org/securing-apps/oidc-layers"], "paths": ["/protocol/openid-connect/"]},
+    {"name": "Google Sign-In", "sources": ["https://developers.google.com/identity/gsi/web/guides/client-library"], "technologies": ["Google Sign-in"], "urls": ["accounts.google.com/gsi/"]},
+    {"name": "Sign in with Apple", "sources": ["https://developer.apple.com/documentation/signinwithapplejs"], "technologies": ["Apple Sign-in"]},
+    {"name": "LINE Login", "sources": ["https://developers.line.biz/en/docs/line-login/"], "technologies": ["LINE Login"]},
+    {"name": "Stytch", "sources": ["https://stytch.com/docs/api-reference/consumer/api/overview.md"], "hosts": ["api.stytch.com"]},
+    {"name": "WorkOS", "sources": ["https://github.com/workos/workos-node/blob/main/src/workos.ts"], "hosts": ["api.workos.com"]},
+    {"name": "Kinde", "sources": ["https://github.com/kinde-oss/kinde-auth-pkce-js/blob/main/src/createKindeClient.ts"], "urls": ["kinde.com/oauth2/"]},
+    {"name": "Descope", "sources": ["https://docs.descope.com/examples/Descope_API.yaml"], "hosts": ["api.descope.com"]},
+    {"name": "Ory", "sources": ["https://www.ory.sh/docs/guides/custom-domains"], "hosts": ["*.projects.oryapis.com"]}
+  ]
+}
