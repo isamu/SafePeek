@@ -1,0 +1,39 @@
+{
+  "name": "safepeek",
+  "version": "0.1.0",
+  "description": "Infer a website's tech stack, outdated backends and card-payment handling from page data. The analysis engine of the SafePeek browser extension.",
+  "keywords": [
+    "security",
+    "fingerprinting",
+    "wappalyzer",
+    "retire.js",
+    "end-of-life",
+    "struts",
+    "seasar",
+    "wordpress",
+    "pci"
+  ],
+  "homepage": "https://github.com/isamu/SafePeek",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isamu/SafePeek.git",
+    "directory": "extension"
+  },
+  "license": "GPL-3.0-or-later",
+  "author": "isamu",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./collector": "./src/page/collector.js",
+    "./data/*": "./data/*"
+  },
+  "files": [
+    "src/",
+    "data/*.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

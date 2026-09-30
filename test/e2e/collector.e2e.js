@@ -14,6 +14,7 @@ import { analyze } from "../../extension/src/analyze.js";
 import { sha1 } from "../../extension/src/engine/hash.js";
 import { buildDomQueries, buildGlobalPaths } from "../../extension/src/engine/queries.js";
 import { retireGlobalPaths } from "../../extension/src/engine/retire.js";
+import { backendGlobalPaths } from "../../extension/src/engine/backend.js";
 import { probeGlobals } from "../../extension/src/page/probe.js";
 import { loadDb } from "../helpers.js";
 
@@ -25,6 +26,7 @@ const HEADERS = {
   "/old-shop.html": { Server: "Apache/2.2.15 (CentOS)", "X-Powered-By": "PHP/5.4.16", "Set-Cookie": "PHPSESSID=abc123; path=/" },
   "/tokenized.html": { Server: "nginx" },
   "/hosted.html": { "Content-Security-Policy": "frame-ancestors 'self'", "X-Content-Type-Options": "nosniff" },
+  "/sastruts.html": { "X-Powered-By": "Servlet/2.5 JSP/2.1", "Set-Cookie": "JSESSIONID=A1B2C3D4; path=/" },
 };
 
 const MAX_SCRIPT_CHARS = 2_000_000;
@@ -97,7 +99,7 @@ async function collect(name, waitUntil = "load") {
     ([queries, h]) => /** @type {any} */ (globalThis).SafePeekCollector.collect(queries, h),
     [buildDomQueries(db.technologies), hosts],
   );
-  const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire)])];
+  const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire), ...backendGlobalPaths(db.backends)])];
   const globals = await page.evaluate(probeGlobals, paths);
   await page.close();
   return { ...collected, globals };
@@ -150,5 +152,28 @@ describe("collector in Chromium", () => {
     const payment = report.findings.filter((f) => f.area === "payment").map((f) => f.id);
     assert.deepEqual(payment, ["card_hosted_iframe", "payment_redirect"]);
     assert.ok(report.technologies.some((t) => t.name === "Stripe"));
+  });
+
+  it("infers an end-of-life Java backend from traces in the page", async () => {
+    const report = await scan("sastruts.html");
+    const names = Object.fromEntries(report.backends.map((b) => [b.name, b.confidence]));
+    assert.equal(names["Apache Struts 1"], 100);
+    assert.equal(names["Seasar2 (SAStruts / Teeda)"], 100);
+    assert.ok(names["Java EE 5 / 6 era servlet container"]);
+    assert.ok(names["Java Servlet / JSP"]);
+    const eol = report.findings.filter((f) => f.id === "backend_eol").map((f) => [f.params.name, f.severity]);
+    assert.deepEqual(eol, [
+      ["Apache Struts 1", "high"],
+      ["Seasar2 (SAStruts / Teeda)", "high"],
+    ]);
+  });
+
+  it("recognises a Firebase app as a managed backend", async () => {
+    const report = await scan("firebase.html");
+    const firebase = report.backends.find((b) => b.name === "Firebase");
+    assert.equal(firebase?.status, "managed");
+    assert.ok((firebase?.confidence ?? 0) >= 60);
+    assert.ok(report.findings.some((f) => f.id === "backend_managed"));
+    assert.ok(!report.technologies.some((t) => t.impliedBy && ["PHP", "MySQL"].includes(t.name)));
   });
 });

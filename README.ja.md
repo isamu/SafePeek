@@ -12,9 +12,15 @@
    - 決済会社の画面（iframe）の中（Stripe、PayPal、Adyen など）
    - サイト自身のページで、ブラウザ内でトークン化する方式（GMO-PG、PAY.JP v1 など）
    - サイト自身のフォームにそのまま入力する方式
-4. **基本的なセキュリティ**：HTTPS、HSTS、CSP、クリックジャッキング対策、サーバーバージョンの露出、JavaScriptから読めるセッションCookie、混在コンテンツ、外部スクリプト
+4. **バックエンド（推定）**：サーバー側のフレームワークは外から直接は見えないため、ページに残った痕跡から推定します。
+   - 痕跡の例：URLの形（`.do`、`.action`、`.php`）、隠しフィールドやパラメーターの名前、レスポンスヘッダー、スクリプトのファイル名・コード・コメント、JavaScriptの変数、Cookie、エラー表示、ドメイン
+   - サポートが終了したもの（Struts 1、Seasar2、symfony 1 など）や、古い世代のもの（Struts 2、CakePHP 1/2、Classic ASP、ASP.NET Web Forms など）を警告します。
+   - 推定には **確度（高・中・低）** を付け、根拠の痕跡1つずつに **強さ（強・中・弱）** を表示します。
+5. **BaaS・マネージド基盤**：Firebase、Supabase、AWS（Amplify、Cognito、AppSync、API Gateway、S3、CloudFront）、Vercel、Netlify、Cloudflare Pages、Google App Engine・Cloud Run、Heroku を判定します。BaaSと判定できた場合は、他の検出ルールの連鎖だけで付いた PHP・MySQL などの矛盾する推定を外します。
+6. **WordPress**：本体のバージョンが古くないか（4.7未満はセキュリティ更新が終了、最新系列より古いものは注意）、読み込まれているプラグイン・テーマの一覧（脆弱性を調べるリンク付き）、XML-RPCの公開。
+7. **基本的なセキュリティ**：HTTPS、HSTS、CSP、クリックジャッキング対策、サーバーバージョンの露出、JavaScriptから読めるセッションCookie、混在コンテンツ、外部スクリプト
 
-すべての指摘に根拠（どのヘッダー・スクリプト・入力欄から判断したか）を表示するので、自分で確かめられます。
+すべての指摘に根拠（どのヘッダー・スクリプト・入力欄から判断したか）を表示するので、自分で確かめられます。できることの一覧は [docs/SPEC.md](docs/SPEC.md) の冒頭にまとめています。
 
 ## 安全性についての方針
 
@@ -23,20 +29,63 @@
 - **外部には何も送信しません。** 解析はすべてブラウザ内で行います。拡張機能のページは `connect-src 'self'` で通信先を自分自身に限定しています。
 - **権限は `activeTab` と `scripting` の2つだけ**です。アイコンを押したときに、そのタブだけを読みます。詳しくは [docs/permissions.md](docs/permissions.md) を参照してください。
 - **リモートコードなし、evalなし、ビルド工程なし。** `extension/` にあるファイルがそのままブラウザで動きます。
-- **配布はGitHubのリリースのみ**（zipとSHA-256）です。ストアを使わないので、知らないうちに自動更新されることはありません。
+- **拡張機能の配布はGitHubのリリースのみ**（zipとSHA-256）です。ストアを使わないので、知らないうちに自動更新されることはありません。解析エンジンだけは別途npmパッケージとしても公開します（下記）。
 - これらの約束はCIのテスト（[`test/policy.test.js`](test/policy.test.js)）で強制しています。
 
 通信が発生するのは次の2つだけです。どちらも、そのページ自身が使っているサーバーへのアクセスです。
 - レスポンスヘッダーを読むために、表示中のページを再リクエストする
 - ライブラリのバージョンを読むために、ページが読み込み済みのスクリプトを再取得する（可能な限りブラウザのキャッシュから）
 
-## インストール（Chrome / Edge / Brave）
+## GitHub版をChromeで使う
 
-1. [Releases](https://github.com/isamu/SafePeek/releases) から `safepeek-vX.Y.Z.zip` をダウンロードし、SHA-256を確認します（またはこのリポジトリをclone）。
-2. 解凍して `chrome://extensions` を開き、**デベロッパーモード**をオンにします。
-3. **パッケージ化されていない拡張機能を読み込む** から、解凍したフォルダ（cloneした場合は `extension/`）を選びます。
+SafePeekはChromeウェブストアでは配布していません。GitHubから入手して、自分でChromeに読み込みます（Edge・Braveも同じ手順です）。
 
-更新は手動です。新しいリリースをダウンロードして読み込み直してください。Firefox対応は予定しています。
+### 1. ファイルを入手する
+
+次のどちらかの方法で入手します。
+
+- **リリースのzipを使う（おすすめ）**
+  1. [Releases](https://github.com/isamu/SafePeek/releases) を開き、最新版の `safepeek-vX.Y.Z.zip` と `safepeek-vX.Y.Z.zip.sha256` をダウンロードします。
+  2. 改ざんされていないか確認します（任意）。
+     - macOS / Linux：`shasum -a 256 safepeek-vX.Y.Z.zip` の結果が `.sha256` ファイルの値と一致すればOKです。
+     - Windows（PowerShell）：`Get-FileHash safepeek-vX.Y.Z.zip -Algorithm SHA256`
+  3. zipを解凍します。解凍したフォルダは、Chromeが使い続けるので、消さない場所に置いてください。
+- **gitでcloneする**
+  1. `git clone https://github.com/isamu/SafePeek.git`
+  2. 読み込むのは、cloneした中の `extension` フォルダです。
+
+### 2. Chromeに読み込む
+
+1. アドレスバーに `chrome://extensions` と入力して開きます。
+2. 右上の **デベロッパーモード** をオンにします。
+3. 左上の **パッケージ化されていない拡張機能を読み込む** を押し、次のフォルダを選びます。
+   - zipの場合：解凍したフォルダ（中に `manifest.json` があるフォルダ）
+   - cloneの場合：`SafePeek/extension`
+4. 一覧に「SafePeek」が出れば完了です。
+
+### 3. 使う
+
+1. ツールバーのパズルのアイコン（拡張機能）から、SafePeekの **ピン留め** を押しておくと便利です。
+2. 調べたいページを開いた状態で、SafePeekのアイコンを押します。その場でそのタブだけを解析し、結果がポップアップに表示されます。
+3. 決済方式を確かめたい場合は、カード番号を入力する画面で開いてください。
+4. バックエンドの推定が間違っている、または新しい痕跡を見つけた場合は、ポップアップの **推定結果をコピー** を押し、**推定の誤りや新しい痕跡を報告** のリンクから開くIssueフォームに貼り付けてください。SafePeekが自動で何かを送ることはありません。
+
+### 4. 更新する
+
+ストア経由ではないので、自動では更新されません（これは知らないうちに中身が変わらないための方針です）。
+
+- zipの場合：新しいリリースをダウンロードして解凍し、`chrome://extensions` で古いSafePeekを削除してから、新しいフォルダを読み込みます。
+- cloneの場合：`git pull` したあと、`chrome://extensions` のSafePeekにある更新ボタン（丸い矢印）を押します。
+
+### 補足
+
+- デベロッパーモードで読み込んだ拡張機能について、Chromeが起動時に注意を表示することがあります。
+- 会社のPCなどで管理ポリシーにより読み込みが禁止されている場合は使えません。
+- Firefox対応は予定しています。
+
+## npmパッケージとして使う
+
+推定エンジンは `safepeek` という名前のnpmパッケージとしても使えます。拡張機能と同じソースで、依存パッケージはありません。クローラーやCIなど、他のツールに組み込めます。使い方は [extension/README.md](extension/README.md) を参照してください（npmへの公開はこれからです）。
 
 ## 限界
 
@@ -53,7 +102,8 @@
 | --- | --- | --- |
 | 技術の検出ルール | [enthec/webappanalyzer](https://github.com/enthec/webappanalyzer) | GPL-3.0 |
 | 脆弱なJSライブラリ | [RetireJS/retire.js](https://github.com/RetireJS/retire.js) | Apache-2.0 |
-| サポート終了日、決済会社の一覧 | このリポジトリで管理 | GPL-3.0 |
+| サポート終了日、決済会社の一覧、WordPressのサポート情報 | このリポジトリで管理 | GPL-3.0 |
+| バックエンド推定のルール | このリポジトリで管理。[Issue](https://github.com/isamu/SafePeek/issues/new?template=backend-signature.yml) から投稿できます（[docs/backend-signatures.md](docs/backend-signatures.md)） | GPL-3.0 |
 
 取り込んだ上流のコミットは [`extension/data/sources.json`](extension/data/sources.json) に記録しています。週に1回、自動でプルリクエストを作って更新します。
 

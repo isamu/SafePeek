@@ -1,28 +1,14 @@
 // Talks to the browser: loads the bundled data and gathers page data from the active tab.
 
 import { buildDomQueries, buildGlobalPaths } from "../src/engine/queries.js";
-import { parseRetireRepository, retireGlobalPaths } from "../src/engine/retire.js";
+import { retireGlobalPaths } from "../src/engine/retire.js";
+import { loadDatabases as loadFromData } from "../src/data.js";
 import { probeGlobals } from "../src/page/probe.js";
+import { backendGlobalPaths } from "../src/engine/backend.js";
 
-/**
- * @param {string} name
- * @returns {Promise<Response>}
- */
-function dataFile(name) {
-  return fetch(chrome.runtime.getURL(`data/${name}`));
-}
-
-/** @returns {Promise<import("../src/analyze.js").Databases & { sources: Record<string, any> }>} */
-export async function loadDatabases() {
-  const [technologies, categories, retireText, eol, payment, sources] = await Promise.all([
-    dataFile("technologies.json").then((r) => r.json()),
-    dataFile("categories.json").then((r) => r.json()),
-    dataFile("retire.json").then((r) => r.text()),
-    dataFile("eol.json").then((r) => r.json()),
-    dataFile("payment-providers.json").then((r) => r.json()),
-    dataFile("sources.json").then((r) => r.json()),
-  ]);
-  return { technologies, categories, retire: parseRetireRepository(retireText), eol, providers: payment.providers, sources };
+/** @returns {ReturnType<typeof loadFromData>} */
+export function loadDatabases() {
+  return loadFromData((name) => fetch(chrome.runtime.getURL(`data/${name}`)).then((r) => r.text()));
 }
 
 /**
@@ -34,7 +20,7 @@ export async function collectFromTab(tabId, db) {
   const target = { tabId };
   const domQueries = buildDomQueries(db.technologies);
   const paymentHosts = db.providers.flatMap((p) => p.hosts);
-  const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire)])];
+  const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire), ...backendGlobalPaths(db.backends)])];
 
   await chrome.scripting.executeScript({ target, files: ["src/page/collector.js"] });
   const [collected] = await chrome.scripting.executeScript({

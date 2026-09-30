@@ -69,9 +69,30 @@
  * @typedef {object} Finding
  * @property {string} id  message key, see popup/i18n.js
  * @property {Severity} severity
- * @property {string} area  transport | headers | server | payment | libraries | eol | page
+ * @property {string} area  transport | headers | server | payment | backend | cms | libraries | eol | page
  * @property {Record<string, string | number>} params
  * @property {string[]} evidence
+ * @property {BackendSignal[]} [signals]  weighted evidence, for inferred backends
+ */
+
+/**
+ * @typedef {object} BackendSignal
+ * @property {import("./engine/backend.js").Signal["type"]} type  where in the page the trace was found
+ * @property {string} note
+ * @property {string} noteJa
+ * @property {number} weight  how strongly this trace points at the backend (1-100)
+ * @property {string} match  what was found in the page
+ */
+
+/**
+ * @typedef {object} Backend
+ * @property {string} name
+ * @property {string} language
+ * @property {"eol" | "legacy" | "managed" | "info"} status
+ * @property {string} eol  end-of-life date, or ""
+ * @property {string} source  link that documents the status, or ""
+ * @property {number} confidence  sum of signal weights, capped at 100
+ * @property {BackendSignal[]} signals
  */
 
 /**
@@ -82,6 +103,7 @@
  * @property {number[]} categories
  * @property {string} website
  * @property {string[]} evidence
+ * @property {string} [impliedBy]  when set, no trace of this technology was seen; another one implies it
  */
 
 /**

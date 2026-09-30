@@ -5,6 +5,43 @@
 
 /** @type {Record<string, Message>} */
 const JA = {
+  backend_managed: {
+    title: (p) => `バックエンドはマネージドサービスと推定: ${p.name}`,
+    detail: (p) =>
+      `${p.name}（${p.language}）がバックエンドを担っていると推定しています（確度「${confidenceLabel(Number(p.confidence))}」${p.confidence}）。サーバーOSやフレームワークの更新はサービス側の責任です。一方で、データベースのアクセスルールや認証の設定が甘いと情報が漏れるため、設定の安全性はこのページからは判断できません。`,
+  },
+  wp_core_eol: {
+    title: (p) => `セキュリティ更新が終了したWordPress: ${p.version}`,
+    detail: (p) =>
+      `WordPress 4.7 未満は ${p.date} 以降セキュリティ修正が提供されていません。公式にサポートされるのは最新の ${p.series} 系（${p.latest}）だけです。`,
+  },
+  wp_core_outdated: {
+    title: (p) => `古いWordPress: ${p.version}`,
+    detail: (p) => `公式にサポートされるのは最新の ${p.series} 系（${p.latest}）だけで、それより古い系列へのセキュリティ修正は保証されていません。`,
+  },
+  wp_version_exposed: {
+    title: (p) => `WordPressのバージョンを公開しています: ${p.version}`,
+    detail: (p) => `${p.source} から読み取れます。古い場合は攻撃対象を探す手がかりになります。`,
+  },
+  wp_xmlrpc: {
+    title: () => "WordPressのXML-RPCが有効です",
+    detail: () => "xmlrpc.php はパスワード総当たりやピンバック悪用の入口として狙われやすく、使っていなければ無効化が推奨されます。",
+  },
+  wp_components: {
+    title: (p) => `WordPressのプラグイン ${p.plugins}件・テーマ ${p.themes}件を確認`,
+    detail: () =>
+      "WordPressの被害の多くはプラグインの脆弱性が原因です。下のリンクで、各プラグインに既知の脆弱性がないか確認できます（?ver= の値はプラグインのバージョンでない場合もあります）。",
+  },
+  backend_eol: {
+    title: (p) => `サポート終了のバックエンドの可能性: ${p.name}`,
+    detail: (p) =>
+      `${p.name}（${p.language}）は ${p.date} にサポートが終了しています。見つかった痕跡から推定しており、確度は「${confidenceLabel(Number(p.confidence))}」（${p.confidence}）です。放置されたフレームワークは修正されない脆弱性を抱えたままになります。`,
+  },
+  backend_legacy: {
+    title: (p) => `古い世代のバックエンドの可能性: ${p.name}`,
+    detail: (p) =>
+      `${p.name}（${p.language}）は古い世代の技術で、更新が止まったまま運用されていることが多いものです。見つかった痕跡から推定しており、確度は「${confidenceLabel(Number(p.confidence))}」（${p.confidence}）です。`,
+  },
   not_https: { title: () => "HTTPSではありません", detail: () => "通信が暗号化されていません。入力した内容が途中で盗み見・改ざんされる可能性があります。" },
   password_over_http: {
     title: () => "暗号化されていないページにパスワード欄があります",
@@ -82,6 +119,43 @@ const JA = {
 
 /** @type {Record<string, Message>} */
 const EN = {
+  backend_managed: {
+    title: (p) => `Backend runs on a managed service: ${p.name}`,
+    detail: (p) =>
+      `${p.name} (${p.language}) appears to run the backend (confidence: ${confidenceLabel(Number(p.confidence))}, ${p.confidence}). Patching servers and frameworks is the provider's job; access rules and auth settings are still the site's, and cannot be judged from this page.`,
+  },
+  wp_core_eol: {
+    title: (p) => `WordPress without security updates: ${p.version}`,
+    detail: (p) =>
+      `WordPress below 4.7 has received no security fixes since ${p.date}. Only the latest ${p.series} series (${p.latest}) is officially supported.`,
+  },
+  wp_core_outdated: {
+    title: (p) => `Outdated WordPress: ${p.version}`,
+    detail: (p) => `Only the latest ${p.series} series (${p.latest}) is officially supported; security fixes for older series are not guaranteed.`,
+  },
+  wp_version_exposed: {
+    title: (p) => `WordPress version exposed: ${p.version}`,
+    detail: (p) => `Readable from the ${p.source}. An old version helps attackers pick a target.`,
+  },
+  wp_xmlrpc: {
+    title: () => "WordPress XML-RPC is enabled",
+    detail: () => "xmlrpc.php is a common entry point for password brute force and pingback abuse; disable it if unused.",
+  },
+  wp_components: {
+    title: (p) => `WordPress plugins: ${p.plugins}, themes: ${p.themes}`,
+    detail: () =>
+      "Most WordPress compromises come through plugins. The links below show known vulnerabilities for each (a ?ver= value is not always the plugin's own version).",
+  },
+  backend_eol: {
+    title: (p) => `Backend likely past end of life: ${p.name}`,
+    detail: (p) =>
+      `${p.name} (${p.language}) reached end of support on ${p.date}. Inferred from the traces below (confidence: ${confidenceLabel(Number(p.confidence))}, ${p.confidence}). An abandoned framework keeps its unpatched vulnerabilities.`,
+  },
+  backend_legacy: {
+    title: (p) => `Backend likely an old generation: ${p.name}`,
+    detail: (p) =>
+      `${p.name} (${p.language}) is an older technology that is often left running without updates. Inferred from the traces below (confidence: ${confidenceLabel(Number(p.confidence))}, ${p.confidence}).`,
+  },
   not_https: { title: () => "Not served over HTTPS", detail: () => "Traffic is unencrypted. Anything you enter can be read or altered in transit." },
   password_over_http: { title: () => "Password field on an unencrypted page", detail: () => "Passwords may be sent in clear text. Do not log in here." },
   card_on_page: {
@@ -171,6 +245,23 @@ const UI = {
     failed: "調査に失敗しました: ",
     footer: "解析はすべてこのブラウザ内で行われ、外部には何も送信しません。",
     data: "データ",
+    backend: "バックエンド（推定）",
+    backend_note: "サーバー側の技術は直接は見えません。ページに残った痕跡から推定しています。",
+    confidence: "確度",
+    conf_high: "高",
+    conf_medium: "中",
+    conf_low: "低",
+    strength: "痕跡の強さ",
+    str_strong: "強",
+    str_medium: "中",
+    str_weak: "弱",
+    status_eol: "サポート終了",
+    status_legacy: "旧世代",
+    status_managed: "マネージド",
+    implied_by: "推定: {name} から",
+    copy_report: "推定結果をコピー",
+    copied: "コピーしました",
+    report_link: "推定の誤りや新しい痕跡を報告",
   },
   en: {
     scanning: "Scanning…",
@@ -192,6 +283,23 @@ const UI = {
     failed: "Scan failed: ",
     footer: "Everything is analysed inside this browser. Nothing is sent anywhere.",
     data: "Data",
+    backend: "Backend (inferred)",
+    backend_note: "Server-side technology is not directly visible; this is inferred from traces left in the page.",
+    confidence: "Confidence",
+    conf_high: "high",
+    conf_medium: "medium",
+    conf_low: "low",
+    strength: "Trace strength",
+    str_strong: "strong",
+    str_medium: "medium",
+    str_weak: "weak",
+    status_eol: "End of life",
+    status_legacy: "Old generation",
+    status_managed: "Managed",
+    implied_by: "implied by {name}",
+    copy_report: "Copy the inference",
+    copied: "Copied",
+    report_link: "Report a wrong guess or a new trace",
   },
 };
 
@@ -206,6 +314,34 @@ export function language() {
  */
 export function t(key) {
   return UI[language()][key];
+}
+
+/**
+ * @param {number} confidence  0-100
+ * @returns {string}
+ */
+export function confidenceLabel(confidence) {
+  if (confidence >= 80) return t("conf_high");
+  if (confidence >= 50) return t("conf_medium");
+  return t("conf_low");
+}
+
+/**
+ * @param {number} weight  0-100
+ * @returns {string}
+ */
+export function strengthLabel(weight) {
+  if (weight >= 70) return t("str_strong");
+  if (weight >= 40) return t("str_medium");
+  return t("str_weak");
+}
+
+/**
+ * @param {import("../src/types.js").BackendSignal} signal
+ * @returns {string}
+ */
+export function signalNote(signal) {
+  return language() === "ja" ? signal.noteJa : signal.note;
 }
 
 /**

@@ -1,0 +1,734 @@
+{
+  "_comment": "Hand-maintained backend inference rules. A backend is reported when the weights of its matched signals reach 30; the sum (capped at 100) is its confidence. Signal types: 'link' = same-origin URL paths in the page (href/action/src and the page URL); 'param' = form field names and query parameter names; 'html' = the page HTML (including HTML comments and error output); 'source' = bodies of inline and fetched scripts (comments, variable names); 'script' = script URLs and file names; 'cookie' = names of cookies readable from JavaScript (HttpOnly cookies are invisible); 'header' = 'Name: regex' against response headers; 'global' = a JavaScript property path that exists in the page; 'host' = the page's own hostname. status: 'eol' = upstream support has ended (needs 'eol' date and 'source'), 'legacy' = an old generation that is often left unmaintained (needs 'source'), 'managed' = a BaaS / PaaS / serverless platform runs the backend, so there is no self-managed server framework to go stale; 'info' = identifies the framework or language only.",
+  "reviewed": "2026-09-30",
+  "backends": [
+    {
+      "name": "Apache Struts 1",
+      "language": "Java",
+      "status": "eol",
+      "eol": "2013-04-05",
+      "source": "https://struts.apache.org/struts1eol-announcement.html",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^org\\.apache\\.struts\\.taglib\\.html\\.TOKEN$",
+          "weight": 80,
+          "note": "Struts 1 transaction token field",
+          "noteJa": "Struts 1 の二重送信防止トークン"
+        },
+        {
+          "type": "link",
+          "pattern": "\\.do$",
+          "weight": 20,
+          "note": "*.do action URLs (Struts 1 convention, also common in Spring MVC)",
+          "noteJa": "*.do 形式のURL（Struts 1 の慣習。Spring MVC でもよく使われる）"
+        },
+        {
+          "type": "html",
+          "pattern": "org\\.apache\\.struts\\.(?:action|util|config)\\.",
+          "weight": 70,
+          "note": "Struts 1 class name in the page (typically an error page)",
+          "noteJa": "ページ内に Struts 1 のクラス名（多くはエラー画面）"
+        }
+      ]
+    },
+    {
+      "name": "Seasar2 (SAStruts / Teeda)",
+      "language": "Java",
+      "status": "eol",
+      "eol": "2016-09-26",
+      "source": "https://product.intra-mart.support/hc/ja/articles/360019726453",
+      "signals": [
+        {
+          "type": "html",
+          "pattern": "org\\.seasar\\.",
+          "weight": 80,
+          "note": "org.seasar package name in the page",
+          "noteJa": "ページ内に org.seasar のパッケージ名"
+        },
+        {
+          "type": "source",
+          "pattern": "org\\.seasar\\.|\\bS2Container\\b|\\bSAStruts\\b",
+          "weight": 60,
+          "note": "Seasar name in script code or comments",
+          "noteJa": "スクリプトのコード・コメントに Seasar の名前"
+        },
+        {
+          "type": "html",
+          "pattern": "\\bsastruts\\b|\\bteeda\\b",
+          "weight": 50,
+          "note": "SAStruts or Teeda mentioned in the page",
+          "noteJa": "ページ内に SAStruts / Teeda の記述"
+        },
+        {
+          "type": "script",
+          "pattern": "/(?:teeda|kumu)(?:\\.min)?\\.js(?:[?#]|$)",
+          "weight": 60,
+          "note": "Teeda or Kumu (Seasar) script file",
+          "noteJa": "Teeda / Kumu（Seasar）のスクリプトファイル"
+        },
+        {
+          "type": "global",
+          "pattern": "Kumu",
+          "weight": 50,
+          "note": "Kumu (Seasar Ajax library) global",
+          "noteJa": "Kumu（Seasar の Ajax ライブラリ）の変数"
+        },
+        {
+          "type": "param",
+          "pattern": "^org\\.apache\\.struts\\.taglib\\.html\\.TOKEN$",
+          "weight": 10,
+          "note": "Struts 1 token (SAStruts runs on Struts 1)",
+          "noteJa": "Struts 1 トークン（SAStruts は Struts 1 上で動く）"
+        }
+      ]
+    },
+    {
+      "name": "symfony 1",
+      "language": "PHP",
+      "status": "eol",
+      "eol": "2012-11-30",
+      "source": "https://symfony.com/blog/symfony-1-4-end-of-maintenance-what-does-it-mean",
+      "signals": [
+        {
+          "type": "cookie",
+          "pattern": "^symfony$",
+          "weight": 60,
+          "note": "default symfony 1 session cookie",
+          "noteJa": "symfony 1 の既定のセッションCookie"
+        },
+        {
+          "type": "link",
+          "pattern": "/(?:frontend|backend)(?:_dev)?\\.php(?:/|$)",
+          "weight": 20,
+          "note": "symfony 1 front controller URL",
+          "noteJa": "symfony 1 のフロントコントローラのURL"
+        },
+        {
+          "type": "script",
+          "pattern": "/sf/(?:sf_|prototype)",
+          "weight": 50,
+          "note": "symfony 1 bundled web assets (/sf/)",
+          "noteJa": "symfony 1 同梱のファイル（/sf/）"
+        }
+      ]
+    },
+    {
+      "name": "Apache Struts 2",
+      "language": "Java",
+      "status": "legacy",
+      "source": "https://cwiki.apache.org/confluence/display/WW/Security+Bulletins",
+      "signals": [
+        {
+          "type": "link",
+          "pattern": "\\.action$",
+          "weight": 50,
+          "note": "*.action URLs (Struts 2 convention)",
+          "noteJa": "*.action 形式のURL（Struts 2 の慣習）"
+        },
+        {
+          "type": "param",
+          "pattern": "^struts\\.token(?:\\.name)?$",
+          "weight": 80,
+          "note": "Struts 2 token field",
+          "noteJa": "Struts 2 のトークン"
+        },
+        {
+          "type": "script",
+          "pattern": "/struts/(?:utils|xhtml|simple)",
+          "weight": 60,
+          "note": "Struts 2 bundled static files",
+          "noteJa": "Struts 2 同梱のファイル"
+        }
+      ]
+    },
+    {
+      "name": "CakePHP 1.x / 2.x",
+      "language": "PHP",
+      "status": "legacy",
+      "source": "https://book.cakephp.org/3/en/appendices/3-0-migration-guide.html",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^data\\[[A-Z]\\w*\\]\\[",
+          "weight": 60,
+          "note": "data[Model][field] form naming (CakePHP 1/2)",
+          "noteJa": "data[Model][field] 形式のフォーム名（CakePHP 1/2）"
+        },
+        {
+          "type": "param",
+          "pattern": "^data\\[_Token\\]",
+          "weight": 40,
+          "note": "CakePHP 1/2 security token",
+          "noteJa": "CakePHP 1/2 のセキュリティトークン"
+        },
+        {
+          "type": "cookie",
+          "pattern": "^CAKEPHP$",
+          "weight": 30,
+          "note": "CakePHP session cookie",
+          "noteJa": "CakePHP のセッションCookie"
+        }
+      ]
+    },
+    {
+      "name": "JavaServer Faces (javax)",
+      "language": "Java",
+      "status": "legacy",
+      "source": "https://jakarta.ee/specifications/faces/",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^javax\\.faces\\.ViewState$",
+          "weight": 80,
+          "note": "javax.faces ViewState field (Java EE era, before Jakarta EE)",
+          "noteJa": "javax.faces の ViewState（Jakarta EE 以前の世代）"
+        },
+        {
+          "type": "link",
+          "pattern": "\\.(?:jsf|faces)$",
+          "weight": 40,
+          "note": "*.jsf / *.faces URLs",
+          "noteJa": "*.jsf / *.faces 形式のURL"
+        },
+        {
+          "type": "header",
+          "pattern": "x-powered-by: \\bJSF/1\\.",
+          "weight": 60,
+          "note": "X-Powered-By names JSF 1.x",
+          "noteJa": "X-Powered-By に JSF 1.x"
+        }
+      ]
+    },
+    {
+      "name": "Java EE 5 / 6 era servlet container",
+      "language": "Java",
+      "status": "legacy",
+      "source": "https://jakarta.ee/specifications/servlet/",
+      "signals": [
+        {
+          "type": "header",
+          "pattern": "x-powered-by: \\bServlet/(?:2\\.|3\\.0)",
+          "weight": 70,
+          "note": "X-Powered-By names Servlet 2.x / 3.0",
+          "noteJa": "X-Powered-By に Servlet 2.x / 3.0"
+        }
+      ]
+    },
+    {
+      "name": "Classic ASP",
+      "language": "VBScript",
+      "status": "legacy",
+      "source": "https://learn.microsoft.com/en-us/troubleshoot/developer/webapps/iis/active-server-pages/support-policy-for-asp",
+      "signals": [
+        {
+          "type": "link",
+          "pattern": "\\.asp$",
+          "weight": 50,
+          "note": "*.asp URLs",
+          "noteJa": "*.asp 形式のURL"
+        },
+        {
+          "type": "cookie",
+          "pattern": "^ASPSESSIONID",
+          "weight": 60,
+          "note": "Classic ASP session cookie",
+          "noteJa": "Classic ASP のセッションCookie"
+        }
+      ]
+    },
+    {
+      "name": "ASP.NET Web Forms",
+      "language": ".NET",
+      "status": "legacy",
+      "source": "https://learn.microsoft.com/en-us/aspnet/web-forms/",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^__VIEWSTATE$",
+          "weight": 80,
+          "note": "__VIEWSTATE field",
+          "noteJa": "__VIEWSTATE フィールド"
+        },
+        {
+          "type": "link",
+          "pattern": "\\.aspx$",
+          "weight": 30,
+          "note": "*.aspx URLs",
+          "noteJa": "*.aspx 形式のURL"
+        },
+        {
+          "type": "script",
+          "pattern": "WebResource\\.axd|ScriptResource\\.axd",
+          "weight": 50,
+          "note": "WebResource.axd / ScriptResource.axd",
+          "noteJa": "WebResource.axd / ScriptResource.axd"
+        }
+      ]
+    },
+    {
+      "name": "ColdFusion",
+      "language": "CFML",
+      "status": "legacy",
+      "source": "https://helpx.adobe.com/support/programs/eol-matrix.html",
+      "signals": [
+        {
+          "type": "link",
+          "pattern": "\\.cfm$",
+          "weight": 50,
+          "note": "*.cfm URLs",
+          "noteJa": "*.cfm 形式のURL"
+        },
+        {
+          "type": "cookie",
+          "pattern": "^(?:CFID|CFTOKEN)$",
+          "weight": 60,
+          "note": "ColdFusion session cookies",
+          "noteJa": "ColdFusion のセッションCookie"
+        }
+      ]
+    },
+    {
+      "name": "Perl CGI",
+      "language": "Perl",
+      "status": "legacy",
+      "source": "https://metacpan.org/pod/CGI#CGI.pm-HAS-BEEN-REMOVED-FROM-THE-PERL-CORE",
+      "signals": [
+        {
+          "type": "link",
+          "pattern": "\\.(?:cgi|pl)$",
+          "weight": 40,
+          "note": "*.cgi / *.pl URLs",
+          "noteJa": "*.cgi / *.pl 形式のURL"
+        }
+      ]
+    },
+    {
+      "name": "Java Servlet / JSP",
+      "language": "Java",
+      "status": "info",
+      "signals": [
+        {
+          "type": "html",
+          "pattern": ";jsessionid=",
+          "weight": 70,
+          "note": "session id rewritten into URLs",
+          "noteJa": "URLにセッションIDが埋め込まれている"
+        },
+        {
+          "type": "cookie",
+          "pattern": "^JSESSIONID$",
+          "weight": 60,
+          "note": "Java servlet session cookie",
+          "noteJa": "Java サーブレットのセッションCookie"
+        },
+        {
+          "type": "link",
+          "pattern": "\\.(?:jsp|do|action)$",
+          "weight": 40,
+          "note": "*.jsp / *.do / *.action URLs",
+          "noteJa": "*.jsp / *.do / *.action 形式のURL"
+        },
+        {
+          "type": "header",
+          "pattern": "x-powered-by: \\b(?:Servlet|JSP)/",
+          "weight": 70,
+          "note": "X-Powered-By names a Servlet/JSP version",
+          "noteJa": "X-Powered-By に Servlet / JSP のバージョン"
+        },
+        {
+          "type": "header",
+          "pattern": "server: Apache-Coyote",
+          "weight": 60,
+          "note": "Tomcat connector in the Server header",
+          "noteJa": "Server ヘッダーに Tomcat のコネクタ"
+        },
+        {
+          "type": "html",
+          "pattern": "\\bjava\\.lang\\.\\w+(?:Exception|Error)\\b|\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+\\(",
+          "weight": 80,
+          "note": "Java exception or stack trace shown in the page",
+          "noteJa": "ページに Java の例外・スタックトレースが表示されている"
+        }
+      ]
+    },
+    {
+      "name": "Spring",
+      "language": "Java",
+      "status": "info",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^_csrf$",
+          "weight": 50,
+          "note": "Spring Security CSRF field",
+          "noteJa": "Spring Security の CSRF フィールド"
+        },
+        {
+          "type": "html",
+          "pattern": "<meta[^>]+name=[\"']_csrf_header[\"']",
+          "weight": 60,
+          "note": "Spring Security CSRF meta tag",
+          "noteJa": "Spring Security の CSRF メタタグ"
+        }
+      ]
+    },
+    {
+      "name": "PHP",
+      "language": "PHP",
+      "status": "info",
+      "signals": [
+        {
+          "type": "link",
+          "pattern": "\\.php$",
+          "weight": 40,
+          "note": "*.php URLs",
+          "noteJa": "*.php 形式のURL"
+        },
+        {
+          "type": "cookie",
+          "pattern": "^PHPSESSID$",
+          "weight": 60,
+          "note": "PHP session cookie",
+          "noteJa": "PHP のセッションCookie"
+        },
+        {
+          "type": "html",
+          "pattern": "<b>(?:Warning|Notice|Fatal error|Deprecated)</b>:.{0,300} on line <b>\\d+",
+          "weight": 80,
+          "note": "PHP error message shown in the page",
+          "noteJa": "ページに PHP のエラーメッセージが表示されている"
+        }
+      ]
+    },
+    {
+      "name": "Laravel",
+      "language": "PHP",
+      "status": "info",
+      "signals": [
+        {
+          "type": "cookie",
+          "pattern": "^XSRF-TOKEN$",
+          "weight": 25,
+          "note": "XSRF-TOKEN cookie",
+          "noteJa": "XSRF-TOKEN Cookie"
+        },
+        {
+          "type": "param",
+          "pattern": "^_token$",
+          "weight": 20,
+          "note": "_token form field",
+          "noteJa": "_token フィールド"
+        },
+        {
+          "type": "cookie",
+          "pattern": "_session$",
+          "weight": 20,
+          "note": "*_session cookie",
+          "noteJa": "*_session Cookie"
+        }
+      ]
+    },
+    {
+      "name": "Ruby on Rails",
+      "language": "Ruby",
+      "status": "info",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^authenticity_token$",
+          "weight": 60,
+          "note": "authenticity_token field",
+          "noteJa": "authenticity_token フィールド"
+        },
+        {
+          "type": "header",
+          "pattern": "x-runtime: ^[\\d.]+$",
+          "weight": 40,
+          "note": "X-Runtime header",
+          "noteJa": "X-Runtime ヘッダー"
+        }
+      ]
+    },
+    {
+      "name": "Django",
+      "language": "Python",
+      "status": "info",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^csrfmiddlewaretoken$",
+          "weight": 70,
+          "note": "csrfmiddlewaretoken field",
+          "noteJa": "csrfmiddlewaretoken フィールド"
+        },
+        {
+          "type": "cookie",
+          "pattern": "^csrftoken$",
+          "weight": 40,
+          "note": "csrftoken cookie",
+          "noteJa": "csrftoken Cookie"
+        }
+      ]
+    },
+    {
+      "name": "ASP.NET MVC / Core",
+      "language": ".NET",
+      "status": "info",
+      "signals": [
+        {
+          "type": "param",
+          "pattern": "^__RequestVerificationToken$",
+          "weight": 60,
+          "note": "__RequestVerificationToken field",
+          "noteJa": "__RequestVerificationToken フィールド"
+        }
+      ]
+    },
+    {
+      "name": "Firebase",
+      "language": "BaaS (Google)",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.(?:web\\.app|firebaseapp\\.com)$",
+          "weight": 80,
+          "note": "hosted on a Firebase Hosting domain",
+          "noteJa": "Firebase Hosting のドメイン"
+        },
+        {
+          "type": "script",
+          "pattern": "/__/firebase/|gstatic\\.com/firebasejs/",
+          "weight": 70,
+          "note": "Firebase SDK script",
+          "noteJa": "Firebase SDK のスクリプト"
+        },
+        {
+          "type": "source",
+          "pattern": "firestore\\.googleapis\\.com|firebaseio\\.com|identitytoolkit\\.googleapis\\.com|\\.firebaseapp\\.com|firebasestorage\\.googleapis\\.com",
+          "weight": 60,
+          "note": "Firebase endpoints in script code",
+          "noteJa": "スクリプト内に Firebase のエンドポイント"
+        },
+        {
+          "type": "global",
+          "pattern": "firebase",
+          "weight": 50,
+          "note": "firebase global",
+          "noteJa": "firebase 変数"
+        },
+        {
+          "type": "global",
+          "pattern": "__FIREBASE_DEFAULTS__",
+          "weight": 60,
+          "note": "__FIREBASE_DEFAULTS__ global",
+          "noteJa": "__FIREBASE_DEFAULTS__ 変数"
+        },
+        {
+          "type": "header",
+          "pattern": "vary: x-fh-requested-host",
+          "weight": 60,
+          "note": "Firebase Hosting response header",
+          "noteJa": "Firebase Hosting のレスポンスヘッダー"
+        }
+      ]
+    },
+    {
+      "name": "Supabase",
+      "language": "BaaS",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "source",
+          "pattern": "\\.supabase\\.co\\b",
+          "weight": 70,
+          "note": "Supabase project URL in script code",
+          "noteJa": "スクリプト内に Supabase のプロジェクトURL"
+        },
+        {
+          "type": "script",
+          "pattern": "supabase",
+          "weight": 50,
+          "note": "Supabase client script",
+          "noteJa": "Supabase クライアントのスクリプト"
+        },
+        {
+          "type": "global",
+          "pattern": "supabase",
+          "weight": 40,
+          "note": "supabase global",
+          "noteJa": "supabase 変数"
+        }
+      ]
+    },
+    {
+      "name": "AWS Amplify / Cognito / AppSync",
+      "language": "BaaS (AWS)",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.amplifyapp\\.com$",
+          "weight": 80,
+          "note": "hosted on an Amplify domain",
+          "noteJa": "Amplify のドメイン"
+        },
+        {
+          "type": "source",
+          "pattern": "cognito-idp\\.[a-z0-9-]+\\.amazonaws\\.com|\\.appsync-api\\.[a-z0-9-]+\\.amazonaws\\.com|aws_user_pools_id|aws_appsync_graphqlEndpoint",
+          "weight": 70,
+          "note": "Cognito / AppSync configuration in script code",
+          "noteJa": "スクリプト内に Cognito / AppSync の設定"
+        },
+        {
+          "type": "script",
+          "pattern": "aws-amplify|amplify",
+          "weight": 40,
+          "note": "Amplify library script",
+          "noteJa": "Amplify ライブラリのスクリプト"
+        }
+      ]
+    },
+    {
+      "name": "AWS serverless (API Gateway / Lambda)",
+      "language": "Serverless (AWS)",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "source",
+          "pattern": "\\.execute-api\\.[a-z0-9-]+\\.amazonaws\\.com|\\.lambda-url\\.[a-z0-9-]+\\.on\\.aws",
+          "weight": 60,
+          "note": "API Gateway / Lambda URL in script code",
+          "noteJa": "スクリプト内に API Gateway / Lambda のURL"
+        },
+        {
+          "type": "header",
+          "pattern": "x-amz-apigw-id: .",
+          "weight": 70,
+          "note": "API Gateway response header",
+          "noteJa": "API Gateway のレスポンスヘッダー"
+        }
+      ]
+    },
+    {
+      "name": "AWS static hosting (S3 / CloudFront)",
+      "language": "Hosting (AWS)",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "header",
+          "pattern": "server: ^AmazonS3$",
+          "weight": 60,
+          "note": "served directly from S3",
+          "noteJa": "S3 から直接配信"
+        },
+        {
+          "type": "header",
+          "pattern": "x-amz-cf-id: .",
+          "weight": 30,
+          "note": "served through CloudFront",
+          "noteJa": "CloudFront 経由の配信"
+        }
+      ]
+    },
+    {
+      "name": "Vercel",
+      "language": "Hosting / serverless",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.vercel\\.app$",
+          "weight": 80,
+          "note": "hosted on a Vercel domain",
+          "noteJa": "Vercel のドメイン"
+        },
+        {
+          "type": "header",
+          "pattern": "x-vercel-id: .",
+          "weight": 70,
+          "note": "Vercel response header",
+          "noteJa": "Vercel のレスポンスヘッダー"
+        }
+      ]
+    },
+    {
+      "name": "Netlify",
+      "language": "Hosting / serverless",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.netlify\\.app$",
+          "weight": 80,
+          "note": "hosted on a Netlify domain",
+          "noteJa": "Netlify のドメイン"
+        },
+        {
+          "type": "header",
+          "pattern": "x-nf-request-id: .",
+          "weight": 70,
+          "note": "Netlify response header",
+          "noteJa": "Netlify のレスポンスヘッダー"
+        }
+      ]
+    },
+    {
+      "name": "Cloudflare Pages / Workers",
+      "language": "Hosting / serverless",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.(?:pages|workers)\\.dev$",
+          "weight": 80,
+          "note": "hosted on a Cloudflare Pages / Workers domain",
+          "noteJa": "Cloudflare Pages / Workers のドメイン"
+        }
+      ]
+    },
+    {
+      "name": "Google App Engine / Cloud Run",
+      "language": "PaaS (Google)",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.(?:appspot\\.com|run\\.app)$",
+          "weight": 80,
+          "note": "hosted on an App Engine / Cloud Run domain",
+          "noteJa": "App Engine / Cloud Run のドメイン"
+        },
+        {
+          "type": "header",
+          "pattern": "server: ^Google Frontend$",
+          "weight": 40,
+          "note": "Google Frontend server header",
+          "noteJa": "Server ヘッダーが Google Frontend"
+        }
+      ]
+    },
+    {
+      "name": "Heroku",
+      "language": "PaaS",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.herokuapp\\.com$",
+          "weight": 80,
+          "note": "hosted on a Heroku domain",
+          "noteJa": "Heroku のドメイン"
+        },
+        {
+          "type": "header",
+          "pattern": "via: vegur$",
+          "weight": 60,
+          "note": "Heroku router in the Via header",
+          "noteJa": "Via ヘッダーに Heroku のルーター"
+        }
+      ]
+    }
+  ]
+}

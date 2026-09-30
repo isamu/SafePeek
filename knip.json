@@ -1,6 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["extension/popup/popup.js", "extension/src/page/collector.js", "extension/src/types.js", "tools/*.mjs", "test/*.test.js", "test/e2e/*.e2e.js"],
+  "entry": [
+    "extension/popup/popup.js",
+    "extension/src/index.js",
+    "extension/src/page/collector.js",
+    "extension/src/types.js",
+    "tools/*.mjs",
+    "test/*.test.js",
+    "test/e2e/*.e2e.js"
+  ],
   "project": ["extension/**/*.js", "tools/**/*.mjs"],
   "rules": {
     "exports": "warn",

@@ -1,0 +1,73 @@
+name: Backend inference — new trace or wrong guess
+description: Suggest a new way to recognise a backend framework, or report a wrong guess. Maintainers turn accepted reports into rules in extension/data/backend-signatures.json.
+title: "[backend] "
+labels: ["backend-signature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping SafePeek recognise abandoned backends. Please do **not** paste session ids, tokens or personal data.
+        In the popup, **Copy the inference** puts SafePeek's current guess and its traces on your clipboard (the site's origin and identifier names only: no URL paths, header values or page excerpts); paste it below.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this?
+      options:
+        - A new trace for a framework SafePeek does not recognise
+        - A new trace for a framework SafePeek already knows
+        - A wrong guess (false positive)
+        - A missed guess (false negative)
+    validations:
+      required: true
+  - type: input
+    id: framework
+    attributes:
+      label: Framework / platform
+      placeholder: "e.g. Seasar2 (SAStruts), symfony 1, Firebase"
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: Language or platform family
+      placeholder: "e.g. Java, PHP, BaaS (Google)"
+  - type: dropdown
+    id: status
+    attributes:
+      label: Support status
+      options:
+        - End of life (upstream support has ended)
+        - Old generation (still runs, often unmaintained)
+        - Managed service (BaaS / PaaS / serverless)
+        - Current
+        - Not sure
+  - type: input
+    id: eol
+    attributes:
+      label: End-of-life date and source
+      description: Required for end-of-life. Link to the vendor's announcement.
+      placeholder: "2016-09-26 https://..."
+  - type: textarea
+    id: traces
+    attributes:
+      label: Traces
+      description: |
+        What in the page gives it away? One per line: type, pattern (regex), how strong (1-100), note.
+        Types: link (URL path), param (form field / query name), html, source (script code or comments), script (script URL), cookie, header ("name: regex"), global (JS variable), host (domain).
+      placeholder: |
+        param | ^org\.apache\.struts\.taglib\.html\.TOKEN$ | 80 | Struts 1 token field
+        link | \.do$ | 20 | *.do action URLs (also Spring MVC)
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: copied
+    attributes:
+      label: SafePeek output (optional)
+      description: Paste from the popup's "Copy the inference" button.
+      render: markdown
+  - type: input
+    id: example
+    attributes:
+      label: Example public page (optional)
+      description: A public URL where the traces can be seen. Only share pages you are comfortable making public.

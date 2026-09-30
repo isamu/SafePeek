@@ -64,7 +64,16 @@ body {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand:hover span {
+  text-decoration: underline;
 }
 
 .host {
@@ -276,4 +285,137 @@ main {
 
 .footer p {
   margin: 2px 0;
+}
+
+.backend {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: var(--card);
+}
+
+.backend summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  padding: 8px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.backend summary::-webkit-details-marker {
+  display: none;
+}
+
+.backend-name {
+  font-weight: 600;
+}
+
+.backend-confidence {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pill.status-eol {
+  color: var(--high);
+  background: var(--high-bg);
+}
+
+.pill.status-legacy {
+  color: var(--medium);
+  background: var(--medium-bg);
+}
+
+.signals {
+  padding: 0 10px 10px;
+}
+
+.signals .evidence-label {
+  padding: 0;
+}
+
+.signal-list {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.signal {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 6px;
+  margin-bottom: 4px;
+}
+
+.strength {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 0 5px;
+  align-self: start;
+}
+
+.strength.w-strong {
+  color: var(--high);
+  background: var(--high-bg);
+}
+
+.strength.w-medium {
+  color: var(--medium);
+  background: var(--medium-bg);
+}
+
+.strength.w-weak {
+  color: var(--low);
+  background: var(--low-bg);
+}
+
+.signal-match {
+  grid-column: 2;
+  font:
+    11px/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.backend-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.copy {
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 10px;
+  background: var(--card);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.report-link {
+  color: var(--info);
+}
+
+.pill.status-managed {
+  color: var(--info);
+  background: var(--info-bg);
+}
+
+.tech.implied {
+  border-style: dashed;
+}
+
+.tech-implied {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 11px;
 }

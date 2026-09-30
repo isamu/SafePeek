@@ -4,6 +4,10 @@ import { checkCookies, checkHeaders, checkTransport } from "./checks/headers.js"
 import { checkEol, checkLibraries } from "./checks/eol.js";
 import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
+import { checkBackends } from "./checks/backend.js";
+import { inferBackends } from "./engine/backend.js";
+import { checkWordPress } from "./checks/wordpress.js";
+import { extractWordPress } from "./engine/wordpress.js";
 import { detectTechnologies } from "./engine/technologies.js";
 import { scanLibraries } from "./engine/retire.js";
 
@@ -20,15 +24,20 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {Record<string, any>} retire
  * @property {{ products: Record<string, any> }} eol
  * @property {import("./checks/payment.js").Provider[]} providers
+ * @property {import("./engine/backend.js").BackendRule[]} backends
+ * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
  */
 
 /**
  * @typedef {object} Report
+ * @property {string} url  the inspected page, without query string or fragment
  * @property {"danger" | "caution" | "ok"} level
  * @property {Record<import("./types.js").Severity, number>} counts
  * @property {import("./types.js").Finding[]} findings
  * @property {import("./types.js").Technology[]} technologies
  * @property {import("./types.js").Library[]} libraries
+ * @property {import("./types.js").Backend[]} backends  inferred server-side frameworks and languages
+ * @property {import("./engine/wordpress.js").WordPressInfo} wordpress
  */
 
 /**
@@ -39,10 +48,16 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  */
 export async function analyze(page, db, env) {
   const libraries = await scanLibraries(page, db.retire, env.sha1);
-  const technologies = mergeLibraries(detectTechnologies(page, db), libraries, db.technologies);
+  const backends = inferBackends(page, db.backends);
+  const detected = mergeLibraries(detectTechnologies(page, db), libraries, db.technologies);
+  const technologies = dropImpliedServerStack(detected, backends);
+  const wordpress = extractWordPress(page);
+  wordpress.version ||= technologies.find((t) => t.name === "WordPress")?.version ?? "";
   const findings = [
     ...checkTransport(page),
     ...checkPayment(page, db.providers),
+    ...checkBackends(backends, env.today),
+    ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),
     ...checkEol(technologies, db.eol, env.today),
     ...checkHeaders(page),
@@ -51,7 +66,7 @@ export async function analyze(page, db, env) {
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };
   for (const f of findings) counts[f.severity]++;
-  return { level: levelOf(counts), counts, findings, technologies, libraries };
+  return { url: page.url.split(/[?#]/)[0], level: levelOf(counts), counts, findings, technologies, libraries, backends, wordpress };
 }
 
 /**
@@ -85,4 +100,21 @@ function levelOf(counts) {
   if (counts.high > 0) return "danger";
   if (counts.medium > 0) return "caution";
   return "ok";
+}
+
+/** Web frameworks, web servers, programming languages, databases. */
+const SERVER_CATEGORIES = new Set([18, 22, 27, 34]);
+
+/**
+ * When the backend is a managed platform (BaaS, serverless, static hosting) inferred from strong
+ * traces, a server stack that only appears through another fingerprint's "implies" contradicts
+ * it and is dropped. Anything seen directly is kept.
+ * @param {import("./types.js").Technology[]} technologies
+ * @param {import("./types.js").Backend[]} backends
+ * @returns {import("./types.js").Technology[]}
+ */
+function dropImpliedServerStack(technologies, backends) {
+  const managed = backends.some((b) => b.status === "managed" && b.confidence >= 60);
+  if (!managed) return technologies;
+  return technologies.filter((t) => !t.impliedBy || !t.categories.some((c) => SERVER_CATEGORIES.has(c)));
 }
