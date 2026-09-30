@@ -71,6 +71,8 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | payment | `payment_redirect` | good | link/form to a known provider host |
 | payment | `payment_scripts_only` | info | provider script or non-card provider frame, but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
+| payment | `checkout_saas` | good | a directly seen ecommerce product, backed by at least two different traces, that webappanalyzer marks as a hosted service (`saas`), e.g. Shopify, MakeShop: the cart service runs the checkout |
+| payment | `checkout_self_hosted` | info | a directly seen ecommerce product, backed by at least two different traces, marked as software the site runs itself (`oss`), e.g. EC-CUBE, Magento, WooCommerce: keeping it updated is the site's job |
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
 | backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |
@@ -102,7 +104,7 @@ Every finding carries evidence (header, URL, selector or element) so the user ca
 
 ## 6. Engines
 
-- **Technologies**: webappanalyzer (Wappalyzer format, GPL-3.0). Supported fields: headers, cookies (with `*` prefix), js, meta, scriptSrc, scripts, html, text, url, dom (exists/attributes/text), implies, requires, requiresCategory, excludes. Not supported: css, xhr, dns, certIssuer, robots, probe, dom `properties`. Patterns are case-insensitive; `\;version:` and `\;confidence:` are honoured, including `\1?a:b` ternaries. A technology whose total confidence is 0 is not reported. A platform (CMS, ecommerce, blog, web framework, web server, programming language, database) seen only as a string inside script code is not reported either, nor brought in through `implies` by a technology itself seen only in script code: bundles and tag managers mention `/wp-content` or `.php?` of other sites. A confidence-0 hit implies nothing.
+- **Technologies**: webappanalyzer (Wappalyzer format, GPL-3.0). Supported fields: headers, cookies (with `*` prefix), js, meta, scriptSrc, scripts, html, text, url, dom (exists/attributes/text), implies, requires, requiresCategory, excludes; `saas` and `oss` are kept to tell a hosted service from self-run software. Not supported: css, xhr, dns, certIssuer, robots, probe, dom `properties`. Patterns are case-insensitive; `\;version:` and `\;confidence:` are honoured, including `\1?a:b` ternaries. A technology whose total confidence is 0 is not reported. A platform (CMS, ecommerce, blog, web framework, web server, programming language, database) seen only as a string inside script code is not reported either, nor brought in through `implies` by a technology itself seen only in script code: bundles and tag managers mention `/wp-content` or `.php?` of other sites. A confidence-0 hit implies nothing.
 - **Libraries**: Retire.js `jsrepository.json` (Apache-2.0). Extractors: uri, filename, filecontent, filecontentreplace, hashes (SHA-1 of fetched bodies), func — only expressions reducible to property paths (`a.b.c`, `(A || B).c`, `A && A.b`); others are skipped by design (S3).
 - **EOL**: hand-maintained `data/eol.json`; a version maps to the first cycle whose `below` it is under. Retire.js versions for jQuery, AngularJS, Vue, Bootstrap also feed this check.
 

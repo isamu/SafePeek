@@ -4,6 +4,7 @@ import { checkCookies, checkHeaders, checkTransport } from "./checks/headers.js"
 import { checkEol, checkLibraries } from "./checks/eol.js";
 import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
+import { checkCheckout } from "./checks/checkout.js";
 import { checkBackends } from "./checks/backend.js";
 import { inferBackends } from "./engine/backend.js";
 import { checkWordPress } from "./checks/wordpress.js";
@@ -56,6 +57,7 @@ export async function analyze(page, db, env) {
   const findings = [
     ...checkTransport(page),
     ...checkPayment(page, db.providers),
+    ...checkCheckout(technologies, db.technologies),
     ...checkBackends(backends, env.today),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),

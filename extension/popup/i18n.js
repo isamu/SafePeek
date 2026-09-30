@@ -65,6 +65,14 @@ const JA = {
     title: (p) => `決済会社のページへ移動して支払う方式です（${p.providers}）`,
     detail: () => "カード番号は決済会社のサイトで入力します。移動先のURLが本物か確認してください。",
   },
+  checkout_saas: {
+    title: (p) => `ショップはカートサービスで運営されています（${p.platforms}）`,
+    detail: () => "決済画面はカートサービスが提供するため、カード番号がこのサイトの運営者のサーバーを通らないのが一般的です。",
+  },
+  checkout_self_hosted: {
+    title: (p) => `ショップは自社サーバー上のECソフトで運営されています（${p.platforms}）`,
+    detail: () => "ECソフトと追加プラグインの更新は運営者の責任です。古いまま放置されると、決済画面の改ざんなどに使われることがあります。",
+  },
   payment_scripts_only: {
     title: (p) => `決済サービスを利用しています（${p.providers}）`,
     detail: () => "このページにはカード入力欄がありません。実際の入力方式は決済画面で改めて確認してください。",
@@ -174,6 +182,14 @@ const EN = {
   payment_redirect: {
     title: (p) => `Pays on the provider's own page (${p.providers})`,
     detail: () => "You enter the card on the provider's site. Check that the address is genuine.",
+  },
+  checkout_saas: {
+    title: (p) => `The shop runs on a hosted cart service (${p.platforms})`,
+    detail: () => "The service provides the checkout, so card numbers usually never pass through this site's own servers.",
+  },
+  checkout_self_hosted: {
+    title: (p) => `The shop runs its own shop software (${p.platforms})`,
+    detail: () => "Keeping the software and its plugins up to date is the site's job; neglected installs are a common way checkout pages get tampered with.",
   },
   payment_scripts_only: {
     title: (p) => `Uses a payment service (${p.providers})`,
