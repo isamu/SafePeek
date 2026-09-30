@@ -232,6 +232,17 @@ describe("checkBackends", () => {
   });
 });
 
+/**
+ * Whether the path part of an API pattern can match variable text. The host part (up to the first "/" after an
+ * optional ^https://) may use classes for project and region names; the path may hold only literals and (?:a|b).
+ * @param {string} pattern
+ */
+const capturesPathText = (pattern) => {
+  const afterScheme = pattern.replace(/^\^https:\/\//, "");
+  const path = afterScheme.slice(Math.max(0, afterScheme.indexOf("/")));
+  return /\[|(?<!\\)\.|[*+{?]|\\[wWsSdD]/.test(path.replaceAll("(?:", "("));
+};
+
 describe("backend-signatures.json (contributed rules)", () => {
   const file = JSON.parse(readFileSync(new URL("../extension/data/backend-signatures.json", import.meta.url), "utf8"));
   const REPORT_THRESHOLD = 30;
@@ -255,10 +266,13 @@ describe("backend-signatures.json (contributed rules)", () => {
     });
   }
 
-  it("keeps API patterns to fixed text, since the matched part is shown and a wildcard could capture a path secret", () => {
+  it("keeps the path part of API patterns to fixed text, since the matched part is shown", () => {
+    for (const bad of ["/livewire/message/[A-Za-z0-9-]+", "/reset/[0-9A-Fa-f-]{36}", "/share/.+", "/t/\\w+", "/id/\\d?"]) {
+      assert.ok(capturesPathText(bad), bad);
+    }
     for (const rule of file.backends) {
       for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "api")) {
-        assert.doesNotMatch(s.pattern, /\[\^|\.[*+]|\\[wWsSdD]/, `${rule.name}: ${s.pattern}`);
+        assert.ok(!capturesPathText(s.pattern), `${rule.name}: ${s.pattern}`);
       }
     }
   });
