@@ -104,17 +104,19 @@ describe("mentions are not traces", () => {
     "<p>Struts 1 apps extend <code>org.apache.struts.action.Action</code>; Seasar lives in <code>org.seasar.framework</code>.</p>",
     "<pre><code>&lt;!-- Powered by SAStruts --&gt;\nxmlns:te=&quot;http://www.seasar.org/teeda/extension&quot;</code></pre>",
     "<li>symfony 1, CakePHP 2, ColdFusion and Classic ASP are old; java.lang.NullPointerException is common.</li>",
+    "Search index: SAStruts, Teeda, Seasar2, S2Container, org.seasar.framework migration guide",
   ];
 
   it("reports no end-of-life or old-generation backend for a page that only talks about them", () => {
-    for (const html of MENTIONS) {
-      const flagged = inferBackends(makePage({ url: "https://github.com/example/repo", html }), db.backends).filter(
-        (b) => b.status === "eol" || b.status === "legacy",
-      );
+    // The same text as markup, as an inline script (hydration JSON, search index) and as a fetched script.
+    for (const text of MENTIONS) {
+      const inline = { src: null, integrity: "", content: JSON.stringify({ readme: text }), fetched: false };
+      const page = makePage({ url: "https://github.com/example/repo", html: text, scripts: [inline, script("https://github.com/assets/search.js", text)] });
+      const flagged = inferBackends(page, db.backends).filter((b) => b.status === "eol" || b.status === "legacy");
       assert.deepEqual(
         flagged.map((b) => b.name),
         [],
-        html,
+        text,
       );
     }
   });

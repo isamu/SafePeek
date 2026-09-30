@@ -49,9 +49,9 @@
         {
           "type": "source",
           "pattern": "org\\.seasar\\.|\\bS2Container\\b|\\bSAStruts\\b",
-          "weight": 60,
-          "note": "Seasar name in script code or comments",
-          "noteJa": "スクリプトのコード・コメントに Seasar の名前"
+          "weight": 20,
+          "note": "Seasar names in script code (a mention on its own; counts only with another trace)",
+          "noteJa": "スクリプト内に Seasar の名前（単独では言及にすぎず、他の痕跡と合わさったときだけ効く）"
         },
         {
           "type": "html",
