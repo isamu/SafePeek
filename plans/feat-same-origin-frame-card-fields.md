@@ -7,7 +7,8 @@ A checkout that puts its card form in an iframe served from the site's own origi
 ## Change
 `collector.js`: the page and up to 10 same-origin frames, nested ones included (listed once per scan), (`contentDocument` is readable only for the same origin;
 another origin throws or returns null and is skipped) are read together for form fields, forms, iframes,
-stylesheets and images. Field and frame checks go by tag name, because elements of a frame are instances of that
+stylesheets, images and external script URLs (bodies are not fetched), so a tokenization script inside a framed
+checkout is seen. Field and frame checks go by tag name, because elements of a frame are instances of that
 frame's constructors, not this window's. No new permission: `activeTab` already covers the tab's same-origin frames
 and the collector reads their DOM directly.
 

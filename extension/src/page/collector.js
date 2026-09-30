@@ -103,6 +103,21 @@
     return [...fetchedScripts, ...inline];
   }
 
+  /**
+   * External script URLs of the same-origin frames, so a tokenization script loaded inside a framed checkout is
+   * seen. Only the URL: their bodies are not fetched and inline code is not read.
+   * @param {Document[]} docs
+   * @returns {import("../types.js").ScriptInfo[]}
+   */
+  function frameScripts(docs) {
+    return docs
+      .slice(1)
+      .flatMap((doc) => [...doc.querySelectorAll("script[src]")])
+      .map((el) => ({ src: absolute(el.getAttribute("src") ?? "", el.baseURI), integrity: el.getAttribute("integrity") ?? "", content: "", fetched: false }))
+      .filter((script) => script.src !== "")
+      .slice(0, MAX_SCRIPTS);
+  }
+
   /** @returns {{ meta: Record<string, string[]>, metaCsp: string[] }} */
   function readMeta() {
     /** @type {Record<string, string[]>} */
@@ -313,15 +328,15 @@
    * @returns {Promise<Omit<import("../types.js").PageData, "globals">>}
    */
   async function collect(domQueries, paymentHosts) {
-    const [headers, scripts] = await Promise.all([readHeaders(), readScripts()]);
     const docs = documents();
+    const [headers, scripts] = await Promise.all([readHeaders(), readScripts()]);
     return {
       url: location.href,
       protocol: location.protocol,
       origin: location.origin,
       headers,
       ...readMeta(),
-      scripts,
+      scripts: [...scripts, ...frameScripts(docs)],
       stylesheets: urls(docs, "link[rel~=stylesheet][href]", "href"),
       iframes: urls(docs, "iframe[src]", "src"),
       images: urls(docs, "img[src]", "src"),

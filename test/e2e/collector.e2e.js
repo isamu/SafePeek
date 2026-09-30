@@ -212,4 +212,10 @@ describe("collector in Chromium", () => {
     const report = await scan("framed-stripe.html");
     assert.ok(report.findings.some((f) => f.id === "card_hosted_iframe"));
   });
+
+  it("sees a tokenization script loaded inside the same-origin frame that holds the card form", async () => {
+    const report = await scan("framed-tokenized.html");
+    const payment = report.findings.find((f) => f.area === "payment");
+    assert.deepEqual([payment?.id, payment?.params.provider], ["card_tokenized_on_page", "GMO Payment Gateway"]);
+  });
 });
