@@ -10,6 +10,8 @@ Given data collected from a page, it infers:
 - how card numbers are entered (provider iframe, redirect, in-page tokenization, raw form),
 - security headers and page-level issues.
 
+It is meant for checking your own sites (CI, monitoring) or building tools for visitors, not for scanning other people's sites in bulk. Findings state exploit-relevant facts in general terms only (see SPEC S9 in the repository).
+
 Everything is a pure function; nothing is sent anywhere.
 
 ```js

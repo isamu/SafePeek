@@ -21,7 +21,7 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 - **WordPress**: core support status, plugins and themes, XML-RPC.
 - **Security basics**: HTTPS, HSTS, CSP, clickjacking, exposed versions, JS-readable session cookies, mixed content, third-party scripts.
 - **False-result report link**: opens a GitHub issue form pre-filled with the origin and the finding only; the user submits it.
-- **npm package** `safepeek`: the same engine for crawlers and CI (not published).
+- **npm package** `safepeek`: the same engine for checking your own sites in CI (not published); not for bulk scanning of others' sites.
 
 ## Stack
 
@@ -58,6 +58,8 @@ Checks are tuned against real pages; each of these came from a false result.
 - Verify a check on real sites before trusting it; a fixture proves only what it was written to show.
 
 ## Things that must not happen
+
+- A finding that mainly helps an attacker: a secret value, the exact place of an exposed secret or debug feature, internal or staging host names, a bypass route, a takeover candidate, a tamperable field (SPEC S9). State such facts in general terms.
 
 - New permissions, host permissions, content scripts or a background worker (SPEC S1).
 - `eval`, `new Function`, remote scripts, `innerHTML` (S3, S4). `noInlineConfig` is on; do not try to disable rules inline.
