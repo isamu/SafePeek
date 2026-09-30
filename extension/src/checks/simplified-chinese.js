@@ -54,7 +54,12 @@ function chineseSigns(page, kana) {
   // Chinese uses its characters and 天 for days as a matter of course: only the Japanese lines are read, and a page
   // written mostly in Chinese is not read at all.
   const japanese = japaneseLines(page.text);
-  const occurrences = [...japanese].filter((char) => SIMPLIFIED_ONLY.has(char));
+  // A stray character sits in a Japanese sentence; one in a kana-less line, even a short heading, is Chinese.
+  const withKana = page.text
+    .split("\n")
+    .filter((line) => HAS_KANA.test(line))
+    .join("\n");
+  const occurrences = [...withKana].filter((char) => SIMPLIFIED_ONLY.has(char));
   const simplified = [...new Set(occurrences)];
   const han = (page.text.match(HAN) ?? []).length;
   const chineseSection = occurrences.length > kana * MAX_SIMPLIFIED_PER_KANA || han > kana * MAX_HAN_PER_KANA;

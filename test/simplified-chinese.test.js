@@ -63,6 +63,11 @@ describe("simplified Chinese on a Japanese shop", () => {
     assert.equal(found?.evidence.length, 2, "stray characters in a Japanese line and a short label both count");
   });
 
+  it("does not count characters in short kana-less headings, as on a Chinese page under Japanese navigation", () => {
+    const headings = ["优惠活动", "购物指南", "关于我们", "联系客服"].join("\n");
+    assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}\n${headings}\n`)), []);
+  });
+
   it("treats a section in Traditional Chinese as a Chinese section too", () => {
     const traditional = "歡迎光臨本店。購物指南：訂購後3天發貨，海外配送費用請參閱說明。會員註冊免費，支援信用卡付款。".repeat(20);
     assert.deepEqual(checkSimplifiedChinese(shop(`${JAPANESE_SHOP}${traditional}3天`)), []);
