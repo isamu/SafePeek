@@ -71,6 +71,7 @@ Hosts are listed with *other*, *session replay* and *ads* first.
 
 ## Who runs the shop
 
+- **A cart service is information, not a good sign.** It handles the checkout, but anyone can open a shop on one, and research on fraudulent storefronts found them common there (`docs/fake-shop-research.md`). Reporting it as good read as vouching for the seller.
 - **A cart service is recognised from its own traces too:** hosts, globals, cookies. So a shop on its own domain is still recognised. Every trace was observed on live storefronts.
 - **Two families of trace are needed.** Scripts, DOM, HTML, URLs and hosts are one family, because an embedded widget or image leaves them together; globals, cookies, headers and meta tags are each their own. One trace is enough only for an explicit, runtime `singleTraces` entry. Confidence is not used, because it sums weak traces.
 - **Products whose only traces are platform-wide are left out** (Wix eCommerce, Square Online): they cannot tell a shop from any other page on the platform.

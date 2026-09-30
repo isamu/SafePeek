@@ -78,7 +78,7 @@ const JA = {
   checkout_saas: {
     title: (p) => `ショップはカートサービス上にあります（${p.platforms}）`,
     detail: () =>
-      "ショップ機能を提供しているのはカートサービスです。決済画面もそのサービスが用意するのが一般的ですが、カードを入力する画面の方式は決済画面でもう一度確かめてください。",
+      "ショップ機能を提供しているのはカートサービスです。決済画面もそのサービスが用意するのが一般的ですが、カードを入力する画面の方式は決済画面でもう一度確かめてください。カートサービスは誰でも使えるため、販売者が実在し商品が届くことの保証にはなりません。",
   },
   dest_session_replay: {
     title: (p) => `画面操作を記録するサービスに送っています（${p.services}）`,
@@ -262,7 +262,8 @@ const EN = {
   },
   checkout_saas: {
     title: (p) => `The shop is on a hosted cart service (${p.platforms})`,
-    detail: () => "A cart service provides the shop, and usually its checkout as well; check how the card is entered on the checkout page itself.",
+    detail: () =>
+      "A cart service provides the shop, and usually its checkout as well; check how the card is entered on the checkout page itself. Anyone can open a shop on a cart service, so it does not vouch that the seller is real or that goods will arrive.",
   },
   dest_session_replay: {
     title: (p) => `Sends what you do on the page to a session-recording service (${p.services})`,
