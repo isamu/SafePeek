@@ -1,0 +1,5 @@
+# Windows checks out CRLF by default, and Prettier's `endOfLine: "lf"` then reports every file as
+# unformatted — a CI failure that only ever appears on a Windows machine.
+* text=auto eol=lf
+
+*.png binary

@@ -1,0 +1,279 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1c1f23;
+  --muted: #5f6770;
+  --line: #e3e6ea;
+  --card: #f6f7f9;
+  --high: #c62828;
+  --high-bg: #fdecea;
+  --medium: #b45f06;
+  --medium-bg: #fff4e0;
+  --low: #5b6470;
+  --low-bg: #eef0f3;
+  --info: #1f5fa8;
+  --info-bg: #e8f0fb;
+  --good: #1e7d3a;
+  --good-bg: #e6f4ea;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17191c;
+    --fg: #e6e8eb;
+    --muted: #9aa3ad;
+    --line: #2c3036;
+    --card: #1f2226;
+    --high: #ff8a80;
+    --high-bg: #3a1f1f;
+    --medium: #ffb74d;
+    --medium-bg: #3a2c16;
+    --low: #b0b8c2;
+    --low-bg: #2a2e33;
+    --info: #90b8ee;
+    --info-bg: #1c2a3d;
+    --good: #81c995;
+    --good-bg: #1c3324;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 420px;
+  max-height: 600px;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    13px/1.5 system-ui,
+    -apple-system,
+    "Hiragino Sans",
+    "Noto Sans JP",
+    sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-weight: 700;
+}
+
+.host {
+  margin-left: auto;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
+}
+
+main {
+  padding: 12px 14px;
+}
+
+.message {
+  color: var(--muted);
+}
+
+.summary {
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.summary.level-danger {
+  background: var(--high-bg);
+}
+
+.summary.level-caution {
+  background: var(--medium-bg);
+}
+
+.summary.level-ok {
+  background: var(--good-bg);
+}
+
+.level {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.level-danger .level {
+  color: var(--high);
+}
+
+.level-caution .level {
+  color: var(--medium);
+}
+
+.level-ok .level {
+  color: var(--good);
+}
+
+.counts {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.section h2 {
+  font-size: 13px;
+  margin: 16px 0 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.empty {
+  color: var(--muted);
+  margin: 0;
+}
+
+.pill {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.pill.sev-high {
+  color: var(--high);
+  background: var(--high-bg);
+}
+
+.pill.sev-medium {
+  color: var(--medium);
+  background: var(--medium-bg);
+}
+
+.pill.sev-low {
+  color: var(--low);
+  background: var(--low-bg);
+}
+
+.pill.sev-info {
+  color: var(--info);
+  background: var(--info-bg);
+}
+
+.pill.sev-good {
+  color: var(--good);
+  background: var(--good-bg);
+}
+
+.summary .pill {
+  background: var(--bg);
+}
+
+.finding {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: var(--card);
+}
+
+.finding summary {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.finding summary::-webkit-details-marker {
+  display: none;
+}
+
+.finding-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  margin: 0;
+  padding: 0 10px 8px;
+}
+
+.evidence-label {
+  padding: 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.evidence {
+  margin: 2px 0 10px;
+  padding: 0 10px 0 26px;
+  font:
+    11px/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.tech-group h3 {
+  font-size: 12px;
+  margin: 8px 0 2px;
+}
+
+.tech-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tech {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: var(--card);
+}
+
+.tech.eol {
+  border-color: var(--high);
+}
+
+.tech-version {
+  margin-left: 4px;
+  color: var(--muted);
+}
+
+.tech.eol .tech-version {
+  color: var(--high);
+  font-weight: 600;
+}
+
+.footer {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.footer p {
+  margin: 2px 0;
+}

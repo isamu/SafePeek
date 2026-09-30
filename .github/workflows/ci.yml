@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - run: yarn install --frozen-lockfile
+
+      - name: format:check
+        run: yarn format:check
+
+      - name: lint
+        run: yarn lint
+
+      - name: typecheck
+        run: yarn typecheck
+
+      # Unit tests, plus the policy tests that hold the README's promises: manifest permissions,
+      # extension-page CSP, no remote code, no eval, no innerHTML.
+      - name: test
+        run: yarn test
