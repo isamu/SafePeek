@@ -93,7 +93,7 @@ function hasGeneralOnRequest(text) {
  * @param {string} html
  * @returns {boolean}
  */
-function isNoticePage(html) {
+export function isNoticePage(html) {
   return [...html.matchAll(HEADINGS)].some((match) => withoutTags(match[2]).split(TITLE_SEPARATORS).some(isNoticeTitle));
 }
 

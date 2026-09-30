@@ -1,14 +1,13 @@
-// Placeholder text a shop template ships with, left on a live shop page. Fake shops are built from shared kits and
-// often keep it (docs/fake-shop-research.md, item 13).
+// Placeholder text a shop template ships with, left in a shop's 特定商取引法 notice. Fake shops are built from shared kits
+// and often keep it (docs/fake-shop-research.md, item 13).
 
 import { finding } from "./finding.js";
-import { isJapaneseShop, offersToBuy } from "./japanese-shop.js";
+import { isNoticePage } from "./legal-notice.js";
 
-// A name of 〇 / × or a number of zeros is a leftover only where the seller's identity is given; elsewhere it is a
-// masked name (〇〇様) or a partner (株式会社××との提携). A line showing an example of how to fill in a form is never one.
+// Only the notice is read: there the identity is the seller's own. Elsewhere 会社名 or TEL can be what a buyer wants
+// printed on a stamp or card, a masked name (〇〇様), or a partner (株式会社××との提携).
 const IDENTITY_LABEL = /販売業者|販売者|運営会社|運営者|会社名|事業者|店舗名|所在地|住所|電話|TEL|連絡先|代表/i;
-// A guide to writing a notice or building a shop, or a demo store, shows placeholders on purpose.
-const GUIDE_OR_DEMO = /記載例|書き方|作り方|作成方法|マニュアル|チュートリアル|デモサイト|デモストア|サンプルショップ/;
+// A line showing an example of how to fill in a form is never a leftover.
 const EXAMPLE_WORDS = /例|入力|記入|サンプル|形式|フォーマット|半角|ハイフン/;
 const IDENTITY_PLACEHOLDERS = [
   { label: "株式会社〇〇", pattern: /(?:株式会社|有限会社|合同会社)[〇○◯×✕]{2,6}|[〇○◯×✕]{2,6}(?:株式会社|商店|ショップ)/ },
@@ -25,7 +24,7 @@ const IDENTITY_PLACEHOLDERS = [
  * @returns {import("../types.js").Finding[]}
  */
 export function checkTemplateLeftovers(page) {
-  if (!isJapaneseShop(page.text) || !offersToBuy(page.text) || GUIDE_OR_DEMO.test(page.text)) return [];
+  if (!isNoticePage(page.html)) return [];
   const identityLines = identityBlocks(page.text).filter((block) => !EXAMPLE_WORDS.test(block));
   const found = IDENTITY_PLACEHOLDERS.filter(({ pattern }) => identityLines.some((line) => pattern.test(line))).map(({ label }) => label);
   return found.length > 0 ? [finding("shop_template_leftovers", "low", "page", { count: found.length }, found)] : [];
