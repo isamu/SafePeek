@@ -10,7 +10,7 @@ Let an ordinary visitor judge, from the browser alone, whether a site they are a
 
 - **Tech stack** from webappanalyzer fingerprints, with versions when visible.
 - **Outdated and vulnerable software**: JS libraries against the Retire.js DB, end-of-life server and front-end products.
-- **Card payment handling**: provider frame, in-page tokenization, the site's own form, or a hand-off link / form to a provider's checkout; card fields in same-origin frames are read too.
+- **Card payment handling**: provider frame, in-page tokenization, the site's own form, or a hand-off link / form to a provider's checkout; card fields in same-origin frames are read too; the page's own card field beside a provider's card frame is flagged as a skimming shape.
 - **Login services**: Auth0, Cognito, Firebase / Supabase Auth, Okta, Entra ID, Keycloak, Google / Apple / LINE sign-in … from the hosts and URLs the page contacts.
 - **Where data goes**: session replay, error / log monitoring, advertising, analytics and marketing services, from the hosts the page contacts and the products it runs.
 - **Who runs the shop**: a hosted cart service (Shopify, BASE, MakeShop, futureshop …, recognised even on the shop's own domain) or shop software the site runs itself (EC-CUBE, Magento, WooCommerce …).

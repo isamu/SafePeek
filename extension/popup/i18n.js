@@ -57,6 +57,11 @@ const JA = {
     title: () => "暗号化されていないページにパスワード欄があります",
     detail: () => "パスワードが平文で送られる可能性があります。このページでは入力しないでください。",
   },
+  card_form_beside_provider_frame: {
+    title: (p) => `決済会社の入力枠とは別に、ページ自身のカード番号欄があります（${p.providers}）`,
+    detail: () =>
+      "本物の決済画面では、カード番号は決済会社の入力枠かページの入力欄のどちらか一方で入力します。両方あるのは、決済会社の枠を隠して偽の入力欄を重ね、カード番号を盗む手口と同じ形です。カード番号は入力せず、サイトの運営者に知らせてください。",
+  },
   card_on_page: {
     title: () => "カード番号をサイト自身のページで入力させています",
     detail: () =>
@@ -248,6 +253,11 @@ const EN = {
   },
   not_https: { title: () => "Not served over HTTPS", detail: () => "Traffic is unencrypted. Anything you enter can be read or altered in transit." },
   password_over_http: { title: () => "Password field on an unencrypted page", detail: () => "Passwords may be sent in clear text. Do not log in here." },
+  card_form_beside_provider_frame: {
+    title: (p) => `The page has its own card number field next to the payment provider's card frame (${p.providers})`,
+    detail: () =>
+      "A genuine checkout takes the card number either in the provider's frame or in the page, not both. Both together is the shape of a skimming attack that hides the provider's frame behind a fake form. Do not enter your card number, and let the site know.",
+  },
   card_on_page: {
     title: () => "Card number is typed into the site's own page",
     detail: () =>
