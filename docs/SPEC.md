@@ -81,7 +81,7 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |
 | backend | `backend_managed` | info | a BaaS / PaaS / serverless platform inferred at ≥ 60 |
-| backend | `backend_hosting` | info | a static or edge hosting platform (S3 / CloudFront, Vercel, Netlify, Cloudflare Pages) inferred at ≥ 60: it serves the page itself; the APIs behind it may run elsewhere |
+| backend | `backend_hosting` | info | a static or edge hosting platform (S3 / CloudFront, Vercel, Netlify, Cloudflare Pages, Firebase Hosting, Amplify Hosting) inferred at ≥ 60; SDKs and API calls of the same vendors stay `backend_managed`: it serves the page itself; the APIs behind it may run elsewhere |
 | cms | `wp_core_eol` | high | WordPress below 4.7 (no security backports since 2025-07) |
 | cms | `wp_core_outdated` | medium | WordPress older than the latest series in `wordpress.json` |
 | cms | `wp_version_exposed` | low | WordPress version readable from the page |

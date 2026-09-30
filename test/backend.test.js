@@ -204,6 +204,21 @@ describe("managed backends (BaaS / PaaS)", () => {
     assert.equal(f.severity, "info");
   });
 
+  it("splits what a trace proves: a hosting domain serves the page, an SDK or API call runs the backend", () => {
+    const status = (/** @type {Partial<import("../extension/src/types.js").PageData>} */ over) =>
+      Object.fromEntries(
+        inferBackends(makePage(over), db.backends)
+          .filter((b) => b.confidence >= 60)
+          .map((b) => [b.name, b.status]),
+      );
+    assert.deepEqual(status({ url: "https://omochi.web.app/" }), { "Firebase Hosting": "hosting" });
+    assert.deepEqual(status({ url: "https://main.d1abc.amplifyapp.com/" }), { "AWS Amplify Hosting": "hosting" });
+    assert.deepEqual(status({ url: "https://site.pages.dev/" }), { "Cloudflare Pages": "hosting" });
+    assert.deepEqual(status({ url: "https://api.me.workers.dev/" }), { "Cloudflare Workers": "managed" });
+    assert.deepEqual(status({ headers: { ...makePage().headers, "x-amz-cf-id": "abc" } }), {}, "CloudFront alone says too little");
+    assert.equal(status({ url: "https://omochi.web.app/", globals: { __FIREBASE_DEFAULTS__: {} } }).Firebase, "managed");
+  });
+
   it("reports a strong managed backend as information, not a problem", () => {
     const [f] = checkBackends([{ name: "Firebase", language: "BaaS", status: "managed", eol: "", source: "", confidence: 100, signals: [] }], today);
     assert.equal(f.id, "backend_managed");

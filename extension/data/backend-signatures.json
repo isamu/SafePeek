@@ -568,13 +568,6 @@
       "status": "managed",
       "signals": [
         {
-          "type": "host",
-          "pattern": "\\.(?:web\\.app|firebaseapp\\.com)$",
-          "weight": 80,
-          "note": "hosted on a Firebase Hosting domain",
-          "noteJa": "Firebase Hosting のドメイン"
-        },
-        {
           "type": "script",
           "pattern": "/__/firebase/|gstatic\\.com/firebasejs/",
           "weight": 70,
@@ -603,18 +596,32 @@
           "noteJa": "__FIREBASE_DEFAULTS__ 変数"
         },
         {
-          "type": "header",
-          "pattern": "vary: x-fh-requested-host",
-          "weight": 60,
-          "note": "Firebase Hosting response header",
-          "noteJa": "Firebase Hosting のレスポンスヘッダー"
-        },
-        {
           "type": "api",
           "pattern": "^https://(?:firestore|identitytoolkit|securetoken|firebaseinstallations)\\.googleapis\\.com/",
           "weight": 60,
           "note": "calls to Firebase APIs",
           "noteJa": "Firebase の API への通信"
+        }
+      ]
+    },
+    {
+      "name": "Firebase Hosting",
+      "language": "Hosting (Google)",
+      "status": "hosting",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.(?:web\\.app|firebaseapp\\.com)$",
+          "weight": 80,
+          "note": "hosted on a Firebase Hosting domain",
+          "noteJa": "Firebase Hosting のドメイン"
+        },
+        {
+          "type": "header",
+          "pattern": "vary: x-fh-requested-host",
+          "weight": 60,
+          "note": "Firebase Hosting response header",
+          "noteJa": "Firebase Hosting のレスポンスヘッダー"
         }
       ]
     },
@@ -659,13 +666,6 @@
       "status": "managed",
       "signals": [
         {
-          "type": "host",
-          "pattern": "\\.amplifyapp\\.com$",
-          "weight": 80,
-          "note": "hosted on an Amplify domain",
-          "noteJa": "Amplify のドメイン"
-        },
-        {
           "type": "source",
           "pattern": "cognito-idp\\.[a-z0-9-]+\\.amazonaws\\.com|\\.appsync-api\\.[a-z0-9-]+\\.amazonaws\\.com|aws_user_pools_id|aws_appsync_graphqlEndpoint",
           "weight": 70,
@@ -692,6 +692,20 @@
           "weight": 70,
           "note": "calls to AWS AppSync",
           "noteJa": "AWS AppSync への通信"
+        }
+      ]
+    },
+    {
+      "name": "AWS Amplify Hosting",
+      "language": "Hosting (AWS)",
+      "status": "hosting",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.amplifyapp\\.com$",
+          "weight": 80,
+          "note": "hosted on an Amplify domain",
+          "noteJa": "Amplify のドメイン"
         }
       ]
     },
@@ -794,16 +808,30 @@
       ]
     },
     {
-      "name": "Cloudflare Pages / Workers",
-      "language": "Hosting / serverless",
+      "name": "Cloudflare Pages",
+      "language": "Hosting (Cloudflare)",
       "status": "hosting",
       "signals": [
         {
           "type": "host",
-          "pattern": "\\.(?:pages|workers)\\.dev$",
+          "pattern": "\\.pages\\.dev$",
           "weight": 80,
-          "note": "hosted on a Cloudflare Pages / Workers domain",
-          "noteJa": "Cloudflare Pages / Workers のドメイン"
+          "note": "hosted on a Cloudflare Pages domain",
+          "noteJa": "Cloudflare Pages のドメイン"
+        }
+      ]
+    },
+    {
+      "name": "Cloudflare Workers",
+      "language": "Serverless (Cloudflare)",
+      "status": "managed",
+      "signals": [
+        {
+          "type": "host",
+          "pattern": "\\.workers\\.dev$",
+          "weight": 80,
+          "note": "runs on a Cloudflare Workers domain",
+          "noteJa": "Cloudflare Workers のドメイン"
         }
       ]
     },
