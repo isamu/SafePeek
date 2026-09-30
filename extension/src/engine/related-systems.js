@@ -2,107 +2,12 @@
 // forms, API calls or first-party scripts, and what their URL shapes suggest. The page's own backend is inferred
 // elsewhere.
 
+import { registrable } from "./public-suffix.js";
+
 const MAX_URLS = 3000;
 const ABSOLUTE_URL = /https?:\/\/[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s"'`<>()\\]*)?/gi;
 const ATTRIBUTE_URL = /\b(?:href|action|src)\s*=\s*["'](https?:\/\/[^"'#\s]+)["']/gi;
-const MIN_BRAND_LENGTH = 4;
-// Shared hosting where each subdomain is a different customer: the registrable domain is one label below these.
-const SHARED_HOSTING_SUFFIXES = [
-  "github.io",
-  "gitlab.io",
-  "vercel.app",
-  "netlify.app",
-  "pages.dev",
-  "workers.dev",
-  "herokuapp.com",
-  "web.app",
-  "firebaseapp.com",
-  "appspot.com",
-  "run.app",
-  "amplifyapp.com",
-  "cloudfront.net",
-  "azurewebsites.net",
-  "blogspot.com",
-  "wixsite.com",
-  "myshopify.com",
-  "square.site",
-  "onrender.com",
-  "fly.dev",
-  "glitch.me",
-  "s3.amazonaws.com",
-  "shop-pro.jp",
-  "thebase.in",
-  "stores.jp",
-  "base.shop",
-  "wordpress.com",
-  "hatenablog.com",
-];
-// Words too common in domain names to identify an organisation.
-const GENERIC_WORDS = new Set([
-  "shop",
-  "store",
-  "online",
-  "mall",
-  "bank",
-  "news",
-  "tokyo",
-  "japan",
-  "osaka",
-  "official",
-  "group",
-  "global",
-  "media",
-  "info",
-  "service",
-  "services",
-  "cloud",
-  "digital",
-  "life",
-  "home",
-  "web",
-  "site",
-  "portal",
-  "market",
-  "select",
-  "direct",
-  "club",
-  "net",
-  "world",
-  "plus",
-  "smart",
-  "style",
-  "design",
-  "studio",
-  "labs",
-]);
-// Second-level suffixes under which the registrable domain has three labels. Not a full public suffix list: a
-// miss only makes two hosts of one organisation look unrelated.
-const SECOND_LEVEL_SUFFIXES = new Set([
-  "co.jp",
-  "ne.jp",
-  "or.jp",
-  "ac.jp",
-  "go.jp",
-  "ad.jp",
-  "ed.jp",
-  "gr.jp",
-  "lg.jp",
-  "co.uk",
-  "org.uk",
-  "ac.uk",
-  "com.au",
-  "net.au",
-  "org.au",
-  "co.kr",
-  "com.br",
-  "com.cn",
-  "com.tw",
-  "com.hk",
-  "co.nz",
-  "com.sg",
-  "com.mx",
-  "co.in",
-]);
+const MIN_NAME_LENGTH = 4;
 
 /**
  * @typedef {object} RelatedHint
@@ -119,39 +24,32 @@ const SECOND_LEVEL_SUFFIXES = new Set([
  */
 
 /**
- * @param {string} host
- * @returns {string}  e.g. "acme-ec.com" for "jp.acme-ec.com", "example.co.jp" for "www.example.co.jp"
- */
-export function registrableDomain(host) {
-  const labels = host.toLowerCase().replace(/\.$/, "").split(".");
-  const shared = sharedHostingSuffix(host);
-  if (shared) return labels.slice(-(shared.split(".").length + 1)).join(".");
-  const size = SECOND_LEVEL_SUFFIXES.has(labels.slice(-2).join(".")) ? 3 : 2;
-  return labels.slice(-size).join(".");
-}
-
-/**
- * The words of a registrable domain's name that can identify the organisation ("acme" from "acme-ec.com").
- * @param {string} host
- * @returns {string[]}
- */
-function brandWords(host) {
-  const name = registrableDomain(host).split(".")[0];
-  return name.split("-").filter((word) => word.length >= MIN_BRAND_LENGTH && !GENERIC_WORDS.has(word));
-}
-
-/**
- * A different host of the same registrable domain, or one whose domain name shares a brand word.
+ * Two hosts look like one organisation's when they share a registrable domain, or when one domain's whole name is
+ * one of the words of the other's ("acme" and "acme-ec"). Sharing one word in the middle ("example-hotel" and
+ * "hotel-alpha") is not enough, and customers of one shared host are never related by name.
  * @param {string} pageHost
  * @param {string} host
+ * @param {import("./public-suffix.js").SuffixIndex} suffixes
  * @returns {boolean}
  */
-export function isRelatedHost(pageHost, host) {
+export function isRelatedHost(pageHost, host, suffixes) {
   if (host === pageHost) return false;
-  if (registrableDomain(host) === registrableDomain(pageHost)) return true;
-  if (sharedHostingSuffix(host) || sharedHostingSuffix(pageHost)) return false;
-  const theirs = brandWords(host);
-  return brandWords(pageHost).some((word) => theirs.includes(word));
+  const ours = registrable(pageHost, suffixes);
+  const theirs = registrable(host, suffixes);
+  if (!ours || !theirs) return false;
+  if (ours.domain === theirs.domain) return true;
+  if (ours.shared || theirs.shared) return false;
+  const a = nameOf(ours);
+  const b = nameOf(theirs);
+  return (a.length >= MIN_NAME_LENGTH && b.split("-").includes(a)) || (b.length >= MIN_NAME_LENGTH && a.split("-").includes(b));
+}
+
+/**
+ * @param {import("./public-suffix.js").Registrable} r
+ * @returns {string}  the label left of the suffix, e.g. "acme-ec" for "acme-ec.com"
+ */
+function nameOf(r) {
+  return r.domain.slice(0, -(r.suffix.length + 1));
 }
 
 /**
@@ -182,13 +80,14 @@ function mentionedUrls(page, pageHost) {
  * Related hosts with the backend URL-shape rules their paths match. Hosts without a match are left out.
  * @param {import("../types.js").PageData} page
  * @param {import("./backend.js").BackendRule[]} rules
+ * @param {import("./public-suffix.js").SuffixIndex} suffixes
  * @returns {RelatedSystem[]}
  */
-export function inferRelatedSystems(page, rules) {
+export function inferRelatedSystems(page, rules, suffixes) {
   const pageHost = new URL(page.url).hostname;
   /** @type {Map<string, Set<string>>} */
   const pathsByHost = new Map();
-  for (const url of mentionedUrls(page, pageHost).filter((u) => isRelatedHost(pageHost, u.hostname))) {
+  for (const url of mentionedUrls(page, pageHost).filter((u) => isRelatedHost(pageHost, u.hostname, suffixes))) {
     const paths = pathsByHost.get(url.hostname) ?? new Set();
     paths.add(url.pathname.replace(/;jsessionid=[^/?]*/i, ""));
     pathsByHost.set(url.hostname, paths);
@@ -237,13 +136,4 @@ function hostOf(url) {
   } catch {
     return "";
   }
-}
-
-/**
- * @param {string} host
- * @returns {string | undefined}  the shared hosting suffix the host is a customer of
- */
-function sharedHostingSuffix(host) {
-  const name = host.toLowerCase().replace(/\.$/, "");
-  return SHARED_HOSTING_SUFFIXES.find((suffix) => name.endsWith(`.${suffix}`));
 }

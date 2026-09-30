@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { parseRetireRepository } from "../extension/src/engine/retire.js";
+import { indexPublicSuffixes } from "../extension/src/engine/public-suffix.js";
 
 const data = (/** @type {string} */ name) => readFileSync(new URL(`../extension/data/${name}`, import.meta.url), "utf8");
 
@@ -17,6 +18,7 @@ export function loadDb() {
     wordpress: JSON.parse(data("wordpress.json")),
     checkout: JSON.parse(data("checkout-platforms.json")).platforms,
     auth: JSON.parse(data("auth-services.json")).services,
+    suffixes: indexPublicSuffixes(JSON.parse(data("public-suffixes.json"))),
   };
 }
 

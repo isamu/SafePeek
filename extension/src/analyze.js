@@ -31,6 +31,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./engine/backend.js").BackendRule[]} backends
  * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
  * @property {import("./checks/checkout.js").CheckoutPlatform[]} checkout
+ * @property {import("./engine/public-suffix.js").SuffixIndex} suffixes
  * @property {import("./checks/auth.js").AuthService[]} auth
  */
 
@@ -65,7 +66,7 @@ export async function analyze(page, db, env) {
     ...checkCheckout(technologies, db.checkout, page),
     ...checkAuth(technologies, db.auth, page),
     ...checkBackends(backends, env.today),
-    ...checkRelatedSystems(inferRelatedSystems(page, db.backends)),
+    ...checkRelatedSystems(inferRelatedSystems(page, db.backends, db.suffixes)),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),
     ...checkEol(technologies, db.eol, env.today),

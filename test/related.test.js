@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { inferRelatedSystems, isRelatedHost, registrableDomain } from "../extension/src/engine/related-systems.js";
+import { inferRelatedSystems, isRelatedHost } from "../extension/src/engine/related-systems.js";
+import { registrable } from "../extension/src/engine/public-suffix.js";
 import { checkRelatedSystems } from "../extension/src/checks/related.js";
 import { analyze } from "../extension/src/analyze.js";
 import { sha1 } from "../extension/src/engine/hash.js";
@@ -8,28 +9,64 @@ import { loadDb, makePage, script } from "./helpers.js";
 
 const db = loadDb();
 
+describe("public suffixes", () => {
+  it("find the registrable domain with the PSL, wildcards, exceptions and shared hosts included", () => {
+    const r = (/** @type {string} */ host) => registrable(host, db.suffixes);
+    assert.equal(r("jp.acme-ec.com")?.domain, "acme-ec.com");
+    assert.equal(r("www.example.co.jp")?.domain, "example.co.jp");
+    assert.equal(r("www.brand.co.id")?.domain, "brand.co.id");
+    assert.equal(r("shop.example.tokyo")?.domain, "example.tokyo");
+    assert.equal(r("tenant-a.vercel.app")?.domain, "tenant-a.vercel.app");
+    assert.equal(r("tenant-a.vercel.app")?.shared, true);
+    assert.equal(r("a.b.city.kawasaki.jp")?.domain, "city.kawasaki.jp", "an exception to a wildcard rule");
+    assert.equal(r("www.shop.kawasaki.jp")?.domain, "www.shop.kawasaki.jp", "a wildcard rule: *.kawasaki.jp is a suffix");
+    assert.equal(r("co.jp"), null, "a public suffix has no registrable domain");
+    assert.equal(r("shop.example.com.")?.domain, "example.com");
+  });
+});
+
 describe("related systems", () => {
-  it("knows registrable domains, including second-level ones", () => {
-    assert.equal(registrableDomain("jp.acme-ec.com"), "acme-ec.com");
-    assert.equal(registrableDomain("www.example.co.jp"), "example.co.jp");
-    assert.equal(registrableDomain("shop.example.com."), "example.com");
+  const related = (/** @type {string} */ a, /** @type {string} */ b) => isRelatedHost(a, b, db.suffixes);
+
+  it("relates hosts of one registrable domain, or where one whole name is a word of the other", () => {
+    assert.ok(related("jp.acme-ec.com", "ec.acme.jp"), "'acme' is a word of 'acme-ec'");
+    assert.ok(related("www.example.co.jp", "order.example.co.jp"));
+    assert.ok(related("www.acme.jp", "www.acme.co.jp"), "the same name on two suffixes");
+    assert.ok(!related("www.example.co.jp", "www.example.co.jp"), "the page's own host");
   });
 
-  it("relates hosts of one domain, or of domains sharing a brand word, and nothing else", () => {
-    assert.ok(isRelatedHost("jp.acme-ec.com", "ec.acme.jp"), "brand word 'acme'");
-    assert.ok(isRelatedHost("www.example.co.jp", "order.example.co.jp"), "same registrable domain");
-    assert.ok(!isRelatedHost("www.example.co.jp", "www.example.co.jp"), "the page's own host");
-    assert.ok(!isRelatedHost("shop.example.jp", "www.google.com"));
-    assert.ok(!isRelatedHost("shop.ec-app.jp", "www.ec-mall.jp"), "sharing only a word shorter than four letters");
-    assert.ok(!isRelatedHost("shop.example.jp", "cdn.jsdelivr.net"));
+  it("does not relate unrelated organisations under a multi-label suffix or sharing a word", () => {
+    for (const [a, b] of [
+      ["www.brand-a.co.id", "order.brand-b.co.id"],
+      ["shop.example-hotel.jp", "booking.hotel-alpha.jp"],
+      ["www.tokyo-bank.jp", "news.tokyo-news.jp"],
+      ["www.acme-shop.jp", "www.shop-plus.jp"],
+      ["shop.ec-app.jp", "www.ec-mall.jp"],
+      ["www.ec.jp", "www.ec-mall.jp"],
+      ["shop.example.jp", "www.google.com"],
+    ]) {
+      assert.ok(!related(a, b) && !related(b, a), `${a} ${b}`);
+    }
   });
 
-  it("finds an order system on another host from a URL in a script body", () => {
+  it("does not relate two customers of one shared host, even with a shared name", () => {
+    assert.ok(!related("tenant-a.vercel.app", "tenant-b.vercel.app"));
+    assert.ok(!related("acme-shop.vercel.app", "acme.vercel.app"));
+    assert.ok(!related("alice.github.io", "bob.github.io"));
+    assert.ok(related("tenant-a.vercel.app", "api.tenant-a.vercel.app"), "the same customer");
+    const page = makePage({
+      url: "https://tenant-a.netlify.app/",
+      forms: [{ action: "https://tenant-b.netlify.app/order.action", method: "post", hasPassword: false }],
+    });
+    assert.deepEqual(inferRelatedSystems(page, db.backends, db.suffixes), []);
+  });
+
+  it("finds an order system on another host from a URL in the site's own script", () => {
     const page = makePage({
       url: "https://jp.acme-ec.com/catalog/",
       scripts: [script("https://jp.acme-ec.com/js/app.js", 'form.action = "https://ec.acme.jp/order/input.do";')],
     });
-    const systems = inferRelatedSystems(page, db.backends);
+    const systems = inferRelatedSystems(page, db.backends, db.suffixes);
     assert.deepEqual(
       systems.map((s) => s.host),
       ["ec.acme.jp"],
@@ -40,35 +77,12 @@ describe("related systems", () => {
     );
   });
 
-  it("does not relate two customers of one shared hosting domain", () => {
-    assert.equal(registrableDomain("tenant-a.vercel.app"), "tenant-a.vercel.app");
-    assert.ok(!isRelatedHost("tenant-a.vercel.app", "tenant-b.vercel.app"));
-    assert.ok(!isRelatedHost("alice.github.io", "bob.github.io"));
-    assert.ok(!isRelatedHost("acme-shop.vercel.app", "acme-blog.vercel.app"), "no brand-word relation between tenants");
-    assert.ok(isRelatedHost("tenant-a.vercel.app", "api.tenant-a.vercel.app"), "the same tenant");
-    const page = makePage({
-      url: "https://tenant-a.netlify.app/",
-      forms: [{ action: "https://tenant-b.netlify.app/order.action", method: "post", hasPassword: false }],
-    });
-    assert.deepEqual(inferRelatedSystems(page, db.backends), []);
-  });
-
-  it("does not relate domains that share only a common word", () => {
-    for (const [a, b] of [
-      ["www.acme-shop.jp", "www.shop-plus.jp"],
-      ["www.tokyo-bank.jp", "news.tokyo-news.jp"],
-      ["www.acme-online.com", "www.online-mall.jp"],
-    ]) {
-      assert.ok(!isRelatedHost(a, b), `${a} ${b}`);
-    }
-  });
-
   it("does not take URLs from a third-party script's body", () => {
     const page = makePage({
       url: "https://www.acme-ec.com/",
       scripts: [script("https://cdn.vendor.example/widget.js", "// see https://order.acme.jp/cart.do for the demo shop")],
     });
-    assert.deepEqual(inferRelatedSystems(page, db.backends), []);
+    assert.deepEqual(inferRelatedSystems(page, db.backends, db.suffixes), []);
   });
 
   it("leaves out unrelated hosts and related ones whose URLs say nothing", () => {
@@ -77,7 +91,7 @@ describe("related systems", () => {
       html: '<a href="https://www.example.jp/about/">about</a><form action="https://pay.provider.com/checkout.do"></form>',
       forms: [{ action: "https://pay.provider.com/checkout.do", method: "post", hasPassword: false }],
     });
-    assert.deepEqual(inferRelatedSystems(page, db.backends), []);
+    assert.deepEqual(inferRelatedSystems(page, db.backends, db.suffixes), []);
   });
 
   it("is one info finding in the backend area", async () => {
