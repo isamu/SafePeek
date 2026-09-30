@@ -6,6 +6,7 @@ import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
 import { checkAuth } from "./checks/auth.js";
+import { checkDestinations } from "./checks/destinations.js";
 import { checkBackends } from "./checks/backend.js";
 import { inferBackends } from "./engine/backend.js";
 import { checkWordPress } from "./checks/wordpress.js";
@@ -30,6 +31,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
  * @property {import("./checks/checkout.js").CheckoutPlatform[]} checkout
  * @property {import("./checks/auth.js").AuthService[]} auth
+ * @property {import("./checks/destinations.js").Destinations} destinations
  */
 
 /**
@@ -62,6 +64,7 @@ export async function analyze(page, db, env) {
     ...checkPayment(page, db.providers),
     ...checkCheckout(technologies, db.checkout, page),
     ...checkAuth(technologies, db.auth, page),
+    ...checkDestinations(technologies, db.destinations, page),
     ...checkBackends(backends, env.today),
     ...checkWordPress(wordpress, db.wordpress, env.today),
     ...checkLibraries(libraries),

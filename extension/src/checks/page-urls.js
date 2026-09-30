@@ -12,6 +12,15 @@ export function resourceHosts(page) {
 }
 
 /**
+ * Hosts the page's own API calls went to.
+ * @param {import("../types.js").PageData} page
+ * @returns {string[]}
+ */
+export function requestHosts(page) {
+  return parseAll(page.requests ?? []).map((url) => url.hostname);
+}
+
+/**
  * Hosts the page loaded anything from or called, including its API calls and form targets.
  * @param {import("../types.js").PageData} page
  * @returns {string[]}

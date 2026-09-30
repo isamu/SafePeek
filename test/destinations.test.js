@@ -1,0 +1,170 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { checkDestinations } from "../extension/src/checks/destinations.js";
+import { analyze } from "../extension/src/analyze.js";
+import { sha1 } from "../extension/src/engine/hash.js";
+import { loadDb, makePage } from "./helpers.js";
+import { MESSAGE_IDS } from "../extension/popup/i18n.js";
+
+const db = loadDb();
+/** @returns {import("../extension/src/types.js").Technology} */
+const tech = (/** @type {string} */ name, evidence = ["js a"], impliedBy = "") => ({
+  name,
+  version: "",
+  confidence: 100,
+  categories: db.technologies[name]?.cats ?? [],
+  website: "",
+  evidence,
+  impliedBy,
+});
+const summary = (/** @type {import("../extension/src/types.js").Finding[]} */ f) => f.map((x) => `${x.id}:${x.params.services}`);
+
+describe("where data goes", () => {
+  it("tells session replay and monitoring apart from analytics, though webappanalyzer files them together", () => {
+    const found = checkDestinations([tech("Hotjar"), tech("Sentry"), tech("Google Analytics")], db.destinations, makePage());
+    assert.deepEqual(summary(found), ["dest_session_replay:Hotjar", "dest_monitoring:Sentry", "dest_analytics:Google Analytics"]);
+  });
+
+  it("sees a listed service from the host the page sent data to, even without its script", () => {
+    const page = makePage({ contactedHosts: ["o123.ingest.sentry.io", "z.clarity.ms", "bam.nr-data.net"] });
+    assert.deepEqual(summary(checkDestinations([], db.destinations, page)), ["dest_session_replay:Microsoft Clarity", "dest_monitoring:Sentry, New Relic"]);
+  });
+
+  it("files unlisted products by their category, advertising before analytics", () => {
+    assert.deepEqual(summary(checkDestinations([tech("Criteo")], db.destinations, makePage())), ["dest_advertising:Criteo"]);
+    assert.deepEqual(summary(checkDestinations([tech("Segment")], db.destinations, makePage())), ["dest_marketing:Segment"]);
+    assert.deepEqual(checkDestinations([tech("jQuery")], db.destinations, makePage()), []);
+  });
+
+  it("does not take a local measurement library for a monitoring service", () => {
+    for (const name of ["web-vitals", "Boomerang"]) {
+      assert.ok(db.technologies[name]?.cats.includes(78), `${name} is in the RUM category`);
+      assert.deepEqual(checkDestinations([tech(name)], db.destinations, makePage()), [], name);
+    }
+  });
+
+  it("does not count a product that is only mentioned or implied", () => {
+    const mentioned = [tech("Hotjar", ["script content"]), tech("Google Analytics", ["html"]), tech("Criteo", ["page text"])];
+    assert.deepEqual(checkDestinations(mentioned, db.destinations, makePage()), []);
+    assert.deepEqual(checkDestinations([tech("Hotjar", ["js hj"], "X")], db.destinations, makePage()), []);
+  });
+
+  it("knows each vendor's other documented intake hosts", () => {
+    const cases = [
+      ["cdn.lr-in-prod.com", "dest_session_replay:LogRocket"],
+      ["rum-http-intake.logs.datadoghq.com", "dest_monitoring:Datadog"],
+      ["browser-intake-datad0g.com", "dest_monitoring:Datadog"],
+      ["notify.bugsnag.com", "dest_monitoring:Bugsnag"],
+      ["sessions.bugsnag.com", "dest_monitoring:Bugsnag"],
+    ];
+    for (const [host, expected] of cases) {
+      assert.deepEqual(summary(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] }))), [expected], host);
+    }
+  });
+
+  it("does not take a vendor's website, docs, status page or dashboard for telemetry", () => {
+    const vendorPages = [
+      "docs.sentry.io",
+      "status.sentry.io",
+      "sentry.io",
+      "app.logrocket.com",
+      "docs.logrocket.com",
+      "www.contentsquare.com",
+      "docs.rollbar.com",
+      "app.rollbar.com",
+      "docs.trackjs.com",
+      "my.trackjs.com",
+      "app.raygun.com",
+      "docs.bugsnag.com",
+      "www.smartlook.com",
+      "app.datadoghq.com",
+      "logrocket.com",
+      "bugsnag.com",
+      "help.hotjar.com",
+      "www.hotjar.com",
+      "help.fullstory.com",
+      "www.quantummetric.com",
+      "www.luckyorange.com",
+    ];
+    for (const host of vendorPages) assert.deepEqual(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] })), [], host);
+  });
+
+  it("does not count a form target, which is sent to only on submit", () => {
+    const page = makePage({ forms: [{ action: "https://api.rollbar.com/api/1/item/", method: "post", hasPassword: false }] });
+    assert.deepEqual(checkDestinations([], db.destinations, page), []);
+  });
+
+  it("files a product with a marketing category under marketing, even if it is also analytics", () => {
+    const both = tech("Braze");
+    assert.ok(both.categories.includes(10) && both.categories.some((c) => [32, 97, 86, 74, 94].includes(c)), "Braze is both");
+    assert.deepEqual(summary(checkDestinations([both], db.destinations, makePage())), ["dest_marketing:Braze"]);
+  });
+
+  it("does not match a shared host, or a neighbouring one", () => {
+    const page = makePage({ contactedHosts: ["c.bing.com", "storage.googleapis.com", "d1234.cloudfront.net", "newrelic.com", "www.smartbear.com"] });
+    assert.deepEqual(checkDestinations([], db.destinations, page), []);
+  });
+
+  it("names a product by the kind of its trace, never its URL", () => {
+    const [f] = checkDestinations([tech("Sentry", ["script https://js.sentry-cdn.com/abcdef0123456789.min.js"])], db.destinations, makePage());
+    assert.deepEqual(f.evidence, ["Sentry: Sentry (script)"]);
+  });
+
+  it("is reported from real page data in its own area", async () => {
+    const report = await analyze(makePage({ contactedHosts: ["static.hotjar.com"] }), db, { today: new Date("2026-09-30T00:00:00Z"), sha1 });
+    const found = report.findings.filter((f) => f.area === "destinations");
+    assert.deepEqual(summary(found), ["dest_session_replay:Hotjar"]);
+    assert.equal(found[0].severity, "info");
+  });
+});
+
+describe("data-destinations.json", () => {
+  const ids = db.destinations.purposes.map((p) => p.id);
+  for (const s of db.destinations.services) {
+    it(s.name, () => {
+      assert.ok(ids.includes(s.purpose), "a known purpose");
+      assert.ok(s.sources.length > 0 && s.sources.every((u) => u.startsWith("https://")), "source links");
+      assert.ok((s.hosts ?? []).length > 0, "hosts the page sends data to");
+      for (const h of s.hosts ?? []) assert.match(h, /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/, `host ${h}`);
+      for (const n of s.technologies ?? []) assert.ok(db.technologies[n], `${n} is a webappanalyzer technology`);
+    });
+  }
+
+  it("has a message for every purpose in both languages", () => {
+    for (const id of ids) assert.ok(MESSAGE_IDS.ja.includes(`dest_${id}`) && MESSAGE_IDS.en.includes(`dest_${id}`), id);
+  });
+
+  it("claims every analytics or RUM product whose vendor site shares a service's domain", () => {
+    const domainOf = (/** @type {string} */ host) => host.split(".").slice(-2).join(".");
+    for (const s of db.destinations.services) {
+      const domains = new Set((s.hosts ?? []).map(domainOf));
+      for (const [name, fp] of Object.entries(db.technologies)) {
+        if (!fp.cats?.some((/** @type {number} */ c) => c === 10 || c === 78) || !fp.website) continue;
+        if (domains.has(domainOf(new URL(fp.website).hostname))) assert.ok((s.technologies ?? []).includes(name), `${s.name} should list ${name}`);
+      }
+    }
+  });
+
+  it("uses a whole domain only where the vendor documents all its subdomains", () => {
+    for (const host of ["js.sentry-cdn.com", "browser.sentry-cdn.com", "www.datadoghq-browser-agent.com"]) {
+      assert.equal(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] })).length, 1, host);
+    }
+    for (const host of ["sentry-cdn.com", "foo.sentry-cdn.com", "datadoghq-browser-agent.com", "foo.datadoghq-browser-agent.com"]) {
+      assert.deepEqual(checkDestinations([], db.destinations, makePage({ contactedHosts: [host] })), [], host);
+    }
+  });
+
+  it("files TrackJS under monitoring once, from its product or its host", () => {
+    const page = makePage({ contactedHosts: ["cdn.trackjs.com"] });
+    assert.deepEqual(summary(checkDestinations([tech("TrackJs", ["script https://cdn.trackjs.com/agent/v3/latest/t.js"])], db.destinations, page)), [
+      "dest_monitoring:TrackJS",
+    ]);
+  });
+
+  it("never lists a host shared with unrelated uses", () => {
+    const hosts = db.destinations.services.flatMap((s) => s.hosts ?? []);
+    for (const shared of ["bing.com", "c.bing.com", "googleapis.com", "cloudfront.net", "amazonaws.com", "smartbear.com", "newrelic.com"]) {
+      assert.ok(!hosts.includes(shared), shared);
+    }
+  });
+});
