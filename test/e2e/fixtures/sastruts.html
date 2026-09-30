@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>会員ログイン</title>
+    <script src="/js/kumu.js"></script>
+  </head>
+  <body>
+    <form name="loginActionForm" method="post" action="/member/login/login.do;jsessionid=A1B2C3D4">
+      <input type="hidden" name="org.apache.struts.taglib.html.TOKEN" value="5f2a" />
+      <input type="text" name="loginId" />
+      <input type="password" name="password" />
+    </form>
+    <a href="/reserve/list.do?method=search">予約一覧</a>
+  </body>
+</html>
