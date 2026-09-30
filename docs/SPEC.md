@@ -55,7 +55,7 @@ Only `collector.js`, `probe.js` and `popup/scan.js` touch browser APIs. Everythi
 
 ## 4. Collected page data (`PageData`, see `src/types.js`)
 
-URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, each download stopped at 2 MB and at 5 s including the body, `cache: force-cache`; only a completely read body is hashed); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); attributes of up to 200 form fields (name, id, autocomplete, placeholder, aria-label — never their values), classified as card fields by `src/checks/cardfield.js`, which excludes loyalty/membership/gift cards and one-time codes; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
+URL/protocol/origin; response headers (HEAD, falling back to GET, `cache: no-store`); meta tags and meta CSP; scripts (src, integrity, inline body or fetched body — max 40 external, each download stopped at 2 MB and at 5 s including the body, `cache: force-cache`; only a completely read body is hashed); stylesheet/iframe/image URLs; anchors pointing to known payment hosts; forms (resolved action, method, password field); attributes of up to 200 form fields (name, id, autocomplete, placeholder, aria-label — never their values), with their owner form and whether that form has a password field (by form ownership, so `form="…"` fields outside the `<form>` count), classified as card fields by `src/checks/cardfield.js`, which excludes loyalty/membership/gift cards and one-time codes, counts an expiry field only by `cc-exp*` autocomplete (a hint such as 有効期限 alone is not a card), and in a form with a password field (a login or sign-up) counts that form's fields only when it asks for both a card number and a security code or expiry; cookies readable by JS; truncated HTML (500 KB) and text (100 KB); answers to the fingerprint DOM queries; property-path values from the MAIN world.
 
 ## 5. Checks
 
@@ -67,9 +67,9 @@ Severity scale: `high`, `medium`, `low`, `info`, `good`. Overall level: `danger`
 | transport | `password_over_http` | high | HTTP page with a password field |
 | payment | `card_on_page` | high | card-like fields in the page and no known tokenization script |
 | payment | `card_tokenized_on_page` | medium | card-like fields + a provider tokenization script (e.g. GMO-PG token.js, PAY.JP v1, Stripe v1/v2) |
-| payment | `card_hosted_iframe` | good | iframe from a known provider host |
+| payment | `card_hosted_iframe` | good | an iframe matching a provider's `cardFrames` (card-entry frames known for that provider, e.g. Stripe `elements-inner-card`); other frames of a provider — buttons, wallets, Stripe's hidden `m-outer` — only count as the provider being used |
 | payment | `payment_redirect` | good | link/form to a known provider host |
-| payment | `payment_scripts_only` | info | provider script but no card entry on this page |
+| payment | `payment_scripts_only` | info | provider script or non-card provider frame, but no card entry on this page |
 | payment | `no_card_form` | info | none of the above |
 | backend | `backend_eol` | high at confidence ≥ 60, else medium | an inferred backend whose upstream support has ended |
 | backend | `backend_legacy` | medium at ≥ 60, else low | an inferred old-generation backend |

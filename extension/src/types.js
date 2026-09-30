@@ -30,6 +30,8 @@
  * @property {string} id
  * @property {string} autocomplete
  * @property {string} hints  placeholder, aria-label and data-encrypted-name, joined
+ * @property {number} form  index of its owner form among all forms of the document, or -1 (identifies the form; may exceed PageData.forms)
+ * @property {boolean} inPasswordForm  its owner form has a password field (a login or sign-up form)
  */
 
 /**
