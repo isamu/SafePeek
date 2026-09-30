@@ -478,7 +478,7 @@
         },
         {
           "type": "api",
-          "pattern": "/livewire/message/[^/]+$",
+          "pattern": "/livewire/message/",
           "weight": 60,
           "note": "Livewire 2 component message endpoint",
           "noteJa": "Livewire 2 のコンポーネント通信エンドポイント"

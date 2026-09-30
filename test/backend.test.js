@@ -116,6 +116,8 @@ describe("API calls the page made", () => {
     const [laravel] = inferBackends(makePage({ requests: ["https://shop.example/magic/alpha-beta-gamma/sanctum/csrf-cookie"] }), db.backends);
     const [signal] = laravel.signals;
     assert.equal(signal.match, "shop.example …/sanctum/csrf-cookie");
+    const [livewire] = inferBackends(makePage({ requests: ["https://shop.example/livewire/message/CorrectHorseBatteryStaple"] }), db.backends);
+    assert.equal(livewire.signals[0].match, "shop.example …/livewire/message/");
     const [php] = inferBackends(makePage({ requests: ["https://shop.example/share/private-reset-token.php"] }), db.backends);
     assert.equal(php.signals[0].match, "shop.example ….php");
   });
@@ -252,6 +254,14 @@ describe("backend-signatures.json (contributed rules)", () => {
       }
     });
   }
+
+  it("keeps API patterns to fixed text, since the matched part is shown and a wildcard could capture a path secret", () => {
+    for (const rule of file.backends) {
+      for (const s of rule.signals.filter((/** @type {any} */ x) => x.type === "api")) {
+        assert.doesNotMatch(s.pattern, /\[\^|\.[*+]|\\[wWsSdD]/, `${rule.name}: ${s.pattern}`);
+      }
+    }
+  });
 
   it("never lets a URL shape or hostname alone reach an end-of-life report", () => {
     for (const rule of file.backends.filter((/** @type {any} */ r) => r.status === "eol")) {
