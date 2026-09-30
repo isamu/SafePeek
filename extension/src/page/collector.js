@@ -478,6 +478,7 @@
       dom: readDom(domQueries),
       requests: readRequests(entries),
       contactedHosts: readContactedHosts(entries),
+      scriptHosts: readContactedHosts(entries.filter((e) => e.initiatorType === "script")),
     };
   }
 

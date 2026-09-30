@@ -63,6 +63,7 @@
  * @property {Record<string, unknown>} globals  JavaScript property path -> value seen in the page
  * @property {string[]} requests  origin + masked path of what the page fetched itself (fetch, XHR, beacons); matched only, never shown whole
  * @property {string[]} contactedHosts  every host the page loaded anything from (scripts, images, frames, fetches …)
+ * @property {string[]} [scriptHosts]  hosts scripts were loaded from, including ones no longer in the DOM
  */
 
 /**

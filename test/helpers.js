@@ -17,6 +17,7 @@ export function loadDb() {
     backends: JSON.parse(data("backend-signatures.json")).backends,
     wordpress: JSON.parse(data("wordpress.json")),
     checkout: JSON.parse(data("checkout-platforms.json")).platforms,
+    compromised: JSON.parse(data("compromised-script-hosts.json")).hosts,
     auth: JSON.parse(data("auth-services.json")).services,
     destinations: JSON.parse(data("data-destinations.json")),
     suffixes: indexPublicSuffixes(JSON.parse(data("public-suffixes.json"))),

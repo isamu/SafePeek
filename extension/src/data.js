@@ -14,20 +14,22 @@ import { indexPublicSuffixes } from "./engine/public-suffix.js";
  */
 export async function loadDatabases(readText) {
   const json = async (/** @type {string} */ name) => JSON.parse(await readText(name));
-  const [technologies, categories, retireText, eol, payment, backends, wordpress, checkout, auth, destinations, publicSuffixes, sources] = await Promise.all([
-    json("technologies.json"),
-    json("categories.json"),
-    readText("retire.json"),
-    json("eol.json"),
-    json("payment-providers.json"),
-    json("backend-signatures.json"),
-    json("wordpress.json"),
-    json("checkout-platforms.json"),
-    json("auth-services.json"),
-    json("data-destinations.json"),
-    json("public-suffixes.json"),
-    json("sources.json"),
-  ]);
+  const [technologies, categories, retireText, eol, payment, backends, wordpress, checkout, auth, destinations, compromised, publicSuffixes, sources] =
+    await Promise.all([
+      json("technologies.json"),
+      json("categories.json"),
+      readText("retire.json"),
+      json("eol.json"),
+      json("payment-providers.json"),
+      json("backend-signatures.json"),
+      json("wordpress.json"),
+      json("checkout-platforms.json"),
+      json("auth-services.json"),
+      json("data-destinations.json"),
+      json("compromised-script-hosts.json"),
+      json("public-suffixes.json"),
+      json("sources.json"),
+    ]);
   return {
     technologies,
     categories,
@@ -39,6 +41,7 @@ export async function loadDatabases(readText) {
     checkout: checkout.platforms,
     auth: auth.services,
     destinations: { purposes: destinations.purposes, services: destinations.services },
+    compromised: compromised.hosts,
     suffixes: indexPublicSuffixes(publicSuffixes),
     sources,
   };

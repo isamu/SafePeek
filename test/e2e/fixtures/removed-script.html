@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>A script inserted, run, then removed</title>
+  </head>
+  <body data-loaded="0">
+    <script>
+      const tag = document.createElement("script");
+      tag.src = `http://cdn.test:${location.port}/js/kumu.js`;
+      tag.onload = tag.onerror = () => {
+        tag.remove();
+        document.body.dataset.loaded = "1";
+      };
+      document.head.append(tag);
+    </script>
+  </body>
+</html>

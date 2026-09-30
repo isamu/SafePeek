@@ -156,6 +156,11 @@ const JA = {
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
   no_clickjacking: { title: () => "クリックジャッキング対策がありません", detail: () => "X-Frame-Options も CSP の frame-ancestors もありません。" },
+  script_compromised_host: {
+    title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
+    detail: () =>
+      "この配信元は、利用しているサイトに悪意のあるコードを配ったことが報告されています。すでに止まっている配信元もありますが、読み込まれればページ上の入力内容をすべて読めます。カード番号やパスワードは入力しないでください。サイトの運営者に知らせてください。",
+  },
   third_party_scripts: {
     title: (p) => `外部のスクリプトを読み込んでいます（${p.hosts}ドメイン, ${p.count}件）`,
     detail: () => "外部スクリプトはページ上の入力内容をすべて読み取れます。広告・解析タグなど多くは一般的なものです。",
@@ -308,6 +313,11 @@ const EN = {
   csp_unsafe_inline: { title: () => "CSP allows inline scripts", detail: () => "'unsafe-inline' largely disables CSP's protection against injected scripts." },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
   no_clickjacking: { title: () => "No clickjacking protection", detail: () => "Neither X-Frame-Options nor CSP frame-ancestors is set." },
+  script_compromised_host: {
+    title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,
+    detail: () =>
+      "This CDN has been reported serving malicious code to the sites that use it. Some such domains no longer serve anything, but a script that does load can read everything typed on the page. Do not enter card numbers or passwords, and let the site know.",
+  },
   third_party_scripts: {
     title: (p) => `Third-party scripts (${p.hosts} domains, ${p.count} files)`,
     detail: () => "Third-party scripts can read everything typed on the page. Most are ordinary analytics or tags.",
