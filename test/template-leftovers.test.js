@@ -34,6 +34,13 @@ describe("template leftovers on a shop page", () => {
     }
   });
 
+  it("reads a value on the line after its label, and a 0000-00-0000 phone", () => {
+    const [found] = checkTemplateLeftovers(shop("販売業者\n株式会社〇〇\n電話番号\n\n0000-00-0000"));
+    assert.deepEqual(found.evidence, ["株式会社〇〇", "000-0000-0000"]);
+    assert.deepEqual(checkTemplateLeftovers(shop("電話番号\n入力例：000-0000-0000")), [], "an example on the next line is still an example");
+    assert.deepEqual(checkTemplateLeftovers(shop("お知らせ\n000-0000-0000")), [], "a zero number under no identity label is not read");
+  });
+
   it("does not take an example of how to fill in a form for a leftover", () => {
     for (const text of [
       "電話番号（入力例：000-0000-0000）",
