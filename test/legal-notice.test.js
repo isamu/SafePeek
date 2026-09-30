@@ -155,6 +155,22 @@ describe("特定商取引法 notice", () => {
     assert.deepEqual(goods.evidence, ["送料"]);
   });
 
+  it("reads any of the words a notice uses for the seller", () => {
+    const withoutSeller = COMPLETE.split("\n").filter((line) => !/販売業者/.test(line));
+    for (const label of [
+      "販売主 株式会社サンプル",
+      "販売元 株式会社サンプル",
+      "販売会社 株式会社サンプル",
+      "運営者 山田花子",
+      "屋号 サンプル商店",
+      "氏名 山田花子",
+    ]) {
+      assert.deepEqual(checkLegalNotice(notice("特定商取引法に基づく表記", [...withoutSeller, label].join("\n"))), [], label);
+    }
+    const [found] = checkLegalNotice(notice("特定商取引法に基づく表記", withoutSeller.join("\n")));
+    assert.deepEqual(found.evidence, ["販売業者"]);
+  });
+
   it("reads common label variants", () => {
     const variants = [
       "事業者の名称 株式会社サンプル",

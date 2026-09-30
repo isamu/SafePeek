@@ -27,7 +27,12 @@ const IDENTITY_ITEMS = ["販売業者", "所在地", "電話番号"];
 // onRequest: the law lets the item be left out after the on-request statement (price and shipping too, when they are
 // not all shown: https://www.no-trouble.caa.go.jp/qa/advertising.html Q5). The return terms never may.
 const ITEMS = [
-  { label: "販売業者", pattern: /販売業者|販売事業者|販売者|事業者|会社名|商号|運営会社|販売元|店舗名/, onRequest: true },
+  // Any word for the one who sells (販売業者, 販売者, 販売主, 販売元 …) or its name; an individual seller writes 氏名.
+  {
+    label: "販売業者",
+    pattern: /販売(?:業者|事業者|者|主|元|会社|店)|事業者|会社名|商号|運営(?:会社|者|元|主体)|店舗名|屋号|法人名|名称|氏名/,
+    onRequest: true,
+  },
   // Some notices put the address under the seller's name without a label: a postal code or prefecture-and-city counts.
   { label: "所在地", pattern: new RegExp(["所在地|住所", POSTAL_CODE.source, PREFECTURE_AND_CITY.source].join("|")), onRequest: true },
   { label: "電話番号", pattern: /電話|TEL/i, onRequest: true },
