@@ -5,6 +5,7 @@ import { retireGlobalPaths } from "../src/engine/retire.js";
 import { loadDatabases as loadFromData } from "../src/data.js";
 import { probeGlobals } from "../src/page/probe.js";
 import { backendGlobalPaths } from "../src/engine/backend.js";
+import { checkoutGlobalPaths } from "../src/checks/cart-traces.js";
 
 /** @returns {ReturnType<typeof loadFromData>} */
 export function loadDatabases() {
@@ -20,7 +21,14 @@ export async function collectFromTab(tabId, db) {
   const target = { tabId };
   const domQueries = buildDomQueries(db.technologies);
   const paymentHosts = db.providers.flatMap((p) => p.hosts);
-  const paths = [...new Set([...buildGlobalPaths(db.technologies), ...retireGlobalPaths(db.retire), ...backendGlobalPaths(db.backends)])];
+  const paths = [
+    ...new Set([
+      ...buildGlobalPaths(db.technologies),
+      ...retireGlobalPaths(db.retire),
+      ...backendGlobalPaths(db.backends),
+      ...checkoutGlobalPaths(db.checkout),
+    ]),
+  ];
 
   await chrome.scripting.executeScript({ target, files: ["src/page/collector.js"] });
   const [collected] = await chrome.scripting.executeScript({

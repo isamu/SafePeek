@@ -10,6 +10,7 @@ export { loadDatabases } from "./data.js";
 export { detectTechnologies } from "./engine/technologies.js";
 export { scanLibraries, parseRetireRepository, retireGlobalPaths } from "./engine/retire.js";
 export { inferBackends, backendGlobalPaths } from "./engine/backend.js";
+export { checkoutGlobalPaths } from "./checks/cart-traces.js";
 export { extractPaths, extractParams } from "./engine/page-traces.js";
 export { extractWordPress } from "./engine/wordpress.js";
 export { buildDomQueries, buildGlobalPaths } from "./engine/queries.js";

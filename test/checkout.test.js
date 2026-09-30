@@ -17,21 +17,23 @@ const tech = (/** @type {string} */ name, evidence = ["js a", "script b"], impli
   evidence,
   impliedBy,
 });
+const blank = makePage();
 const summary = (/** @type {import("../extension/src/types.js").Finding[]} */ f) => f.map((x) => `${x.id}:${x.params.platforms}`);
 
 describe("who runs the checkout", () => {
   it("tells a hosted cart service from shop software the site runs itself", () => {
-    assert.deepEqual(summary(checkCheckout([tech("Shopify")], db.checkout)), ["checkout_saas:Shopify"]);
+    assert.deepEqual(summary(checkCheckout([tech("Shopify")], db.checkout, blank)), ["checkout_saas:Shopify"]);
     assert.deepEqual(
       summary(
         checkCheckout(
-          [tech("Magento", ["script https://shop.example/static/frontend/Magento/luma/en_US/requirejs/require.js", "dom body.cms-home"])],
+          [tech("Magento", ["script https://shop.example/static/frontend/Magento/luma/en_US/requirejs/require.js", "js Mage"])],
           db.checkout,
+          blank,
         ),
       ),
       ["checkout_self_hosted:Magento"],
     );
-    assert.deepEqual(summary(checkCheckout([tech("MakeShop"), tech("WooCommerce")], db.checkout)), [
+    assert.deepEqual(summary(checkCheckout([tech("MakeShop"), tech("WooCommerce")], db.checkout, blank)), [
       "checkout_saas:MakeShop",
       "checkout_self_hosted:WooCommerce",
     ]);
@@ -39,26 +41,47 @@ describe("who runs the checkout", () => {
 
   it("says nothing for products outside the list, or only implied", () => {
     for (const name of ["Amazon Webstore", "Shopware", "1C-Bitrix", "Cart Functionality", "Squarespace Commerce"])
-      assert.deepEqual(checkCheckout([tech(name)], db.checkout), [], name);
-    assert.deepEqual(checkCheckout([tech("WooCommerce", ["implied by WordPress"], "WordPress")], db.checkout), []);
+      assert.deepEqual(checkCheckout([tech(name)], db.checkout, blank), [], name);
+    const upgraded = tech("WooCommerce", ["script content", "implied by WordPress"], "WordPress");
+    assert.deepEqual(checkCheckout([upgraded], db.checkout, blank), [], "a hit the engine upgraded to direct through an implication");
   });
 
-  it("needs two kinds of trace by default, since one generic trace also appears on pages that are not the shop", () => {
+  it("needs two families of trace by default, since one generic trace also appears on pages that are not the shop", () => {
     assert.deepEqual(
-      checkCheckout([tech("Base", ["dom link[href*='.thebase.in/']", "dom a[href*='.thebase.in/']"])], db.checkout),
+      checkCheckout([tech("Base", ["dom link[href*='.thebase.in/']", "dom a[href*='.thebase.in/']"])], db.checkout, blank),
       [],
       "two labels of one kind",
     );
-    assert.deepEqual(checkCheckout([tech("BigCommerce", ["dom img[src*='.bigcommerce.com']"])], db.checkout), [], "an embedded BigCommerce image");
-    assert.deepEqual(checkCheckout([tech("Shopify", ["js Shopify"])], db.checkout), []);
-    assert.deepEqual(summary(checkCheckout([tech("Base", ["script https://thebase.in/js/shop.js", "js BASE_API.shop_id"])], db.checkout)), [
+    assert.deepEqual(checkCheckout([tech("BigCommerce", ["dom img[src*='.bigcommerce.com']"])], db.checkout, blank), [], "an embedded BigCommerce image");
+    assert.deepEqual(checkCheckout([tech("Shopify", ["js Shopify"])], db.checkout, blank), []);
+    assert.deepEqual(summary(checkCheckout([tech("Base", ["script https://thebase.in/js/shop.js", "js BASE_API.shop_id"])], db.checkout, blank)), [
       "checkout_saas:Base",
     ]);
   });
 
+  it("counts what an embed leaves (script, DOM, HTML, host) as one family", () => {
+    const widget = makePage({ contactedHosts: ["cdn11.bigcommerce.com"] });
+    assert.deepEqual(checkCheckout([tech("BigCommerce", ["script https://cdn11.bigcommerce.com/s-abc/widget.js", "dom a.bc-buy"])], db.checkout, widget), []);
+    const onlyHost = makePage({ contactedHosts: ["palua.itembox.cloud"] });
+    assert.deepEqual(checkCheckout([], db.checkout, onlyHost), [], "a host alone");
+  });
+
+  it("adds SafePeek's own traces to the fingerprint's", () => {
+    const futureshop = makePage({ contactedHosts: ["palua.itembox.cloud"], globals: { _FS: {} } });
+    assert.deepEqual(summary(checkCheckout([], db.checkout, futureshop)), ["checkout_saas:Future Shop"]);
+    const shopserve = makePage({ cookies: { "ESTORE-KAGO-12345": "x" } });
+    const [f] = checkCheckout([], db.checkout, shopserve);
+    assert.deepEqual(f.evidence, ["Estore Shopserve: cookie ESTORE-KAGO-*"], "the label names the pattern, not the shop id");
+    const eccube = makePage({ globals: { eccube: {} }, scripts: [script("https://shop.example/html/template/default/assets/js/eccube.js")] });
+    assert.deepEqual(
+      summary(checkCheckout([tech("EC-CUBE", ["script https://shop.example/html/template/default/assets/js/eccube.js"])], db.checkout, eccube)),
+      ["checkout_self_hosted:EC-CUBE"],
+    );
+  });
+
   it("takes one trace only for products whose every trace comes from the shop itself", () => {
-    assert.deepEqual(summary(checkCheckout([tech("stores.jp", ["js STORES_JP"])], db.checkout)), ["checkout_saas:stores.jp"]);
-    assert.deepEqual(summary(checkCheckout([tech("Zen Cart", ["meta generator"])], db.checkout)), ["checkout_self_hosted:Zen Cart"]);
+    assert.deepEqual(summary(checkCheckout([tech("stores.jp", ["js STORES_JP"])], db.checkout, blank)), ["checkout_saas:stores.jp"]);
+    assert.deepEqual(summary(checkCheckout([tech("Zen Cart", ["meta generator"])], db.checkout, blank)), ["checkout_self_hosted:Zen Cart"]);
   });
 
   it("does not take one trace an embedded asset or copied markup could leave", () => {
@@ -67,7 +90,7 @@ describe("who runs the checkout", () => {
       tech("BigCommerce", ["script https://blog.example/js/bigcommerce-widget.js"]),
       tech("osCommerce", ["dom td.infoBoxHeading"]),
     ];
-    for (const t of embeddable) assert.deepEqual(checkCheckout([t], db.checkout), [], t.evidence[0]);
+    for (const t of embeddable) assert.deepEqual(checkCheckout([t], db.checkout, blank), [], t.evidence[0]);
   });
 
   it("does not take traces the fingerprint marks as generic, however many", async () => {
@@ -92,7 +115,7 @@ describe("who runs the checkout", () => {
   });
 
   it("carries the evidence it rests on", () => {
-    const [f] = checkCheckout([tech("Shopify", ["js Shopify", "meta shopify-digital-wallet"])], db.checkout);
+    const [f] = checkCheckout([tech("Shopify", ["js Shopify", "meta shopify-digital-wallet"])], db.checkout, blank);
     assert.deepEqual(f.evidence, ["Shopify: js Shopify", "Shopify: meta shopify-digital-wallet"]);
   });
 
@@ -114,21 +137,47 @@ const RUNTIME_FIELDS = new Map([
   ["header", "headers"],
   ["meta", "meta"],
 ]);
-
-const FIELD_KINDS = new Map([
+const FIELD_FAMILIES = new Map([
   ["headers", "header"],
   ["cookies", "cookie"],
   ["js", "js"],
   ["meta", "meta"],
-  ["scriptSrc", "script"],
-  ["scripts", "script"],
-  ["html", "html"],
-  ["text", "page"],
-  ["url", "url"],
-  ["dom", "dom"],
+  ["scriptSrc", "asset"],
+  ["scripts", "asset"],
+  ["html", "asset"],
+  ["text", "asset"],
+  ["url", "asset"],
+  ["dom", "asset"],
 ]);
-/** @param {Record<string, unknown>} fingerprint */
-const possibleKinds = (fingerprint) => new Set([...FIELD_KINDS].filter(([field]) => field in fingerprint).map(([, kind]) => kind)).size;
+const TRACE_FAMILIES = new Map([
+  ["hosts", "asset"],
+  ["globals", "js"],
+  ["cookies", "cookie"],
+]);
+
+/** @param {any} p */
+const possibleFamilies = (p) => {
+  const fingerprint = db.technologies[p.name] ?? {};
+  const fromFingerprint = [...FIELD_FAMILIES].filter(([field]) => field in fingerprint).map(([, family]) => family);
+  const fromTraces = [...TRACE_FAMILIES].filter(([field]) => (p.traces?.[field] ?? []).length > 0).map(([, family]) => family);
+  return new Set([...fromFingerprint, ...fromTraces]).size;
+};
+
+/**
+ * A single trace is a runtime one: in the fingerprint at full confidence, or one of the row's own globals / cookies.
+ * @param {any} p
+ * @param {string} label
+ */
+const isRuntimeSingleTrace = (p, label) => {
+  const [kind, key] = label.split(" ");
+  if (kind === "js" && p.traces?.globals?.includes(key)) return true;
+  if (kind === "cookie" && p.traces?.cookies?.includes(key)) return true;
+  const field = RUNTIME_FIELDS.get(kind);
+  if (!field) return false;
+  const rules = db.technologies[p.name]?.[field] ?? {};
+  const ruleKey = Object.keys(rules).find((k) => k.toLowerCase() === key.toLowerCase());
+  return ruleKey !== undefined && ![rules[ruleKey]].flat().some((v) => String(v).includes("\\;confidence:"));
+};
 
 describe("checkout-platforms.json", () => {
   const { platforms } = JSON.parse(readFileSync(new URL("../extension/data/checkout-platforms.json", import.meta.url), "utf8"));
@@ -138,18 +187,12 @@ describe("checkout-platforms.json", () => {
       assert.ok(db.technologies[p.name].cats.includes(6), "is an ecommerce product");
       assert.ok(p.kind === "hosted" || p.kind === "self", "kind");
       assert.match(p.source, /^https:\/\//, "source link");
+      for (const key of Object.keys(p.traces ?? {})) assert.ok(TRACE_FAMILIES.has(key), `trace field ${key}`);
+      for (const host of p.traces?.hosts ?? []) assert.match(host, /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/, `host ${host} is a bare domain`);
       assert.equal("singleTraces" in p, "singleTraceReason" in p, "single traces come with their reason");
-      assert.ok("singleTraces" in p || possibleKinds(db.technologies[p.name]) >= 2, "can ever reach a verdict with the current fingerprint");
+      assert.ok("singleTraces" in p || possibleFamilies(p) >= 2, "can ever reach a verdict");
       if ("singleTraceReason" in p) assert.ok(p.singleTraceReason.length > 20, "says why one trace is enough");
-      for (const label of p.singleTraces ?? []) {
-        const [kind, key] = label.split(" ");
-        const field = RUNTIME_FIELDS.get(kind);
-        assert.ok(field, `${label}: a runtime trace, not one an embedded asset could leave`);
-        const rules = db.technologies[p.name][field] ?? {};
-        const ruleKey = Object.keys(rules).find((k) => k.toLowerCase() === key.toLowerCase());
-        assert.ok(ruleKey, `${label}: in the fingerprint`);
-        assert.ok(![rules[ruleKey]].flat().some((v) => String(v).includes("\\;confidence:")), `${label}: not marked lower confidence`);
-      }
+      for (const label of p.singleTraces ?? []) assert.ok(isRuntimeSingleTrace(p, label), `${label}: a full-confidence runtime trace`);
     });
   }
 });
