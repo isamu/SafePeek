@@ -16,13 +16,15 @@ import { hostMatches } from "./page-urls.js";
  * @returns {import("../types.js").Finding[]}
  */
 export function checkCompromisedHosts(page, compromised) {
-  const scriptHosts = page.scripts.flatMap((s) => {
+  const fromDom = page.scripts.flatMap((s) => {
     try {
       return s.src ? [new URL(s.src).hostname] : [];
     } catch {
       return [];
     }
   });
+  // A script a tag manager inserted and then removed is gone from the DOM but still in the loading record.
+  const scriptHosts = [...fromDom, ...(page.scriptHosts ?? [])];
   const hit = compromised.filter((c) => scriptHosts.some((h) => hostMatches(c.domain, h)));
   if (hit.length === 0) return [];
   const evidence = hit.map((c) => `${c.domain} (${c.incident}): ${c.sources[0]}`);

@@ -73,7 +73,7 @@ before(async () => {
   base = `http://${FIXTURE_HOST}:${typeof address === "object" && address ? address.port : 0}`;
   browser = await chromium.launch({
     executablePath: process.env.CHROMIUM_PATH || undefined,
-    args: ["--no-sandbox", `--host-resolver-rules=MAP ${FIXTURE_HOST} 127.0.0.1`],
+    args: ["--no-sandbox", `--host-resolver-rules=MAP ${FIXTURE_HOST} 127.0.0.1, MAP cdn.test 127.0.0.1`],
   });
 });
 
@@ -262,6 +262,12 @@ describe("collector in Chromium", () => {
         { action: "/clobbered-form.html", method: "get", hasPassword: false },
       ],
     );
+  });
+
+  it("records the host of a script that ran and was then removed from the DOM", async () => {
+    const page = await collect("removed-script.html");
+    assert.ok(!page.scripts.some((s) => (s.src ?? "").includes("cdn.test")), "gone from the DOM");
+    assert.ok(page.scriptHosts?.includes("cdn.test"), JSON.stringify(page.scriptHosts));
   });
 
   it("does not count its own earlier re-requests as the page's on a second scan", async () => {

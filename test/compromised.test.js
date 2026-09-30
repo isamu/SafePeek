@@ -20,6 +20,11 @@ describe("scripts from a CDN that has been taken over", () => {
     }
   });
 
+  it("are reported from the loading record, for a script no longer in the DOM", () => {
+    const found = checkCompromisedHosts(makePage({ scriptHosts: ["cdn.bootcss.com"] }), db.compromised);
+    assert.deepEqual(ids(found), ["script_compromised_host:bootcss.com"]);
+  });
+
   it("are not reported for look-alike hosts, other resources, or the maintained mirrors", () => {
     const pages = [
       makePage({ scripts: [script("https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js")] }),
