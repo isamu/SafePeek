@@ -140,7 +140,7 @@ Every public body's fake-shop checklist starts with this notice (`docs/fake-shop
 - **Payment timing is not checked.** The table lets it be left out only under conditions (prepayment, whether every charge is shown) the notice page does not state reliably.
 - **Only the kinds of missing item are shown**, never a value: an address or phone number on the page is the seller's, and is left to the page.
 - **One unread term alone is not reported.** Real notices word the price, timing and charges many ways (利用料金, サービス開始時期, お支払い金額 …); reviews against real notices kept finding one more. A single unread term on an otherwise complete notice is more often such wording than a gap, so the other terms are reported when two or more are missing. The seller's name, address and phone, and the return terms (which the law never lets a notice omit), are reported alone.
-- **A shop page with no link to the notice is a separate check**, because the collected HTML and text can be cut off before the footer.
+- **A shop page with no mention of the notice is its own finding.** A shop normally links the notice from every page's footer, so a Japanese shop page that nowhere names it is worth a warning. It is not judged when the collected HTML or text reached its limit, since the footer is at the end; nor on cart, checkout and order pages, which legitimate shops often strip of their footer; nor on a page that talks about shops without offering to buy (a cart platform's own site).
 
 ## Simplified Chinese on a Japanese shop
 

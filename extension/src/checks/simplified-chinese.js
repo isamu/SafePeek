@@ -2,6 +2,7 @@
 // often machine-translated from Chinese (docs/fake-shop-research.md, item 4).
 
 import { finding } from "./finding.js";
+import { countKana, isJapaneseShop } from "./japanese-shop.js";
 
 // Simplified forms that Japanese normally writes differently (这 for 這, 购 for 購 …). 个 and 价 are left out: Japanese
 // knows them as old or variant forms (of 個・箇 and 価).
@@ -23,9 +24,6 @@ const CHINESE_COMMA = "，";
 // the days still are.
 const CHINESE_STUDY = /中国語|簡体字|ピンイン|拼音|HSK|中検/;
 const MIN_SIMPLIFIED = 3;
-const KANA = /[ぁ-ゖァ-ヺ]/g;
-const MIN_KANA = 200;
-const SHOP_WORDS = /カート|買い物かご|ショッピング|購入|税込|送料/;
 // The lang attribute itself, not one ending in -lang such as data-lang.
 const CHINESE_LANG = /(?<![\w-])lang\s{0,4}=\s{0,4}["']?zh/i;
 // 天 counts days in Chinese; Japanese writes 日 (「365天受付」 on a Japanese page). Japanese words starting with 天 (天体,
@@ -38,9 +36,8 @@ const CHINESE_DAYS = new RegExp(`(?<!\\d)\\d{1,4}天(?=${AFTER_DAYS.join("|")}|[
  * @returns {import("../types.js").Finding[]}
  */
 export function checkSimplifiedChinese(page) {
-  const kana = (page.text.match(KANA) ?? []).length;
-  if (kana < MIN_KANA || !SHOP_WORDS.test(page.text)) return [];
-  const signs = chineseSigns(page, kana);
+  if (!isJapaneseShop(page.text)) return [];
+  const signs = chineseSigns(page, countKana(page.text));
   if (signs.length === 0) return [];
   return [finding("shop_simplified_chinese", signs.length > 1 ? "medium" : "low", "page", { count: signs.length }, signs)];
 }

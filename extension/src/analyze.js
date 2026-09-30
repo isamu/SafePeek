@@ -10,6 +10,7 @@ import { checkCredentialTarget } from "./checks/credential-target.js";
 import { checkCompromisedHosts } from "./checks/compromised-hosts.js";
 import { checkExposedSecrets } from "./checks/secrets.js";
 import { checkLegalNotice } from "./checks/legal-notice.js";
+import { checkLegalNoticeLink } from "./checks/legal-notice-link.js";
 import { checkSimplifiedChinese } from "./checks/simplified-chinese.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
@@ -98,6 +99,7 @@ export async function analyze(page, db, env) {
     ...checkCompromisedHosts(page, db.compromised),
     ...checkExposedSecrets(page, db.secrets),
     ...checkLegalNotice(page),
+    ...checkLegalNoticeLink(page),
     ...checkSimplifiedChinese(page),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);
   const counts = { high: 0, medium: 0, low: 0, info: 0, good: 0 };
