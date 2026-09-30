@@ -44,3 +44,7 @@ Hosts are listed with *other* and *ads* first.
 - Such scripts are counted like any other.
 - On a card page, a host-only script on a payment provider's host that has a tokenizer is given the benefit of the doubt. Without its path, a tokenizer cannot be told from the same provider's SDK, and wrongly flagging the tokenizer would contradict the payment finding.
 - A label is decided per host. A product's evidence keeps only a few of its script URLs, and the other scripts on the same host are the same product.
+- **A host-only script's role is a guess from its host.**
+  - Bot checks and sign-in services whose documented trace is a URL are matched by that URL's host alone. For example, a script from `www.google.com` known only by host is taken as reCAPTCHA.
+  - A sign-in service known only by a path (Keycloak's `/protocol/openid-connect/`) cannot be recognised without the path.
+  - This errs towards leaving well-known infrastructure out on login pages. Card pages count bot checks and sign-in scripts anyway.

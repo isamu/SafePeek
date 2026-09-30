@@ -80,6 +80,20 @@ describe("login pages", () => {
     );
   });
 
+  it("leave out a sign-in service known by its path", () => {
+    assert.deepEqual(
+      check({ inputs: passwordInput, scripts: [script("https://id.other-company.example/realms/x/protocol/openid-connect/login-status-iframe.js")] }),
+      [],
+    );
+  });
+
+  it("count every host, not just the listed ones", () => {
+    const scripts = Array.from({ length: 25 }, (_, i) => script(`https://cdn${i}.unknown-widget.example/w.js`));
+    const [f] = check({ inputs: cardInputs, scripts });
+    assert.equal(f.params.count, 25);
+    assert.equal(f.evidence.length, 20);
+  });
+
   it("are information when only analytics and tag managers run, low with ads or unknown hosts", () => {
     assert.deepEqual(summary(check({ inputs: passwordInput, scripts: [script(GTM), script(RECAPTCHA)] })), ["login_page_third_party:info:1"]);
     assert.deepEqual(summary(check({ inputs: passwordInput, scripts: [script(GTM), script(ADS)] })), ["login_page_third_party:low:2"]);

@@ -11,6 +11,7 @@ import { isRelatedHost } from "../engine/related-systems.js";
 const ANALYTICS_CATEGORIES = [10, 42];
 const ADVERTISING_CATEGORIES = [36, 71, 77];
 const AUTHENTICATION_CATEGORY = 69;
+const MAX_EVIDENCE = 20;
 
 /**
  * @typedef {object} SensitiveContext
@@ -54,8 +55,8 @@ function cardPageFinding(page, scripts, context) {
   if (!cardFields(page.inputs).some((f) => cardFieldKind(f) === "number")) return [];
   const counted = scripts.filter((s) => !isProviderTokenizer(s, context.providers));
   if (counted.length === 0) return [];
-  const evidence = labelled(counted);
-  return [finding("card_page_third_party", "medium", "page", { count: evidence.length }, evidence)];
+  const { count, evidence } = labelled(counted);
+  return [finding("card_page_third_party", "medium", "page", { count }, evidence)];
 }
 
 /**
@@ -71,18 +72,20 @@ function loginPageFinding(page, scripts) {
   const counted = scripts.filter((s) => s.role !== "bot check" && s.role !== "sign-in");
   if (counted.length === 0) return [];
   const severity = counted.every((s) => s.role === "analytics") ? "info" : "low";
-  const evidence = labelled(counted);
-  return [finding("login_page_third_party", severity, "page", { count: evidence.length }, evidence)];
+  const { count, evidence } = labelled(counted);
+  return [finding("login_page_third_party", severity, "page", { count }, evidence)];
 }
 
 /**
  * @param {OtherScript[]} scripts
- * @returns {string[]}  one "role: host" line per host, ads and unknown hosts first
+ * @returns {{ count: number, evidence: string[] }}  how many hosts, and one "role: host" line per host (ads and
+ *   unknown hosts first), the lines capped for display
  */
 function labelled(scripts) {
   const order = ["other", "ads", "analytics", "sign-in", "bot check"];
   const lines = scripts.map((s) => ({ rank: order.indexOf(s.role), line: `${s.role}: ${s.host}` }));
-  return [...new Set(lines.sort((a, b) => a.rank - b.rank).map((l) => l.line))].slice(0, 20);
+  const unique = [...new Set(lines.sort((a, b) => a.rank - b.rank).map((l) => l.line))];
+  return { count: new Set(scripts.map((s) => s.host)).size, evidence: unique.slice(0, MAX_EVIDENCE) };
 }
 
 /**
@@ -136,20 +139,28 @@ function roleOf(host, url, categories, context) {
   const cats = categories.get(host) ?? [];
   const matchesUrl = (/** @type {string} */ pattern) => (url ? urlMatches(pattern, url) : hostMatches(pattern.slice(0, pattern.indexOf("/")), host));
   if (context.botChecks.some((b) => b.urls.some(matchesUrl))) return "bot check";
-  if (cats.includes(AUTHENTICATION_CATEGORY) || isSignInService(host, matchesUrl, context.auth)) return "sign-in";
+  if (cats.includes(AUTHENTICATION_CATEGORY) || isSignInService(host, url, matchesUrl, context.auth)) return "sign-in";
   if (cats.some((c) => ADVERTISING_CATEGORIES.includes(c))) return "ads";
   if (cats.some((c) => ANALYTICS_CATEGORIES.includes(c))) return "analytics";
   return "other";
 }
 
 /**
+ * A sign-in service by any of the traces auth-services.json lists: host, URL prefix, or a path fragment (the last
+ * needs the script's path, so a host-only script cannot match it).
  * @param {string} host
+ * @param {URL | null} url
  * @param {(pattern: string) => boolean} matchesUrl
  * @param {import("./auth.js").AuthService[]} auth
  * @returns {boolean}
  */
-function isSignInService(host, matchesUrl, auth) {
-  return auth.some((s) => (s.hosts ?? []).some((p) => hostMatches(p, host)) || (s.urls ?? []).some(matchesUrl));
+function isSignInService(host, url, matchesUrl, auth) {
+  return auth.some(
+    (s) =>
+      (s.hosts ?? []).some((p) => hostMatches(p, host)) ||
+      (s.urls ?? []).some(matchesUrl) ||
+      (url !== null && (s.paths ?? []).some((p) => url.pathname.includes(p))),
+  );
 }
 
 /**
