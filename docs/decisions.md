@@ -109,6 +109,18 @@ Hosts are listed with *other*, *session replay* and *ads* first.
 - **Only script CDNs named in a report of malicious code are listed.** The attackers' own redirect and payload domains are left out; no site loads them on purpose.
 - **The wording is "tries to load".** Some of these domains no longer serve anything, and SafePeek cannot see whether a cross-origin script ran.
 
+## Secrets in the page
+
+A server-side key in the page's code means the site does not keep its own secrets, and a payment key can reach customers' data. So a visitor is told that one is there, and the site is suggested to be told. Nothing else is shown: not the kind, the value, the script or the place, since each of those mainly shortens an attacker's search.
+
+- **Only formats with a documented, distinctive prefix** (Stripe `sk_live_` / `rk_live_` / `sk_org_`, GitHub `ghp_` … `github_pat_`, Slack `xoxb-` / `xoxp-`, a PEM private key with its body). A generic "long random string" rule would flag every hash, nonce and build id.
+- **Keys meant to be public are left out:** Stripe `pk_live_` and Google `AIza…` keys are designed to be in pages. Test keys (`sk_test_`) are left out because they cannot move money.
+- **An AWS secret access key is left out**: it has no prefix, and an access key id alone is not a secret.
+- **Only the random part is judged**: for Slack, the final section (the one Slack calls the secret), not the id sections before it; for a stateless GitHub App token (`ghs_APPID_JWT`), the JWT signature.
+- **A vendor's own documentation example can be reported.** It has the real shape and enough distinct characters (Slack's `xoxp-111-222-333-…`), and a list of known examples would never be complete. A page that prints a real-shaped key is rare, and the message says "looks like".
+- **A PEM key does not need its END line**: the collected HTML and scripts can be cut off before it, and a private key body on its own is already the leak.
+- **Placeholders**: a random part with fewer than 12 distinct characters (`sk_live_xxxx…`, `ghp_0123456789…`) is not counted. A PEM header on its own is not counted either, because crypto libraries carry it as a parser constant.
+
 ## Where a password is sent
 
 - **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
