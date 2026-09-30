@@ -57,3 +57,21 @@ function seenService(service, direct, page) {
   ];
   return { name: service.name, evidence };
 }
+
+/**
+ * Whether a host, or a URL on it, belongs to a listed sign-in service: by host, by URL prefix, or by path fragment.
+ * With only the host known, a URL prefix is matched by its domain part and a path fragment cannot match.
+ * @param {string} host
+ * @param {URL | null} url
+ * @param {AuthService[]} services
+ * @returns {boolean}
+ */
+export function isSignInService(host, url, services) {
+  const byUrl = (/** @type {string} */ pattern) => (url ? urlMatches(pattern, url) : hostMatches(pattern.slice(0, pattern.indexOf("/")), host));
+  return services.some(
+    (s) =>
+      (s.hosts ?? []).some((p) => hostMatches(p, host)) ||
+      (s.urls ?? []).some(byUrl) ||
+      (url !== null && (s.paths ?? []).some((p) => url.pathname.includes(p))),
+  );
+}

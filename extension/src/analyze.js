@@ -6,6 +6,7 @@ import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
 import { checkSensitivePage } from "./checks/sensitive-page.js";
+import { checkCredentialTarget } from "./checks/credential-target.js";
 import { checkCompromisedHosts } from "./checks/compromised-hosts.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
@@ -80,6 +81,7 @@ export async function analyze(page, db, env) {
     ...checkHeaders(page),
     ...checkCookies(page),
     ...checkPage(page),
+    ...checkCredentialTarget(page, db.auth, db.suffixes),
     ...checkSensitivePage(page, { providers: db.providers, suffixes: db.suffixes, technologies, botChecks: db.botChecks, auth: db.auth }),
     ...checkCompromisedHosts(page, db.compromised),
   ].sort((a, b) => ORDER[a.severity] - ORDER[b.severity]);

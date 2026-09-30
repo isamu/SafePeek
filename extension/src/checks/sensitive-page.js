@@ -7,6 +7,7 @@ import { cardFieldKind, cardFields } from "./cardfield.js";
 import { tokenizerFor } from "./payment.js";
 import { hostMatches, urlMatches } from "./page-urls.js";
 import { isRelatedHost } from "../engine/related-systems.js";
+import { isSignInService } from "./auth.js";
 
 const ANALYTICS_CATEGORIES = [10, 42];
 const ADVERTISING_CATEGORIES = [36, 71, 77];
@@ -139,28 +140,10 @@ function roleOf(host, url, categories, context) {
   const cats = categories.get(host) ?? [];
   const matchesUrl = (/** @type {string} */ pattern) => (url ? urlMatches(pattern, url) : hostMatches(pattern.slice(0, pattern.indexOf("/")), host));
   if (context.botChecks.some((b) => b.urls.some(matchesUrl))) return "bot check";
-  if (cats.includes(AUTHENTICATION_CATEGORY) || isSignInService(host, url, matchesUrl, context.auth)) return "sign-in";
+  if (cats.includes(AUTHENTICATION_CATEGORY) || isSignInService(host, url, context.auth)) return "sign-in";
   if (cats.some((c) => ADVERTISING_CATEGORIES.includes(c))) return "ads";
   if (cats.some((c) => ANALYTICS_CATEGORIES.includes(c))) return "analytics";
   return "other";
-}
-
-/**
- * A sign-in service by any of the traces auth-services.json lists: host, URL prefix, or a path fragment (the last
- * needs the script's path, so a host-only script cannot match it).
- * @param {string} host
- * @param {URL | null} url
- * @param {(pattern: string) => boolean} matchesUrl
- * @param {import("./auth.js").AuthService[]} auth
- * @returns {boolean}
- */
-function isSignInService(host, url, matchesUrl, auth) {
-  return auth.some(
-    (s) =>
-      (s.hosts ?? []).some((p) => hostMatches(p, host)) ||
-      (s.urls ?? []).some(matchesUrl) ||
-      (url !== null && (s.paths ?? []).some((p) => url.pathname.includes(p))),
-  );
 }
 
 /**

@@ -101,3 +101,9 @@ Hosts are listed with *other* and *ads* first.
 
 - **Only script CDNs named in a report of malicious code are listed.** The attackers' own redirect and payload domains are left out; no site loads them on purpose.
 - **The wording is "tries to load".** Some of these domains no longer serve anything, and SafePeek cannot see whether a cross-origin script ran.
+
+## Where a password is sent
+
+- **A login form posting to another organisation's domain is medium.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.
+- **Left out:** the page's own host, hosts that look like the same organisation's (the related-systems rule), and listed sign-in services (by host, URL prefix or path). A site that hands login to Auth0, Okta or Keycloak is not warned about.
+- **The target domain is shown.** It is public, and it is exactly what the visitor needs to judge (S9).
