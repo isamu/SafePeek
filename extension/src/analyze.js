@@ -8,6 +8,7 @@ import { checkCheckout } from "./checks/checkout.js";
 import { checkSensitivePage } from "./checks/sensitive-page.js";
 import { checkCredentialTarget } from "./checks/credential-target.js";
 import { checkCompromisedHosts } from "./checks/compromised-hosts.js";
+import { checkSkimmerKits } from "./checks/skimmer-kits.js";
 import { checkExposedSecrets } from "./checks/secrets.js";
 import { checkLegalNotice } from "./checks/legal-notice.js";
 import { checkLegalNoticeLink } from "./checks/legal-notice-link.js";
@@ -43,6 +44,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./checks/wordpress.js").WordPressFacts} wordpress
  * @property {import("./checks/checkout.js").CheckoutPlatform[]} checkout
  * @property {import("./checks/compromised-hosts.js").CompromisedHost[]} compromised
+ * @property {import("./checks/skimmer-kits.js").Kit[]} kits
  * @property {import("./checks/secrets.js").SecretFormat[]} secrets
  * @property {import("./engine/public-suffix.js").SuffixIndex} suffixes
  * @property {import("./checks/auth.js").AuthService[]} auth
@@ -100,6 +102,7 @@ export async function analyze(page, db, env) {
       fingerprints: db.technologies,
     }),
     ...checkCompromisedHosts(page, db.compromised),
+    ...checkSkimmerKits(page, db.kits),
     ...checkExposedSecrets(page, db.secrets),
     ...checkLegalNotice(page),
     ...checkLegalNoticeLink(page),

@@ -191,6 +191,15 @@ JC3 and 国民生活センター list signs that real shops also show: an unfami
 - **Only the TLDs JC3 names** (.xyz, .top, .bid). `.shop` is left out: many legitimate Japanese shops use it.
 - **Bank transfer only is read from every payment section**, the text after each 支払方法 or 決済方法. A card or other method named in any of them clears it, so a FAQ line saying transfer only does not outweigh the actual list. A notice that claims cards but offers only transfer at checkout cannot be seen from one page.
 
+## Known skimmer kits
+
+Fake-shop networks reuse one checkout kit across hundreds of storefronts, which makes them fingerprintable (`docs/fake-shop-research.md`, item 10).
+
+- **Two kinds of trace, not one.** A vendor's skimmer detector lists all the kit's names in its own code, and a name such as UserInputMonitor is used elsewhere; the kit itself leaves two kinds at once (its file with its globals, or its code with its server).
+- **Traces only**: a loaded script's file name, a contacted host, or an identifier inside executed script code. The HTML and page text are not read, because an article about the kit quotes the same names.
+- **Only indicators a published report names**, each entry with its source and date. Kits rotate, so entries may age; an old one costs little, since it can only match that kit's own files.
+- **High**: a match means the checkout itself may be the skimmer.
+
 ## Where a password is sent
 
 - **A login form whose target is another organisation's domain is medium, whatever the method.** It is a common phishing shape, or a form pointed at the wrong place, and the visitor is about to type the password.

@@ -226,6 +226,11 @@ const JA = {
     detail: () =>
       "決済やサービス連携に使う、本来サーバーの中だけに置くべき鍵の形をした値が、訪問者全員に送られるページやスクリプトの中にあります。悪用を避けるため、種類や場所は表示していません。サイトの運営者に知らせてください。",
   },
+  shop_known_skimmer_kit: {
+    title: (p) => `カード情報を盗む仕組みとして報告されたキットが動いています（${p.kits}）`,
+    detail: () =>
+      "このページは、セキュリティ研究者が偽ショップのカード情報窃取キットとして報告したスクリプト・通信先・コードを使っています。決済画面に本物そっくりの入力欄を出してカード番号を盗む手口です。カード番号やパスワードは入力しないでください。",
+  },
   script_compromised_host: {
     title: (p) => `乗っ取られたことのある配信元のスクリプトを読み込もうとしています（${p.domains}）`,
     detail: () =>
@@ -453,6 +458,11 @@ const EN = {
     title: () => "The page's code contains what looks like a server-side secret key",
     detail: () =>
       "A value shaped like a key meant to stay on the server (for payments or connected services) is in the page or scripts sent to every visitor. Its kind and place are not shown, to avoid helping misuse. Let the site know.",
+  },
+  shop_known_skimmer_kit: {
+    title: (p) => `Runs a kit reported for stealing card details (${p.kits})`,
+    detail: () =>
+      "This page uses a script, host or code that security researchers have reported as part of a fake-shop card-skimming kit, which shows a look-alike card form at checkout to steal the number. Do not enter card numbers or passwords.",
   },
   script_compromised_host: {
     title: (p) => `Tries to load scripts from a CDN that has been taken over (${p.domains})`,
