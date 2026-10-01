@@ -16,6 +16,7 @@ const JSON_FILES = {
   categories: "categories.json",
   checkout: "checkout-platforms.json",
   compromised: "compromised-script-hosts.json",
+  consent: "consent-banners.json",
   kits: "fake-shop-kits.json",
   destinations: "data-destinations.json",
   eol: "eol.json",
@@ -49,6 +50,7 @@ export async function loadDatabases(readText) {
     secrets: files.secrets.formats,
     suffixes: indexPublicSuffixes(files.publicSuffixes),
     botChecks: files.botChecks.services,
+    consent: { banners: files.consent.banners, identifiers: files.consent.identifiers },
     sources: files.sources,
   };
 }

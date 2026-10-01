@@ -19,6 +19,7 @@ import { checkWeakShopSigns } from "./checks/weak-shop-signs.js";
 import { checkSimplifiedChinese } from "./checks/simplified-chinese.js";
 import { checkAuth } from "./checks/auth.js";
 import { checkDestinations } from "./checks/destinations.js";
+import { checkIdentifiersBeforeConsent } from "./checks/consent.js";
 import { checkBackends } from "./checks/backend.js";
 import { inferBackends } from "./engine/backend.js";
 import { inferRelatedSystems } from "./engine/related-systems.js";
@@ -51,6 +52,7 @@ const ORDER = { high: 0, medium: 1, low: 2, info: 3, good: 4 };
  * @property {import("./checks/auth.js").AuthService[]} auth
  * @property {{ name: string, sources: string[], urls: string[] }[]} botChecks
  * @property {import("./checks/destinations.js").Destinations} destinations
+ * @property {import("./checks/consent.js").ConsentData} consent
  */
 
 /**
@@ -84,6 +86,7 @@ export async function analyze(page, db, env) {
     ...checkCheckout(technologies, db.checkout, page),
     ...checkAuth(technologies, db.auth, page),
     ...checkDestinations(technologies, db.destinations, page),
+    ...checkIdentifiersBeforeConsent(page, db.consent),
     ...checkBackends(backends, env.today),
     ...checkRelatedSystems(inferRelatedSystems(page, db.backends, db.suffixes)),
     ...checkWordPress(wordpress, db.wordpress, env.today),
