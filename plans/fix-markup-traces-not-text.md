@@ -5,4 +5,5 @@ An article about SafePeek was reported as running Seasar2 (end of life). It show
 - `src/engine/markup.js` finds start tags, end tags, comments and doctypes as the HTML Standard's tokenizer does: the attribute states (a quote opens a value only after `=`), comments including `<!-->` and `--!>`, bogus comments and CDATA, raw text and RCDATA elements, noscript, plaintext, and script data with its escaped forms.
 - `html` backend rules read start tags only; the comment rule reads comments only (`comment` type); error output a page shows as text reads the whole HTML (`text` type).
 - Verified against parse5 (dev dependency, tests only) over generated HTML: the same tokens at the same offsets, with a printed seed. Verified against Chromium's DOM on the e2e fixtures and on large real pages.
-- Limit: foreign content (SVG, MathML) is read as HTML content, which can only miss a trace.
+- Inside SVG and MathML, a CDATA section is text. Other foreign-content differences are read as HTML content, which can only miss a trace.
+- The Seasar comment rule only corroborates another trace: a page about Teeda carries such comments too.

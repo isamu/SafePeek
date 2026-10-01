@@ -3,6 +3,9 @@ import assert from "node:assert/strict";
 import { Tokenizer, TokenizerMode } from "parse5";
 import { markupTokens, readMarkup } from "../extension/src/engine/markup.js";
 
+// Generous, for a loaded machine: the reader takes milliseconds here, and a search per comment took seconds.
+const LINEAR_BUDGET_MS = 3000;
+
 describe("markup without text", () => {
   it("keeps start tags with their attributes, and comments, and drops text", () => {
     const markup = readMarkup('<p class="x">Teeda の <code>xmlns:te="http://www.seasar.org/"</code></p><!-- c -->');
@@ -31,6 +34,20 @@ describe("markup without text", () => {
     const markup = readMarkup('<!-- <meta name="_csrf_header"> --><![CDATA[<meta name="_csrf_header">]]><p>');
     assert.equal(markup.tags, "<p>");
     assert.equal(markup.comments.split("\n").length, 2);
+  });
+
+  it("reads a CDATA section inside SVG or MathML as text, and one outside as a bogus comment", () => {
+    assert.deepEqual(readMarkup('<svg><![CDATA[x> <meta name="_csrf_header"> <!-- c -->]]></svg><p>'), { tags: "<svg>\n<p>", comments: "" });
+    assert.equal(readMarkup("<math><mi><![CDATA[<b>]]></mi></math>").tags, "<math>\n<mi>");
+    assert.equal(readMarkup("<svg/><![CDATA[x]]><p>").comments, "<![CDATA[x]]>", "a self-closed svg contains nothing");
+    assert.equal(readMarkup("<svg></svg><![CDATA[x]]>").comments, "<![CDATA[x]]>");
+  });
+
+  it("reads a page full of comments in linear time", () => {
+    const page = "<!-- c --><p>x</p>\n".repeat(25_000);
+    const started = performance.now();
+    assert.equal(readMarkup(page).comments.split("\n").length, 25_000);
+    assert.ok(performance.now() - started < LINEAR_BUDGET_MS, `${Math.round(performance.now() - started)} ms`);
   });
 
   it("treats < that does not start a tag as text", () => {
@@ -71,6 +88,9 @@ function parse5Tokens(html) {
   /** @param {string} kind @param {{ location?: { startOffset: number, endOffset: number } | null }} token */
   const push = (kind, token) => tokens.push(`${kind} ${token.location?.startOffset}-${Math.min(token.location?.endOffset ?? -1, html.length)}`);
   const ignore = () => {};
+  // The tree builder knows when it is inside SVG or MathML; this follows the reader's model of it (svg and math
+  // elements only), so the comparison checks the tokenizer and not that model.
+  let foreignDepth = 0;
   /** @type {Tokenizer} */
   const tokenizer = new Tokenizer(
     { sourceCodeLocationInfo: true },
@@ -78,8 +98,14 @@ function parse5Tokens(html) {
       onStartTag: (token) => {
         push("startTag", token);
         tokenizer.state = TEXT_MODES.get(token.tagName) ?? tokenizer.state;
+        foreignDepth += FOREIGN_ROOTS.includes(token.tagName) && !token.selfClosing ? 1 : 0;
+        tokenizer.inForeignNode = foreignDepth > 0;
       },
-      onEndTag: (token) => push("endTag", token),
+      onEndTag: (token) => {
+        push("endTag", token);
+        foreignDepth = Math.max(0, foreignDepth - (FOREIGN_ROOTS.includes(token.tagName) ? 1 : 0));
+        tokenizer.inForeignNode = foreignDepth > 0;
+      },
       onComment: (token) => push("comment", token),
       onDoctype: (token) => push("doctype", token),
       onEof: ignore,
@@ -91,6 +117,8 @@ function parse5Tokens(html) {
   tokenizer.write(html, true);
   return tokens;
 }
+
+const FOREIGN_ROOTS = ["svg", "math"];
 
 // Pieces that reach every tokenizer state the reader models, and the text elements' edges.
 const PIECES = [
@@ -144,6 +172,11 @@ const PIECES = [
   "<!-->",
   "<!--->",
   "</ x>",
+  "<svg>",
+  "</svg>",
+  "<svg/>",
+  "<math>",
+  "</math>",
 ];
 const CASES = 4000;
 const MAX_PIECES = 30;

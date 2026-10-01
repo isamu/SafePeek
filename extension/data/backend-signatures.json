@@ -70,9 +70,9 @@
         {
           "type": "comment",
           "pattern": "<!--[^<>]{0,200}\\b(?:sastruts|teeda)\\b",
-          "weight": 50,
-          "note": "SAStruts or Teeda named in an HTML comment",
-          "noteJa": "HTMLコメントに SAStruts / Teeda の記述"
+          "weight": 20,
+          "note": "SAStruts or Teeda named in an HTML comment (a page about them can carry one too; counts only with another trace)",
+          "noteJa": "HTMLコメントに SAStruts / Teeda の記述（それだけでは数えず、他の痕跡と合わせて数える）"
         },
         {
           "type": "script",

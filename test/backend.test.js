@@ -44,7 +44,12 @@ describe("inferBackends (real rules)", () => {
   it("recognises a SAStruts site as Struts 1 and Seasar2, with weighted evidence", () => {
     const found = byName(inferBackends(makePage({ url: "https://share.example/", html: SASTRUTS_PAGE }), db.backends));
     assert.equal(found["Apache Struts 1"]?.confidence, 100);
-    assert.ok((found["Seasar2 (SAStruts / Teeda)"]?.confidence ?? 0) >= 50);
+    const seasar = found["Seasar2 (SAStruts / Teeda)"];
+    assert.deepEqual(
+      seasar?.signals.map((s) => s.type),
+      ["comment", "param"],
+      "the comment counts together with another trace",
+    );
     assert.ok(found["Java Servlet / JSP"]);
     const struts = found["Apache Struts 1"];
     assert.equal(struts.signals[0].weight, 80, "strongest trace first");
@@ -175,15 +180,19 @@ describe("mentions are not traces", () => {
       '<div "x>xmlns:te="http://www.seasar.org/teeda/extension"',
       '<plaintext><html xmlns:te="http://www.seasar.org/teeda/extension"><a href="/x;jsessionid=ABC">',
       '<p title="<!-- Powered by SAStruts -->">x</p>',
+      '<svg><![CDATA[<!-- Powered by SAStruts --> <meta name="_csrf_header">]]></svg>',
     ];
     for (const html of shapes) assert.deepEqual(Object.keys(byName(inferBackends(makePage({ html }), db.backends))), [], html);
   });
 
-  it("still reads what a running app emits: a Teeda namespace, an HTML comment", () => {
+  it("still reads what a running app emits: a Teeda namespace; a comment only with another trace", () => {
     const namespace = byName(inferBackends(makePage({ html: '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>' }), db.backends));
     assert.equal(namespace["Seasar2 (SAStruts / Teeda)"]?.confidence, 80);
-    const comment = byName(inferBackends(makePage({ html: "<!-- Powered by SAStruts --><p>x</p>" }), db.backends));
-    assert.equal(comment["Seasar2 (SAStruts / Teeda)"]?.confidence, 50);
+    const article = "<!-- Teeda tutorial: part 2 --><h2>Teeda の画面</h2><!-- /Teeda tutorial -->";
+    assert.equal(byName(inferBackends(makePage({ html: article }), db.backends))["Seasar2 (SAStruts / Teeda)"], undefined, "a page about Teeda");
+    const frame = "<pre>\tat org.seasar.framework.container.S2Container.create(S2Container.java:101)</pre>";
+    const both = byName(inferBackends(makePage({ html: `<!-- Powered by SAStruts -->${frame}` }), db.backends));
+    assert.equal(both["Seasar2 (SAStruts / Teeda)"]?.confidence, 35);
   });
 
   it("counts a stack trace only together with another trace, since a page about the framework can show one", () => {

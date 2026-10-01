@@ -18,6 +18,10 @@ const WHITESPACE = /^[\t\n\f\r ]$/;
 const ALPHA = /^[A-Za-z]$/;
 const TAG_NAME = /^<\/?([A-Za-z][^\t\n\f\r />]*)/;
 const DOCTYPE = "DOCTYPE";
+const COMMENT_END = "--!?>";
+const CDATA_START = "<![CDATA[";
+const CDATA_END = "]]>";
+const FOREIGN_ROOTS = new Set(["svg", "math"]);
 
 /**
  * @param {string} html
@@ -40,13 +44,45 @@ export function readMarkup(html) {
 export function markupTokens(html) {
   /** @type {MarkupToken[]} */
   const tokens = [];
+  let foreignDepth = 0;
   let at = html.indexOf("<");
   while (at >= 0) {
-    const token = tokenAt(html, at);
+    const token = foreignDepth > 0 && html.startsWith(CDATA_START, at) ? null : tokenAt(html, at);
     if (token) tokens.push(token);
-    at = html.indexOf("<", token ? contentEnd(html, token) : at + 1);
+    foreignDepth = token ? nextForeignDepth(html, token, foreignDepth) : foreignDepth;
+    at = html.indexOf("<", nextMarkup(html, at, token));
   }
   return tokens;
+}
+
+/**
+ * @param {string} html
+ * @param {number} at
+ * @param {MarkupToken | null} token  null for text, or for a CDATA section, which is text inside SVG and MathML
+ * @returns {number}  where to look for the next "<"
+ */
+function nextMarkup(html, at, token) {
+  if (token) return contentEnd(html, token);
+  if (!html.startsWith(CDATA_START, at)) return at + 1;
+  const close = html.indexOf(CDATA_END, at + CDATA_START.length);
+  return close < 0 ? html.length : close + CDATA_END.length;
+}
+
+/**
+ * How deep inside SVG or MathML the next token is, where a CDATA section is text rather than a bogus comment. The
+ * HTML islands inside them (foreignObject, annotation-xml) are not followed: CDATA there is read as text too, which
+ * can only hide markup, never invent it.
+ * @param {string} html
+ * @param {MarkupToken} token
+ * @param {number} depth
+ * @returns {number}
+ */
+function nextForeignDepth(html, token, depth) {
+  const text = html.slice(token.start, token.end);
+  const name = TAG_NAME.exec(text)?.[1]?.toLowerCase() ?? "";
+  if (!FOREIGN_ROOTS.has(name) || !token.emitted) return depth;
+  if (token.kind === "endTag") return Math.max(0, depth - 1);
+  return token.kind === "startTag" && !text.endsWith("/>") ? depth + 1 : depth;
 }
 
 /**
@@ -104,10 +140,13 @@ function bogusComment(html, open) {
  */
 function comment(html, open) {
   const body = open + "<!--".length;
-  const abrupt = [">", "->"].filter((s) => html.startsWith(s, body)).map((s) => body + s.length);
-  const closing = ["-->", "--!>"].map((s) => [html.indexOf(s, body), s.length]).filter(([at]) => (at ?? -1) >= 0);
-  const end = Math.min(...abrupt, ...closing.map(([at = 0, length = 0]) => at + length), html.length);
-  return { kind: "comment", start: open, end, emitted: true };
+  const abrupt = [">", "->"].find((s) => html.startsWith(s, body));
+  if (abrupt) return { kind: "comment", start: open, end: body + abrupt.length, emitted: true };
+  // One search for either ending: searching for each separately rescans the rest of the page for every comment.
+  const close = new RegExp(COMMENT_END, "g");
+  close.lastIndex = body;
+  const match = close.exec(html);
+  return { kind: "comment", start: open, end: match ? match.index + match[0].length : html.length, emitted: true };
 }
 
 /**
