@@ -41,6 +41,10 @@ describe("identifier cookies before the consent banner is answered", () => {
     assert.equal(check('<div class="onetrust-banner-sdk"></div>', { _ga: "x" }), null);
     assert.equal(check('<div id="onetrust-banner-sdk-wrapper"></div>', { _ga: "x" }), null);
     assert.equal(check('<div data-id="onetrust-banner-sdk"></div>', { _ga: "x" }), null);
+    assert.equal(check('<div data-template=" id=onetrust-banner-sdk "></div>', { _ga: "x" }), null, "inside another attribute's value");
+    assert.equal(check("<meta content='x id=\"CybotCookiebotDialog\"'>", { _ga: "x" }), null);
+    assert.equal(check('<div id="ONETRUST-BANNER-SDK"></div>', { _ga: "x" }), null, "ids are case-sensitive");
+    assert.ok(check('<div ID="onetrust-banner-sdk"></div>', { _ga: "x" }), "attribute names are not");
     assert.equal(check('<script>var t = "<div id=onetrust-banner-sdk>";</script>', { _ga: "x" }), null);
     assert.ok(check("<div\nid='onetrust-banner-sdk'>", { _ga: "x" }), "another quote and whitespace");
     assert.ok(check("<p>x</p><div id=onetrust-banner-sdk", { _ga: "x" }), "a tag cut off where the collected HTML ends");

@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { Tokenizer, TokenizerMode } from "parse5";
-import { markupTokens, readMarkup } from "../extension/src/engine/markup.js";
+import { markupTokens, readMarkup, tagAttributes } from "../extension/src/engine/markup.js";
 
 // Generous, for a loaded machine: the reader takes milliseconds here, and a search per comment took seconds.
 const LINEAR_BUDGET_MS = 3000;
@@ -96,7 +96,7 @@ function parse5Tokens(html) {
     { sourceCodeLocationInfo: true },
     {
       onStartTag: (token) => {
-        push("startTag", token);
+        push(`startTag ${JSON.stringify(token.attrs.map((a) => [a.name, a.value]))}`, token);
         tokenizer.state = TEXT_MODES.get(token.tagName) ?? tokenizer.state;
         foreignDepth += FOREIGN_ROOTS.includes(token.tagName) && !token.selfClosing ? 1 : 0;
         tokenizer.inForeignNode = foreignDepth > 0;
@@ -177,6 +177,10 @@ const PIECES = [
   "<svg/>",
   "<math>",
   "</math>",
+  "id=",
+  "ID",
+  "data-x=",
+  "a=b",
 ];
 const CASES = 4000;
 const MAX_PIECES = 30;
@@ -195,15 +199,25 @@ function random(seed) {
   };
 }
 
+/**
+ * @param {string} html
+ * @param {import("../extension/src/engine/markup.js").MarkupToken} token
+ * @returns {string}  the kind, with the attributes of a start tag
+ */
+function describeToken(html, token) {
+  if (token.kind !== "startTag") return token.kind;
+  return "startTag " + JSON.stringify(tagAttributes(html.slice(token.start, token.end)).map((a) => [a.name, a.value]));
+}
+
 describe("markup tokens agree with parse5", () => {
-  it("emits the same tokens at the same places over generated HTML", () => {
+  it("emits the same tokens at the same places, with the same attributes, over generated HTML", () => {
     const seed = Number(process.env.MARKUP_SEED ?? Date.now() % 2 ** 31);
     const next = random(seed);
     for (let n = 0; n < CASES; n++) {
       const html = Array.from({ length: 1 + Math.floor(next() * MAX_PIECES) }, () => PIECES[Math.floor(next() * PIECES.length)]).join("");
       const ours = markupTokens(html)
         .filter((t) => t.emitted)
-        .map((t) => `${t.kind} ${t.start}-${t.end}`);
+        .map((t) => `${describeToken(html, t)} ${t.start}-${t.end}`);
       assert.deepEqual(ours, parse5Tokens(html), `MARKUP_SEED=${seed} case ${n}: ${JSON.stringify(html)}`);
     }
   });

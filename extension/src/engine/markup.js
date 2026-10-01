@@ -156,75 +156,129 @@ function comment(html, open) {
  * @returns {MarkupToken}
  */
 function tag(html, open, kind) {
-  /** @type {TagState} */
-  let state = "tagName";
   // The first letter of the name is already read.
-  for (let i = open + (kind === "endTag" ? "</a".length : "<a".length); i < html.length; i++) {
-    state = nextState(state, html[i] ?? "");
-    if (state === "end") return { kind, start: open, end: i + 1, emitted: true };
-  }
-  return { kind, start: open, end: html.length, emitted: false };
+  const { end } = scanTag(html, open + (kind === "endTag" ? "</a".length : "<a".length));
+  return end < 0 ? { kind, start: open, end: html.length, emitted: false } : { kind, start: open, end, emitted: true };
 }
 
-/** @typedef {"tagName" | "beforeAttrName" | "attrName" | "beforeValue" | "doubleQuoted" | "singleQuoted" | "unquoted" | "selfClosing" | "end"} TagState */
+/**
+ * The attributes of one start tag, as the tokenizer reads them: names lower-cased, a repeated name dropped.
+ * Character references in values are left as written.
+ * @param {string} startTag  the text of a start tag, from "<"
+ * @returns {{ name: string, value: string }[]}
+ */
+export function tagAttributes(startTag) {
+  const seen = new Set();
+  return scanTag(startTag, "<a".length)
+    .attributes.map((a) => ({ name: lowerAscii(startTag.slice(a.nameStart, a.nameEnd)), value: startTag.slice(a.valueStart, a.valueEnd) }))
+    .filter((a) => !seen.has(a.name) && seen.add(a.name));
+}
 
-/** @type {Record<Exclude<TagState, "end">, (char: string) => TagState>} */
+/**
+ * @typedef {object} AttributeSpan
+ * @property {number} nameStart
+ * @property {number} nameEnd
+ * @property {number} valueStart
+ * @property {number} valueEnd
+ */
+
+/**
+ * @param {string} html
+ * @param {number} from  just after the first letter of the tag's name
+ * @returns {{ end: number, attributes: AttributeSpan[] }}  end is just after the tag, or -1 when the input ends first
+ */
+function scanTag(html, from) {
+  /** @type {AttributeSpan[]} */
+  const attributes = [];
+  /** @type {TagState} */
+  let state = "tagName";
+  for (let i = from; i < html.length; i++) {
+    const step = TAG_STATES[state](html[i] ?? "");
+    record(attributes, step.add, i);
+    if (step.state === "end") return { end: i + 1, attributes };
+    state = step.state;
+  }
+  return { end: -1, attributes };
+}
+
+/**
+ * @param {AttributeSpan[]} attributes
+ * @param {Step["add"]} add
+ * @param {number} at
+ */
+function record(attributes, add, at) {
+  if (add === "newName") attributes.push({ nameStart: at, nameEnd: at + 1, valueStart: 0, valueEnd: 0 });
+  const current = attributes.at(-1);
+  if (!current || add === undefined || add === "newName") return;
+  if (add === "name") current.nameEnd = at + 1;
+  if (add === "value" && current.valueEnd === 0) current.valueStart = at;
+  if (add === "value") current.valueEnd = at + 1;
+}
+
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+function lowerAscii(text) {
+  return text.replace(/[A-Z]/g, (c) => c.toLowerCase());
+}
+
+/** @typedef {"tagName" | "beforeName" | "name" | "afterName" | "beforeValue" | "doubleQuoted" | "singleQuoted" | "unquoted" | "selfClosing"} TagState */
+/** @typedef {{ state: TagState | "end", add?: "newName" | "name" | "value" }} Step */
+
+/** @type {Record<TagState, (char: string) => Step>} */
 const TAG_STATES = {
-  tagName: (c) => endOrSlash(c) ?? (WHITESPACE.test(c) ? "beforeAttrName" : "tagName"),
+  tagName: (c) => boundary(c) ?? { state: WHITESPACE.test(c) ? "beforeName" : "tagName" },
   // A quote or "=" here starts an attribute name; only "=" after a name leads to a value.
-  beforeAttrName: (c) => endOrSlash(c) ?? (WHITESPACE.test(c) ? "beforeAttrName" : "attrName"),
-  // The spec's "after attribute name" state reads every character as this one does.
-  attrName: (c) => endOrSlash(c) ?? afterName(c),
+  beforeName: (c) => boundary(c) ?? (WHITESPACE.test(c) ? { state: "beforeName" } : { state: "name", add: "newName" }),
+  name: (c) => boundary(c) ?? afterNameChar(c, "name"),
+  afterName: (c) => boundary(c) ?? afterNameChar(c, "newName"),
   beforeValue: (c) => valueStart(c),
-  doubleQuoted: (c) => (c === '"' ? "beforeAttrName" : "doubleQuoted"),
-  singleQuoted: (c) => (c === "'" ? "beforeAttrName" : "singleQuoted"),
-  unquoted: (c) => (c === ">" ? "end" : unquotedNext(c)),
-  selfClosing: (c) => (c === ">" ? "end" : TAG_STATES.beforeAttrName(c)),
+  // The spec's "after attribute value (quoted)" state reads every character as "before attribute name" does.
+  doubleQuoted: (c) => (c === '"' ? { state: "beforeName" } : { state: "doubleQuoted", add: "value" }),
+  singleQuoted: (c) => (c === "'" ? { state: "beforeName" } : { state: "singleQuoted", add: "value" }),
+  unquoted: (c) => unquotedChar(c),
+  selfClosing: (c) => (c === ">" ? { state: "end" } : TAG_STATES.beforeName(c)),
 };
 
 /**
- * @param {TagState} state
  * @param {string} char
- * @returns {TagState}
+ * @returns {Step | undefined}
  */
-function nextState(state, char) {
-  return state === "end" ? "end" : TAG_STATES[state](char);
+function boundary(char) {
+  if (char === ">") return { state: "end" };
+  return char === "/" ? { state: "selfClosing" } : undefined;
+}
+
+/**
+ * In an attribute name, or after one: "=" leads to a value, whitespace ends the name, anything else is a name.
+ * @param {string} char
+ * @param {"name" | "newName"} other  whether another character continues this name or starts the next
+ * @returns {Step}
+ */
+function afterNameChar(char, other) {
+  if (char === "=") return { state: "beforeValue" };
+  return WHITESPACE.test(char) ? { state: "afterName" } : { state: "name", add: other };
 }
 
 /**
  * @param {string} char
- * @returns {TagState | undefined}
- */
-function endOrSlash(char) {
-  if (char === ">") return "end";
-  return char === "/" ? "selfClosing" : undefined;
-}
-
-/**
- * @param {string} char
- * @returns {TagState}
- */
-function afterName(char) {
-  return char === "=" ? "beforeValue" : "attrName";
-}
-
-/**
- * @param {string} char
- * @returns {TagState}
+ * @returns {Step}
  */
 function valueStart(char) {
-  if (char === '"') return "doubleQuoted";
-  if (char === "'") return "singleQuoted";
-  if (char === ">") return "end";
-  return WHITESPACE.test(char) ? "beforeValue" : "unquoted";
+  if (char === '"') return { state: "doubleQuoted" };
+  if (char === "'") return { state: "singleQuoted" };
+  if (char === ">") return { state: "end" };
+  return WHITESPACE.test(char) ? { state: "beforeValue" } : { state: "unquoted", add: "value" };
 }
 
 /**
  * @param {string} char
- * @returns {TagState}
+ * @returns {Step}
  */
-function unquotedNext(char) {
-  return WHITESPACE.test(char) ? "beforeAttrName" : "unquoted";
+function unquotedChar(char) {
+  if (char === ">") return { state: "end" };
+  return WHITESPACE.test(char) ? { state: "beforeName" } : { state: "unquoted", add: "value" };
 }
 
 /**
