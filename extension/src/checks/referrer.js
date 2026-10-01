@@ -43,8 +43,9 @@ export function checkReferrerLeak(page, suffixes) {
 }
 
 /**
- * The policy the browser applies: the last valid <meta name="referrer"> overrides the header (its value lower-cased,
- * not trimmed, as the HTML Standard reads it); in the header, the last policy the browser knows wins.
+ * The page's own referrer policy: the last valid <meta name="referrer"> overrides the header (its value lower-cased,
+ * not trimmed, as the HTML Standard reads it); in the header, the last policy the browser knows wins. Browsers apply
+ * the most recently inserted meta, which is the last one unless a script adds or changes them out of order.
  * @param {import("../types.js").PageData} page
  * @returns {{ policy: string, from: string }}
  */

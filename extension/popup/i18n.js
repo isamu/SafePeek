@@ -178,9 +178,9 @@ const JA = {
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
   referrer_leaks_url: {
-    title: () => "入力ページの URL が、そのまま外部のサイトに渡る設定です",
+    title: () => "入力ページの URL を、そのまま外部のサイトに渡す設定です",
     detail: (p) =>
-      `カード番号やパスワードを入力するページですが、リファラーの設定（${p.policy}）により、ページの URL がパスやクエリまで含めて、読み込み先の外部サイトに送られます。URL に注文番号やセッションの情報が入っていれば、それも渡ります。ブラウザの標準の設定なら、送られるのはドメインまでです。`,
+      `カード番号やパスワードを入力するページですが、ページのリファラー設定（${p.policy}）は、ページの URL をパスやクエリまで含めて、読み込み先の外部サイトに送る設定です。URL に注文番号やセッションの情報が入っていれば、それも渡ります。ブラウザの標準の設定なら、送られるのはドメインまでです。読み込みごとの個別の設定で上書きされている場合もあります。`,
   },
   no_clickjacking: {
     title: () => "クリックジャッキング対策がありません",
@@ -421,9 +421,9 @@ const EN = {
   },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
   referrer_leaks_url: {
-    title: () => "This input page hands its full URL to other sites",
+    title: () => "This input page is set to hand its full URL to other sites",
     detail: (p) =>
-      `This page asks for a card number or a password, but its referrer policy (${p.policy}) sends the page's URL, path and query included, to the other sites it loads from. Anything in the URL, such as an order number or session data, goes with it. Under the browsers' default policy, only the domain is sent.`,
+      `This page asks for a card number or a password, but its referrer policy (${p.policy}) is set to send the page's URL, path and query included, to the other sites it loads from. Anything in the URL, such as an order number or session data, goes with it. Under the browsers' default policy, only the domain is sent. A single element can override the page's policy for its own request.`,
   },
   no_clickjacking: {
     title: () => "No clickjacking protection",
