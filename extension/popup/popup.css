@@ -134,6 +134,42 @@ main {
   margin-top: 6px;
 }
 
+.tracking {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.tracking-title {
+  font-weight: 700;
+}
+
+.tracking-none {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.tracking-list {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tracking-line {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.tracking-purpose {
+  flex: 0 0 auto;
+  font-weight: 600;
+}
+
+.tracking-services {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
 .note {
   margin: 8px 0 0;
   color: var(--muted);
