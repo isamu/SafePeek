@@ -90,6 +90,7 @@ export const PURPOSE_LABELS = {
   monitoring: "purpose_monitoring",
   advertising: "purpose_advertising",
   marketing: "purpose_marketing",
+  fingerprinting: "purpose_fingerprinting",
   analytics: "purpose_analytics",
 };
 
