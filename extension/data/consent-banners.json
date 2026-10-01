@@ -1,0 +1,31 @@
+{
+  "_comment": "Consent banners SafePeek can see on screen, the cookie each sets once the visitor answers, and the cookies tracking services set to identify a visitor. Hand-maintained; every entry needs a source.",
+  "banners": [
+    {
+      "name": "OneTrust",
+      "elementIds": ["onetrust-banner-sdk"],
+      "answeredCookies": ["OptanonAlertBoxClosed"],
+      "sources": [
+        "https://developer.onetrust.com/onetrust/docs/common-custom-css",
+        "https://developer.onetrust.com/onetrust/docs/javascript-api",
+        "https://my.onetrust.com/s/article/UUID-2dc719a8-4be5-8d16-1dc8-c7b4147b88e0"
+      ]
+    },
+    {
+      "name": "Cookiebot",
+      "elementIds": ["CybotCookiebotDialog"],
+      "answeredCookies": ["CookieConsent"],
+      "sources": [
+        "https://www.cookiebot.com/en/developer/",
+        "https://support.cookiebot.com/hc/en-us/articles/360003922714-Overriding-styles-for-the-cookie-banner-with-an-external-stylesheet",
+        "https://github.com/CybotAS/CookiebotWP/blob/master/tests/unit/Test_Manipulate_Script.php"
+      ]
+    }
+  ],
+  "identifiers": [
+    { "service": "Google Analytics", "cookies": ["_ga"], "sources": ["https://support.google.com/analytics/answer/11397207"] },
+    { "service": "Google Ads", "cookies": ["_gcl_au"], "sources": ["https://business.safety.google/adscookies/"] },
+    { "service": "Meta Pixel", "cookies": ["_fbp"], "sources": ["https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/fbp-and-fbc/"] },
+    { "service": "Microsoft Clarity", "cookies": ["_clck"], "sources": ["https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-list"] }
+  ]
+}

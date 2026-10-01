@@ -99,6 +99,11 @@ const JA = {
     title: (p) => `広告サービスを使っています（${p.services}）`,
     detail: () => "広告やリターゲティングのサービスには閲覧情報が送られ、ほかのサイトをまたいで閲覧履歴がつなげられることがあります。",
   },
+  identifiers_before_consent: {
+    title: (p) => `同意の回答前から、利用者を識別する Cookie が保存されています（${p.services}）`,
+    detail: (p) =>
+      `このページは Cookie の同意バナー（${p.banner}）を出していて、まだ回答していない状態です。それでも、アクセス解析や広告のサービスが利用者を見分けるための Cookie をすでに保存しています。バナーで選ぶ内容が、それより前の計測には反映されていない可能性があります。`,
+  },
   dest_fingerprinting: {
     title: (p) => `端末の特徴から利用者を識別する仕組みを使っています（${p.services}）`,
     detail: () =>
@@ -344,6 +349,11 @@ const EN = {
   dest_advertising: {
     title: (p) => `Uses advertising services (${p.services})`,
     detail: () => "Advertising and retargeting services receive browsing data and can link what you view here with what you view on other sites.",
+  },
+  identifiers_before_consent: {
+    title: (p) => `Identifying cookies are set before you answer the consent banner (${p.services})`,
+    detail: (p) =>
+      `This page shows a cookie consent banner (${p.banner}) that has not been answered yet. Analytics or advertising services have already stored the cookies they use to recognise a visitor, so what you choose in the banner may not apply to what was measured before.`,
   },
   dest_fingerprinting: {
     title: (p) => `Identifies visitors from their device's traits (${p.services})`,

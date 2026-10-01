@@ -119,6 +119,7 @@ Hosts are listed with *other*, *session replay* and *ads* first.
 - **"Uses", not "sends".** Analytics, advertising, marketing and monitoring found only by product say the site uses them: a product being present does not prove data leaves the site, since analytics can be self-hosted.
   - The RUM category is not a destination (web-vitals is a local library).
   - Advertising and marketing come before analytics when a product is both.
+- **Tracking before consent is judged by identifier cookies, not by contact.** Under Google's consent mode a tag can contact its host before consent while sending no identifier, so contact alone would accuse a page that waits properly. What SafePeek reports is mechanical: a banner's own element on screen, the cookie it sets once answered still absent, and an identifier cookie already stored. Where a banner service decides no consent is needed (Cookiebot's `-1`), it sets its cookie at once, so nothing is reported.
 - **Identifying a visitor from the device's traits is its own purpose.** Browser fingerprinting recognises a visitor after cookies are cleared. It is information, not a warning: most of these products are fraud prevention, which protects the visitor too.
 
 ## Compromised CDNs

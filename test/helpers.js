@@ -22,6 +22,7 @@ export function loadDb() {
     secrets: JSON.parse(data("secret-formats.json")).formats,
     auth: JSON.parse(data("auth-services.json")).services,
     botChecks: JSON.parse(data("bot-checks.json")).services,
+    consent: (({ banners, identifiers }) => ({ banners, identifiers }))(JSON.parse(data("consent-banners.json"))),
     destinations: (({ purposes, services }) => ({ purposes, services }))(JSON.parse(data("data-destinations.json"))),
     suffixes: indexPublicSuffixes(JSON.parse(data("public-suffixes.json"))),
   };
