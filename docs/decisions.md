@@ -24,6 +24,7 @@ A header that browsers ignore protects nothing, so it is not counted as protecti
 
 - **HSTS:** `max-age=0` tells the browser to forget HSTS, so it counts as none; so does a header RFC 6797 has the browser ignore (a repeated directive, a malformed max-age). Only the first of several headers counts. The HSTS preload list is not shipped, so the message says preloaded sites are protected without the header. An age under six months is reported on its own, since it lapses between visits.
 - **Framing:** a header CSP with `frame-ancestors` decides alone, since browsers then ignore `X-Frame-Options`; one that admits any host limits nothing. Otherwise `X-Frame-Options` follows the HTML Standard: `DENY` or `SAMEORIGIN` alone, or several distinct values including a known one (blocked as confusing); `ALLOW-FROM` is obsolete.
+- **Referrer policy:** only the policy a browser applies counts: the last valid `<meta name="referrer">` overrides the header, and in the header the last token the browser knows wins. It is reported only where it matters: a page that asks for a card number or a password, and loads something from another organisation's site, since the URL of such a page can carry an order or session number. A page with no policy gets the browsers' default, which sends the origin only, so silence is not reported.
 
 ## Scripts from other domains on card and login pages
 

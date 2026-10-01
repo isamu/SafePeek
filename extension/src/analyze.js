@@ -6,6 +6,7 @@ import { checkPage } from "./checks/page.js";
 import { checkPayment } from "./checks/payment.js";
 import { checkCheckout } from "./checks/checkout.js";
 import { checkSensitivePage } from "./checks/sensitive-page.js";
+import { checkReferrerLeak } from "./checks/referrer.js";
 import { checkCredentialTarget } from "./checks/credential-target.js";
 import { checkCompromisedHosts } from "./checks/compromised-hosts.js";
 import { checkSkimmerKits } from "./checks/skimmer-kits.js";
@@ -89,6 +90,7 @@ export async function analyze(page, db, env) {
     ...checkLibraries(libraries),
     ...checkEol(technologies, db.eol, env.today),
     ...checkHeaders(page),
+    ...checkReferrerLeak(page, db.suffixes),
     ...checkCookies(page),
     ...checkPage(page),
     ...checkCredentialTarget(page, db.auth, db.suffixes),
