@@ -94,7 +94,7 @@ export const PURPOSE_LABELS = {
 };
 
 /**
- * What the page's programs send about the visitor, by purpose, with the services named.
+ * Where the page's programs appear to send data about the visitor, by purpose, with the services named.
  * @param {import("../src/analyze.js").Report} report
  * @returns {HTMLElement}
  */
@@ -111,7 +111,7 @@ function renderTracking(report) {
     const item = el("li", "tracking-line");
     item.append(
       el("span", "tracking-purpose", PURPOSE_LABELS[line.purpose] ? t(PURPOSE_LABELS[line.purpose]) : line.purpose),
-      el("span", "tracking-services", line.services.join("、")),
+      el("span", "tracking-services", line.services),
     );
     list.append(item);
   }
