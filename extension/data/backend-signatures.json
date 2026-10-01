@@ -374,9 +374,9 @@
         {
           "type": "text",
           "pattern": "\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
-          "weight": 80,
-          "note": "Java stack trace shown in the page",
-          "noteJa": "ページに Java のスタックトレースが表示されている"
+          "weight": 20,
+          "note": "Java stack trace shown in the page (text a page about Java can show too; counts only with another trace)",
+          "noteJa": "ページに Java のスタックトレースが表示されている（それだけでは数えず、他の痕跡と合わせて数える）"
         }
       ]
     },
@@ -394,7 +394,7 @@
         },
         {
           "type": "html",
-          "pattern": "<meta[^>]+name=[\"']_csrf_header[\"']",
+          "pattern": "<meta\\b[^>]{0,500}\\bname=[\"']_csrf_header[\"']",
           "weight": 60,
           "note": "Spring Security CSRF meta tag",
           "noteJa": "Spring Security の CSRF メタタグ"

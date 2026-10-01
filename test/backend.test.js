@@ -136,6 +136,42 @@ describe("API calls the page made", () => {
   });
 });
 
+// Inputs that make a backtracking pattern scan the rest of the page from every start: runs of a pattern's prefix.
+const ADVERSARIAL_PREFIXES = [
+  "<meta ",
+  "a",
+  "at java.",
+  "\tat org.apache.struts.action.",
+  "xmlns:a=",
+  "<b>Warning</b>:",
+  "<!-- sastrut",
+  "data[A",
+  ";jsessionid",
+  "/",
+  "a.",
+  "<",
+  "=a",
+];
+const ADVERSARIAL_LENGTH = 200_000;
+// Generous, for a loaded machine: a linear pattern takes a few milliseconds; a quadratic one, seconds.
+const PATTERN_BUDGET_MS = 1500;
+
+describe("rule patterns", () => {
+  it("run in linear time on long runs of their own prefixes", () => {
+    const inputs = ADVERSARIAL_PREFIXES.map((p) => p.repeat(Math.ceil(ADVERSARIAL_LENGTH / p.length)));
+    for (const rule of db.backends) {
+      for (const signal of rule.signals) {
+        const regex = new RegExp(signal.pattern, "i");
+        for (const input of inputs) {
+          const started = performance.now();
+          regex.test(input);
+          assert.ok(performance.now() - started < PATTERN_BUDGET_MS, `${rule.name}: ${signal.pattern} on ${input.slice(0, 12)}…`);
+        }
+      }
+    }
+  });
+});
+
 describe("mentions are not traces", () => {
   // Text a page can show about these frameworks without running them: a README, a commit message, a blog post.
   const MENTIONS = [
@@ -189,6 +225,9 @@ describe("mentions are not traces", () => {
     const namespace = byName(inferBackends(makePage({ html: '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>' }), db.backends));
     assert.equal(namespace["Seasar2 (SAStruts / Teeda)"]?.confidence, 80);
     const article = "<!-- Teeda tutorial: part 2 --><h2>Teeda の画面</h2><!-- /Teeda tutorial -->";
+    const javaArticle =
+      "<article><p>よくある例外:</p><pre>java.lang.NullPointerException\n\tat java.util.Objects.requireNonNull(Objects.java:208)</pre></article>";
+    assert.deepEqual(Object.keys(byName(inferBackends(makePage({ html: javaArticle }), db.backends))), [], "a page showing a Java stack trace");
     assert.equal(byName(inferBackends(makePage({ html: article }), db.backends))["Seasar2 (SAStruts / Teeda)"], undefined, "a page about Teeda");
     const frame = "<pre>\tat org.seasar.framework.container.S2Container.create(S2Container.java:101)</pre>";
     const both = byName(inferBackends(makePage({ html: `<!-- Powered by SAStruts -->${frame}` }), db.backends));
@@ -288,10 +327,12 @@ describe("checkBackends", () => {
     const internal = ["/var/www/html/shop/includes/db_connect.php", "shop_admin", ["10", "0", "3", "12"].join(".")];
     const phpWarning = `<br />\n<b>Warning</b>:  mysqli_connect(): Access denied for user '${internal[1]}'@'${internal[2]}' in <b>${internal[0]}</b> on line <b>14</b><br />`;
     const javaTrace = `<pre>java.lang.NullPointerException\n\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)\n\tat jp.example.internal.${internal[1]}.OrderAction.execute(OrderAction.java:88)</pre>`;
-    const found = byName(inferBackends(makePage({ html: `<html><body>${phpWarning}${javaTrace}</body></html>` }), db.backends));
+    // The session id in a link is the second trace the Java stack trace needs to count.
+    const html = `<html><body>${phpWarning}${javaTrace}<a href="/order.do;jsessionid=AB12">x</a></body></html>`;
+    const found = byName(inferBackends(makePage({ html }), db.backends));
     const signals = Object.values(found).flatMap((b) => b.signals);
     assert.ok(signals.some((s) => s.note === "PHP error message shown in the page" && s.match === ""));
-    assert.ok(signals.some((s) => s.note === "Java stack trace shown in the page" && s.match === ""));
+    assert.ok(signals.some((s) => s.note.startsWith("Java stack trace shown in the page") && s.match === ""));
     for (const text of internal) assert.ok(!JSON.stringify(found).includes(text), text);
   });
 
