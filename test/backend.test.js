@@ -142,6 +142,8 @@ describe("mentions are not traces", () => {
     "<article><p>My Struts 1 stack trace:</p><pre>\tat org.apache.struts.action.RequestProcessor.process(RequestProcessor.java:236)</pre></article>",
     "<main><p>Debugging old Seasar2:</p><pre>    at org.seasar.framework.container.S2Container.create(S2Container.java:101)</pre></main>",
     '<td class="blob-code"><span>\tat org.apache.struts.action.ActionServlet.process(ActionServlet.java:1482)</span></td>',
+    // An article showing the code, its quotes left as they are in the serialised page text.
+    '<li>Teeda の <code>xmlns:te="http://www.seasar.org/teeda/extension"</code></li><p>Powered by SAStruts</p>',
   ];
 
   it("reports no end-of-life or old-generation backend for a page that only talks about them", () => {
@@ -156,6 +158,14 @@ describe("mentions are not traces", () => {
         text,
       );
     }
+  });
+
+  it("reads markup traces only in tags and comments, never in the page's text", () => {
+    const article = '<p>URL に <code>;jsessionid=ABC</code> や <code>&lt;meta name="_csrf_header"&gt;</code> が付くことがあります</p>';
+    assert.deepEqual(Object.keys(byName(inferBackends(makePage({ html: article }), db.backends))), []);
+    const app = '<a href="/menu.do;jsessionid=ABC">x</a><meta content="X-CSRF-TOKEN" name="_csrf_header">';
+    const found = byName(inferBackends(makePage({ html: app }), db.backends));
+    assert.ok(found["Java Servlet / JSP"] && found["Spring"]);
   });
 
   it("still reads what a running app emits: a Teeda namespace, an HTML comment", () => {
@@ -315,7 +325,7 @@ const capturesPathText = (pattern) => {
 describe("backend-signatures.json (contributed rules)", () => {
   const file = JSON.parse(readFileSync(new URL("../extension/data/backend-signatures.json", import.meta.url), "utf8"));
   const REPORT_THRESHOLD = 30;
-  const TYPES = ["link", "param", "html", "source", "script", "cookie", "header", "global", "host", "api"];
+  const TYPES = ["link", "param", "html", "text", "source", "script", "cookie", "header", "global", "host", "api"];
 
   for (const rule of file.backends) {
     it(rule.name, () => {

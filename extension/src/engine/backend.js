@@ -4,13 +4,14 @@
 // weight, as evidence.
 
 import { isFixedText } from "./fixed-text.js";
+import { markupOnly } from "./markup.js";
 import { extractParams, extractPaths } from "./page-traces.js";
 
 const THRESHOLD = 30;
 
 /**
  * @typedef {object} Signal
- * @property {"link" | "param" | "html" | "source" | "script" | "cookie" | "header" | "global" | "host" | "api"} type  "api": a URL the page itself fetched
+ * @property {"link" | "param" | "html" | "text" | "source" | "script" | "cookie" | "header" | "global" | "host" | "api"} type  "api": a URL the page itself fetched; "html": the markup only (tags and comments); "text": the whole HTML, for error output a page shows as text
  * @property {string} pattern
  * @property {number} weight
  * @property {string} note
@@ -32,6 +33,7 @@ const THRESHOLD = 30;
  * @property {string[]} paths
  * @property {string[]} params
  * @property {string[]} sources
+ * @property {string} markup  the page's tags and comments without its text
  */
 
 /**
@@ -50,7 +52,12 @@ export function backendGlobalPaths(rules) {
  */
 export function inferBackends(page, rules) {
   /** @type {Traces} */
-  const traces = { paths: extractPaths(page), params: extractParams(page), sources: page.scripts.map((s) => s.content).filter((c) => c) };
+  const traces = {
+    paths: extractPaths(page),
+    params: extractParams(page),
+    sources: page.scripts.map((s) => s.content).filter((c) => c),
+    markup: markupOnly(page.html),
+  };
   /** @type {import("../types.js").Backend[]} */
   const found = [];
   for (const rule of rules) {
@@ -103,8 +110,10 @@ function matchSignal(signal, page, traces) {
       );
     case "source":
       return fixedMatch(signal.pattern, traces.sources);
-    default:
+    case "text":
       return fixedMatch(signal.pattern, [page.html]);
+    default:
+      return fixedMatch(signal.pattern, [traces.markup]);
   }
 }
 

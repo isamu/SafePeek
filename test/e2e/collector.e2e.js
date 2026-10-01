@@ -18,6 +18,8 @@ import { backendGlobalPaths } from "../../extension/src/engine/backend.js";
 import { checkoutGlobalPaths } from "../../extension/src/checks/cart-traces.js";
 import { probeGlobals } from "../../extension/src/page/probe.js";
 import { COLLECTOR_FILES } from "../../extension/src/page/collector-files.js";
+import { markupOnly } from "../../extension/src/engine/markup.js";
+import { readdir } from "node:fs/promises";
 import { loadDb } from "../helpers.js";
 
 const fixtures = fileURLToPath(new URL("./fixtures/", import.meta.url));
@@ -282,5 +284,37 @@ describe("collector in Chromium", () => {
       page.requests.join(", "),
     );
     assert.ok(!page.requests.some((u) => u.endsWith("/api-calls.html") || u.endsWith("/js/kumu.js")), page.requests.join(", "));
+  });
+
+  it("reads markup as the browser's own parser does: the same elements in order, and the same comments", async () => {
+    const names = (await readdir(fixtures)).filter((f) => f.endsWith(".html") && f !== "large-scripts.html");
+    for (const name of names) {
+      const page = await browser.newPage();
+      await page.route(/^https:\/\//, (route) => route.abort());
+      await page.goto(`${base}/${name}`, { waitUntil: "load" });
+      const dom = await page.evaluate(() => {
+        const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
+        let comments = 0;
+        while (walker.nextNode()) comments++;
+        // Template content is markup the server sent, though not part of the document's tree.
+        /** @type {string[]} */
+        const elements = ["html"];
+        /** @param {Element | DocumentFragment} node */
+        const walk = (node) => {
+          for (const child of node.children) {
+            elements.push(child.tagName.toLowerCase());
+            if (child instanceof HTMLTemplateElement) walk(child.content);
+            walk(child);
+          }
+        };
+        walk(document.documentElement);
+        return { html: document.documentElement.outerHTML, elements, comments };
+      });
+      await page.close();
+      const tokens = markupOnly(dom.html).split("\n");
+      const starts = tokens.filter((t) => /^<[A-Za-z]/.test(t)).map((t) => /^<([^\s/>]+)/.exec(t)?.[1]?.toLowerCase());
+      assert.deepEqual(starts, dom.elements, name);
+      assert.equal(tokens.filter((t) => t.startsWith("<!--")).length, dom.comments, name);
+    }
   });
 });

@@ -16,7 +16,8 @@ Each trace is shown in the popup with its strength (strong ≥ 70, medium ≥ 40
 | --- | --- |
 | `link` | same-origin URL paths in the page (links, form actions, asset URLs, the page itself), with `;jsessionid=` removed |
 | `param` | form field names (hidden ones included) and query parameter names |
-| `html` | the page HTML, including comments and any error output |
+| `html` | the page's markup only: its tags (with attributes) and comments, read as the HTML Standard tokenizes them (`src/engine/markup.js`). The page's text, and the content of scripts, styles, titles and text areas, is left out, so an article showing the same code never matches |
+| `text` | the whole page HTML, text included: for error output a page shows as text (a stack trace, a PHP warning) |
 | `source` | the code of inline and loaded scripts (variable names, comments, endpoints) |
 | `script` | script URLs and file names |
 | `cookie` | names of cookies readable from JavaScript (HttpOnly cookies are invisible) |
