@@ -99,6 +99,11 @@ const JA = {
     title: (p) => `広告サービスを使っています（${p.services}）`,
     detail: () => "広告やリターゲティングのサービスには閲覧情報が送られ、ほかのサイトをまたいで閲覧履歴がつなげられることがあります。",
   },
+  dest_fingerprinting: {
+    title: (p) => `端末の特徴から利用者を識別する仕組みを使っています（${p.services}）`,
+    detail: () =>
+      "ブラウザや端末の設定・性能などの特徴を集めて、Cookie を消しても同じ利用者だと見分ける仕組みです。多くは不正ログインや不正購入の対策として使われますが、追跡にも使えます。",
+  },
   dest_analytics: {
     title: (p) => `アクセス解析を使っています（${p.services}）`,
     detail: () => "閲覧したページや操作の統計は、多くの場合、解析サービスに送られます。解析ツールを自社のサーバーで動かしている場合もあります。",
@@ -335,6 +340,11 @@ const EN = {
     title: (p) => `Uses advertising services (${p.services})`,
     detail: () => "Advertising and retargeting services receive browsing data and can link what you view here with what you view on other sites.",
   },
+  dest_fingerprinting: {
+    title: (p) => `Identifies visitors from their device's traits (${p.services})`,
+    detail: () =>
+      "These services gather the browser's and device's settings and capabilities to recognise the same visitor even after cookies are cleared. They are mostly used against account takeover and payment fraud, but can also track.",
+  },
   dest_analytics: {
     title: (p) => `Uses analytics (${p.services})`,
     detail: () => "Statistics about the pages you view and what you do usually go to an analytics service; some sites run the analytics on their own servers.",
@@ -489,6 +499,7 @@ const UI = {
     purpose_monitoring: "エラー・動作ログの監視",
     purpose_advertising: "広告",
     purpose_marketing: "マーケティング",
+    purpose_fingerprinting: "端末の識別",
     purpose_analytics: "アクセス解析",
     high: "重大",
     medium: "注意",
@@ -538,6 +549,7 @@ const UI = {
     purpose_monitoring: "Error and log monitoring",
     purpose_advertising: "Advertising",
     purpose_marketing: "Marketing",
+    purpose_fingerprinting: "Device identification",
     purpose_analytics: "Analytics",
     high: "High",
     medium: "Medium",

@@ -118,6 +118,15 @@ describe("where data goes", () => {
   });
 });
 
+describe("device identification", () => {
+  it("reports a fingerprinting product as its own purpose, before analytics", () => {
+    const fp = { ...tech("FingerprintJS"), evidence: ["script https://cdn.example/fingerprintjs@3/dist/fp.min.js"] };
+    assert.deepEqual(summary(checkDestinations([fp], db.destinations, makePage())), ["dest_fingerprinting:FingerprintJS"]);
+    const tmx = { ...tech("ThreatMetrix"), evidence: ["script https://h.online-metrix.net/fp/tags.js"] };
+    assert.deepEqual(summary(checkDestinations([tmx], db.destinations, makePage())), ["dest_fingerprinting:ThreatMetrix"]);
+  });
+});
+
 describe("data-destinations.json", () => {
   const ids = db.destinations.purposes.map((p) => p.id);
   for (const s of db.destinations.services) {
