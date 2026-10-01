@@ -4,14 +4,14 @@
 // weight, as evidence.
 
 import { isFixedText } from "./fixed-text.js";
-import { markupOnly } from "./markup.js";
+import { readMarkup } from "./markup.js";
 import { extractParams, extractPaths } from "./page-traces.js";
 
 const THRESHOLD = 30;
 
 /**
  * @typedef {object} Signal
- * @property {"link" | "param" | "html" | "text" | "source" | "script" | "cookie" | "header" | "global" | "host" | "api"} type  "api": a URL the page itself fetched; "html": the markup only (tags and comments); "text": the whole HTML, for error output a page shows as text
+ * @property {"link" | "param" | "html" | "comment" | "text" | "source" | "script" | "cookie" | "header" | "global" | "host" | "api"} type  "api": a URL the page itself fetched; "html": the start tags only; "comment": the comments only; "text": the whole HTML, for error output a page shows as text
  * @property {string} pattern
  * @property {number} weight
  * @property {string} note
@@ -33,7 +33,7 @@ const THRESHOLD = 30;
  * @property {string[]} paths
  * @property {string[]} params
  * @property {string[]} sources
- * @property {string} markup  the page's tags and comments without its text
+ * @property {{ tags: string, comments: string }} markup  the page's start tags and comments, without its text
  */
 
 /**
@@ -56,7 +56,7 @@ export function inferBackends(page, rules) {
     paths: extractPaths(page),
     params: extractParams(page),
     sources: page.scripts.map((s) => s.content).filter((c) => c),
-    markup: markupOnly(page.html),
+    markup: readMarkup(page.html),
   };
   /** @type {import("../types.js").Backend[]} */
   const found = [];
@@ -112,8 +112,10 @@ function matchSignal(signal, page, traces) {
       return fixedMatch(signal.pattern, traces.sources);
     case "text":
       return fixedMatch(signal.pattern, [page.html]);
+    case "comment":
+      return fixedMatch(signal.pattern, [traces.markup.comments]);
     default:
-      return fixedMatch(signal.pattern, [traces.markup]);
+      return fixedMatch(signal.pattern, [traces.markup.tags]);
   }
 }
 

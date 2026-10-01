@@ -168,6 +168,17 @@ describe("mentions are not traces", () => {
     assert.ok(found["Java Servlet / JSP"] && found["Spring"]);
   });
 
+  it("reads tag rules in start tags and comment rules in comments, never across", () => {
+    const shapes = [
+      '<!-- <meta name="_csrf_header"> --><p>x</p>',
+      '<![CDATA[<meta name="_csrf_header">]]>',
+      '<div "x>xmlns:te="http://www.seasar.org/teeda/extension"',
+      '<plaintext><html xmlns:te="http://www.seasar.org/teeda/extension"><a href="/x;jsessionid=ABC">',
+      '<p title="<!-- Powered by SAStruts -->">x</p>',
+    ];
+    for (const html of shapes) assert.deepEqual(Object.keys(byName(inferBackends(makePage({ html }), db.backends))), [], html);
+  });
+
   it("still reads what a running app emits: a Teeda namespace, an HTML comment", () => {
     const namespace = byName(inferBackends(makePage({ html: '<html xmlns:te="http://www.seasar.org/teeda/extension"><body></body></html>' }), db.backends));
     assert.equal(namespace["Seasar2 (SAStruts / Teeda)"]?.confidence, 80);
@@ -325,7 +336,7 @@ const capturesPathText = (pattern) => {
 describe("backend-signatures.json (contributed rules)", () => {
   const file = JSON.parse(readFileSync(new URL("../extension/data/backend-signatures.json", import.meta.url), "utf8"));
   const REPORT_THRESHOLD = 30;
-  const TYPES = ["link", "param", "html", "text", "source", "script", "cookie", "header", "global", "host", "api"];
+  const TYPES = ["link", "param", "html", "comment", "text", "source", "script", "cookie", "header", "global", "host", "api"];
 
   for (const rule of file.backends) {
     it(rule.name, () => {

@@ -68,7 +68,7 @@
           "noteJa": "スクリプト内に Seasar の名前（単独では言及にすぎず、他の痕跡と合わさったときだけ効く）"
         },
         {
-          "type": "html",
+          "type": "comment",
           "pattern": "<!--[^<>]{0,200}\\b(?:sastruts|teeda)\\b",
           "weight": 50,
           "note": "SAStruts or Teeda named in an HTML comment",

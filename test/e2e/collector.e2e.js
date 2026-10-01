@@ -18,7 +18,7 @@ import { backendGlobalPaths } from "../../extension/src/engine/backend.js";
 import { checkoutGlobalPaths } from "../../extension/src/checks/cart-traces.js";
 import { probeGlobals } from "../../extension/src/page/probe.js";
 import { COLLECTOR_FILES } from "../../extension/src/page/collector-files.js";
-import { markupOnly } from "../../extension/src/engine/markup.js";
+import { markupTokens } from "../../extension/src/engine/markup.js";
 import { readdir } from "node:fs/promises";
 import { loadDb } from "../helpers.js";
 
@@ -311,10 +311,10 @@ describe("collector in Chromium", () => {
         return { html: document.documentElement.outerHTML, elements, comments };
       });
       await page.close();
-      const tokens = markupOnly(dom.html).split("\n");
-      const starts = tokens.filter((t) => /^<[A-Za-z]/.test(t)).map((t) => /^<([^\s/>]+)/.exec(t)?.[1]?.toLowerCase());
+      const tokens = markupTokens(dom.html).map((t) => ({ kind: t.kind, text: dom.html.slice(t.start, t.end) }));
+      const starts = tokens.filter((t) => t.kind === "startTag").map((t) => /^<([^\s/>]+)/.exec(t.text)?.[1]?.toLowerCase());
       assert.deepEqual(starts, dom.elements, name);
-      assert.equal(tokens.filter((t) => t.startsWith("<!--")).length, dom.comments, name);
+      assert.equal(tokens.filter((t) => t.kind === "comment").length, dom.comments, name);
     }
   });
 });
