@@ -5,6 +5,7 @@ import { describe, t } from "./i18n.js";
 import { el } from "./dom.js";
 import { renderBackendSection, renderSignals } from "./render-backend.js";
 import { findingReportUrl, technologiesReportUrl } from "./false-report.js";
+import { trackingSummary } from "../src/engine/tracking-summary.js";
 
 /**
  * A link that opens a pre-filled issue form on GitHub. GitHub receives the pre-filled values when the user opens it;
@@ -79,7 +80,42 @@ function renderSummary(report) {
   for (const severity of /** @type {const} */ (["high", "medium", "low"])) {
     counts.append(el("span", `pill sev-${severity}`, `${t(severity)} ${report.counts[severity]}`));
   }
-  node.append(counts, el("p", "note", t("level_note")));
+  node.append(counts, renderTracking(report), el("p", "note", t("level_note")));
+  return node;
+}
+
+/** @type {Record<string, Parameters<typeof t>[0]>} */
+export const PURPOSE_LABELS = {
+  session_replay: "purpose_session_replay",
+  monitoring: "purpose_monitoring",
+  advertising: "purpose_advertising",
+  marketing: "purpose_marketing",
+  analytics: "purpose_analytics",
+};
+
+/**
+ * Where the page's programs appear to send data about the visitor, by purpose, with the services named.
+ * @param {import("../src/analyze.js").Report} report
+ * @returns {HTMLElement}
+ */
+function renderTracking(report) {
+  const lines = trackingSummary(report.findings);
+  const node = el("div", "tracking");
+  node.append(el("div", "tracking-title", t("tracking_title")));
+  if (lines.length === 0) {
+    node.append(el("p", "tracking-none", t("tracking_none")));
+    return node;
+  }
+  const list = el("ul", "tracking-list");
+  for (const line of lines) {
+    const item = el("li", "tracking-line");
+    item.append(
+      el("span", "tracking-purpose", PURPOSE_LABELS[line.purpose] ? t(PURPOSE_LABELS[line.purpose]) : line.purpose),
+      el("span", "tracking-services", line.services),
+    );
+    list.append(item);
+  }
+  node.append(list);
   return node;
 }
 
