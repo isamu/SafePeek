@@ -100,9 +100,9 @@ const JA = {
     detail: () => "広告やリターゲティングのサービスには閲覧情報が送られ、ほかのサイトをまたいで閲覧履歴がつなげられることがあります。",
   },
   identifiers_before_consent: {
-    title: (p) => `同意バナーに未回答のまま、利用者を識別する Cookie があります（${p.services}）`,
+    title: (p) => `同意バナーへの回答が記録されていないのに、利用者を識別する Cookie があります（${p.services}）`,
     detail: (p) =>
-      `このページは Cookie の同意バナー（${p.banner}）を出していて、まだ回答していない状態ですが、アクセス解析や広告のサービスが利用者を見分けるための Cookie がすでにあります。今回のアクセスで保存されたのか、以前の訪問で残っていたのかは、ここからは分かりません。`,
+      `このページには Cookie の同意バナー（${p.banner}）の要素があり、バナーへの回答を記録する Cookie はまだありません。それなのに、アクセス解析や広告のサービスが利用者を見分けるための Cookie がすでにあります。バナーが実際に表示されているか、識別用の Cookie が今回のアクセスで保存されたのか以前の訪問で残っていたのかは、ここからは分かりません。`,
   },
   dest_fingerprinting: {
     title: (p) => `端末の特徴から利用者を識別する仕組みを使っています（${p.services}）`,
@@ -351,9 +351,9 @@ const EN = {
     detail: () => "Advertising and retargeting services receive browsing data and can link what you view here with what you view on other sites.",
   },
   identifiers_before_consent: {
-    title: (p) => `Identifying cookies are present while the consent banner is unanswered (${p.services})`,
+    title: (p) => `Identifying cookies are present while no answer to the consent banner is recorded (${p.services})`,
     detail: (p) =>
-      `This page shows a cookie consent banner (${p.banner}) that has not been answered yet, but cookies that analytics or advertising services use to recognise a visitor are already present. Whether they were stored on this visit or left from an earlier one cannot be seen from here.`,
+      `This page contains a cookie consent banner's element (${p.banner}), and the cookie that records an answer to it is not set yet. Even so, cookies that analytics or advertising services use to recognise a visitor are already present. Whether the banner is actually displayed, and whether those cookies were stored on this visit or left from an earlier one, cannot be seen from here.`,
   },
   dest_fingerprinting: {
     title: (p) => `Identifies visitors from their device's traits (${p.services})`,

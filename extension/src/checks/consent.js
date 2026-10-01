@@ -1,6 +1,7 @@
-// A consent banner on screen that the visitor has not answered yet, while cookies that tracking services use to
+// A consent banner's element in the page with no answer recorded yet, while cookies that tracking services use to
 // identify a visitor are already present. What SafePeek sees: the banner's element in the markup, the absence of the
-// cookie the banner sets once answered, and the identifier cookies readable now. When they were stored, it cannot see.
+// cookie the banner sets once answered, and the identifier cookies readable now. Whether the banner is displayed, and
+// when the cookies were stored, it cannot see.
 
 import { finding } from "./finding.js";
 import { markupTokens, tagAttributes } from "../engine/markup.js";
