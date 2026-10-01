@@ -24,7 +24,7 @@
           "noteJa": "*.do 形式のURL（Struts 1 の慣習。Spring MVC でもよく使われる）"
         },
         {
-          "type": "html",
+          "type": "text",
           "pattern": "\\bat org\\.apache\\.struts\\.(?:action|util|config)\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
           "weight": 15,
           "note": "Struts 1 frame in a stack trace shown in the page (text a page about Struts can show too; counts only with another trace)",
@@ -54,7 +54,7 @@
           "noteJa": "マークアップに Teeda の XML 名前空間"
         },
         {
-          "type": "html",
+          "type": "text",
           "pattern": "\\bat org\\.seasar\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
           "weight": 15,
           "note": "Seasar frame in a stack trace shown in the page (text a page about Seasar can show too; counts only with another trace)",
@@ -68,11 +68,11 @@
           "noteJa": "スクリプト内に Seasar の名前（単独では言及にすぎず、他の痕跡と合わさったときだけ効く）"
         },
         {
-          "type": "html",
+          "type": "comment",
           "pattern": "<!--[^<>]{0,200}\\b(?:sastruts|teeda)\\b",
-          "weight": 50,
-          "note": "SAStruts or Teeda named in an HTML comment",
-          "noteJa": "HTMLコメントに SAStruts / Teeda の記述"
+          "weight": 20,
+          "note": "SAStruts or Teeda named in an HTML comment (a page about them can carry one too; counts only with another trace)",
+          "noteJa": "HTMLコメントに SAStruts / Teeda の記述（それだけでは数えず、他の痕跡と合わせて数える）"
         },
         {
           "type": "script",
@@ -372,11 +372,11 @@
           "noteJa": "Server ヘッダーに Tomcat のコネクタ"
         },
         {
-          "type": "html",
+          "type": "text",
           "pattern": "\\bat (?:java|javax|org\\.apache)\\.[\\w.$]+(?:<(?:cl)?init>)?\\(",
-          "weight": 80,
-          "note": "Java stack trace shown in the page",
-          "noteJa": "ページに Java のスタックトレースが表示されている"
+          "weight": 20,
+          "note": "Java stack trace shown in the page (text a page about Java can show too; counts only with another trace)",
+          "noteJa": "ページに Java のスタックトレースが表示されている（それだけでは数えず、他の痕跡と合わせて数える）"
         }
       ]
     },
@@ -394,7 +394,7 @@
         },
         {
           "type": "html",
-          "pattern": "<meta[^>]+name=[\"']_csrf_header[\"']",
+          "pattern": "<meta\\b[^>]{0,500}\\bname=[\"']_csrf_header[\"']",
           "weight": 60,
           "note": "Spring Security CSRF meta tag",
           "noteJa": "Spring Security の CSRF メタタグ"
@@ -421,7 +421,7 @@
           "noteJa": "PHP のセッションCookie"
         },
         {
-          "type": "html",
+          "type": "text",
           "pattern": "<b>(?:Warning|Notice|Fatal error|Deprecated)</b>:.{0,300} on line <b>\\d+",
           "weight": 80,
           "note": "PHP error message shown in the page",

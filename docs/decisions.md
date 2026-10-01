@@ -98,6 +98,7 @@ Hosts are listed with *other*, *session replay* and *ads* first.
   - Only the site's own HTML, forms, API calls and scripts are read; a vendor script's body names the vendor's hosts.
   - The result never feeds the page's own backend or an end-of-life verdict.
 
+- **Markup traces are read in tags and comments only.** A Teeda namespace, a meta tag or a session id in a URL is a trace when it sits in the markup; the same words in the page's text are an article quoting them. An article about SafePeek itself was once reported as Seasar2 because its text showed the namespace with its quotes left as they are. The page is now read as the HTML Standard tokenizes it, and error output a page shows as text is its own type.
 - **Backend evidence shows fixed text only.** A PHP warning or a stack trace is strong evidence of the backend, and its text is where server paths, database user names and internal addresses leak; script code beside a project URL can hold a token, and a script URL can be signed. So `html`, `source` and `script` traces show only what a fixed-text pattern matched, and otherwise just their note ("PHP error message shown in the page"). This is decided from the pattern's shape, not a per-rule flag, so a new rule cannot forget it.
 
 ## The page's own requests

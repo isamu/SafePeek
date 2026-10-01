@@ -35,6 +35,7 @@
     "eslint-plugin-sonarjs": "^4.2.2",
     "globals": "^17.12.0",
     "knip": "^6.38.0",
+    "parse5": "^8.0.1",
     "playwright": "^1.63.0",
     "prettier": "^3.9.9",
     "typescript": "^6.0.3"
