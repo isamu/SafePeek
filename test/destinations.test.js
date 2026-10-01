@@ -125,6 +125,11 @@ describe("device identification", () => {
     const tmx = { ...tech("ThreatMetrix"), evidence: ["script https://h.online-metrix.net/fp/tags.js"] };
     assert.deepEqual(summary(checkDestinations([tmx], db.destinations, makePage())), ["dest_fingerprinting:ThreatMetrix"]);
   });
+
+  it("names a product that is both fingerprinting and analytics for device identification", () => {
+    const both = { ...tech("FingerprintJS"), categories: [83, 10], evidence: ["script https://cdn.example/fp.js"] };
+    assert.deepEqual(summary(checkDestinations([both], db.destinations, makePage())), ["dest_fingerprinting:FingerprintJS"]);
+  });
 });
 
 describe("data-destinations.json", () => {
