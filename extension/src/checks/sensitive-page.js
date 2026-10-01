@@ -3,7 +3,7 @@
 // The balance behind what counts where is in docs/decisions.md.
 
 import { finding } from "./finding.js";
-import { cardFieldKind, cardFields } from "./cardfield.js";
+import { asksForCardNumber, asksForPassword } from "./typed-secrets.js";
 import { tokenizerFor } from "./payment.js";
 import { hostMatches, urlMatches } from "./page-urls.js";
 import { isRelatedHost } from "../engine/related-systems.js";
@@ -56,7 +56,7 @@ export function checkSensitivePage(page, context) {
  * @returns {import("../types.js").Finding[]}
  */
 function cardPageFinding(page, scripts, context) {
-  if (!cardFields(page.inputs).some((f) => cardFieldKind(f) === "number")) return [];
+  if (!asksForCardNumber(page)) return [];
   const counted = scripts.filter((s) => !isProviderTokenizer(s, context.providers));
   if (counted.length === 0) return [];
   const { count, evidence } = labelled(counted);
@@ -71,8 +71,7 @@ function cardPageFinding(page, scripts, context) {
  * @returns {import("../types.js").Finding[]}
  */
 function loginPageFinding(page, scripts) {
-  const hasPassword = page.inputs.some((i) => i.type.toLowerCase() === "password") || page.forms.some((f) => f.hasPassword);
-  if (!hasPassword) return [];
+  if (!asksForPassword(page)) return [];
   const counted = scripts.filter((s) => s.role !== "bot check" && s.role !== "sign-in");
   if (counted.length === 0) return [];
   const severity = counted.every((s) => s.role === "analytics" || s.role === "monitoring") ? "info" : "low";

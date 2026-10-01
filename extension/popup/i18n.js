@@ -177,6 +177,11 @@ const JA = {
     detail: () => "* や https:、data: などにより、任意のサイトや data: URL からスクリプトを読み込めます。",
   },
   no_nosniff: { title: () => "X-Content-Type-Options がありません", detail: () => "ファイル種別の誤判定を防ぐ nosniff が設定されていません。" },
+  referrer_leaks_url: {
+    title: () => "入力ページの URL が、そのまま外部のサイトに渡る設定です",
+    detail: (p) =>
+      `カード番号やパスワードを入力するページですが、リファラーの設定（${p.policy}）により、ページの URL がパスやクエリまで含めて、読み込み先の外部サイトに送られます。URL に注文番号やセッションの情報が入っていれば、それも渡ります。ブラウザの標準の設定なら、送られるのはドメインまでです。`,
+  },
   no_clickjacking: {
     title: () => "クリックジャッキング対策がありません",
     detail: () => "有効な X-Frame-Options（DENY / SAMEORIGIN）も、埋め込み元を限定する CSP の frame-ancestors もありません。",
@@ -415,6 +420,11 @@ const EN = {
     detail: () => "A source such as *, https: or data: lets scripts load from any site or from data: URLs.",
   },
   no_nosniff: { title: () => "No X-Content-Type-Options", detail: () => "nosniff is not set." },
+  referrer_leaks_url: {
+    title: () => "This input page hands its full URL to other sites",
+    detail: (p) =>
+      `This page asks for a card number or a password, but its referrer policy (${p.policy}) sends the page's URL, path and query included, to the other sites it loads from. Anything in the URL, such as an order number or session data, goes with it. Under the browsers' default policy, only the domain is sent.`,
+  },
   no_clickjacking: {
     title: () => "No clickjacking protection",
     detail: () => "Neither a valid X-Frame-Options (DENY or SAMEORIGIN) nor a CSP frame-ancestors that limits who may embed the page.",
