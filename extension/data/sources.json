@@ -8,13 +8,13 @@
   "retire": {
     "url": "https://github.com/RetireJS/retire.js.git",
     "license": "Apache-2.0",
-    "commit": "5bbb7874493864b64794cfad8afc5e0021a6f5cb",
-    "date": "2026-09-29T10:03:15+02:00"
+    "commit": "a2b99016cd3a60af7d748c506f202512e59effd8",
+    "date": "2026-10-02T14:29:13+02:00"
   },
   "publicSuffixes": {
     "url": "https://github.com/publicsuffix/list.git",
     "license": "MPL-2.0",
-    "commit": "a179a48c465e818cfd8d626691cb317985da87fb",
-    "date": "2026-09-24T15:26:24+02:00"
+    "commit": "6cd82aff889e3d64e5e03bc5c1f43da1934a960a",
+    "date": "2026-10-01T16:02:42-07:00"
   }
 }
