@@ -27,17 +27,17 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/chrome": "^0.3.4",
-    "@types/node": "^26.6.3",
+    "@types/chrome": "^0.3.5",
+    "@types/node": "^26.6.5",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-sonarjs": "^4.2.2",
     "globals": "^17.12.0",
-    "knip": "^6.38.0",
+    "knip": "^6.42.0",
     "parse5": "^8.0.1",
-    "playwright": "^1.63.0",
-    "prettier": "^3.9.9",
+    "playwright": "^1.64.1",
+    "prettier": "^3.9.10",
     "typescript": "^6.0.3"
   }
 }
