@@ -2,19 +2,19 @@
   "webappanalyzer": {
     "url": "https://github.com/enthec/webappanalyzer.git",
     "license": "GPL-3.0",
-    "commit": "eea872af449e207e055398f7369d11ee48c8ea03",
-    "date": "2026-09-16T09:11:59+02:00"
+    "commit": "d91f7e510e93457041bea874e8a9ffb011e3e4fe",
+    "date": "2026-10-19T17:09:50+02:00"
   },
   "retire": {
     "url": "https://github.com/RetireJS/retire.js.git",
     "license": "Apache-2.0",
-    "commit": "5bbb7874493864b64794cfad8afc5e0021a6f5cb",
-    "date": "2026-09-29T10:03:15+02:00"
+    "commit": "e5e228659bbcaea7ba85536a2ef8d4fb97b366e9",
+    "date": "2026-10-21T12:07:00+02:00"
   },
   "publicSuffixes": {
     "url": "https://github.com/publicsuffix/list.git",
     "license": "MPL-2.0",
-    "commit": "a179a48c465e818cfd8d626691cb317985da87fb",
-    "date": "2026-09-24T15:26:24+02:00"
+    "commit": "8437e5262f13305f94087abe699b4fe2be1d1de8",
+    "date": "2026-10-22T10:36:29+02:00"
   }
 }
